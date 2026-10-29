@@ -8,7 +8,7 @@ import re
 import time
 import unicodedata
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, cast
 
 from huggingface_hub import errors
 
@@ -41,7 +41,7 @@ def _download_from_hf_hub(repo_id: str, filename: str, **kwargs: Any) -> str:
             "livekit-plugins-turn-detector initialization failed. "
             f'Could not find file "{filename}".'
         ) from None
-    return local_path
+    return cast(str, local_path)
 
 
 class _EUORunnerBase(_InferenceRunner):
@@ -83,14 +83,17 @@ class _EUORunnerBase(_InferenceRunner):
                 new_chat_ctx.append(msg)
                 last_msg = msg
 
-        convo_text = self._tokenizer.apply_chat_template(
-            new_chat_ctx, add_generation_prompt=False, add_special_tokens=False, tokenize=False
+        convo_text = cast(
+            str,
+            self._tokenizer.apply_chat_template(
+                new_chat_ctx, add_generation_prompt=False, add_special_tokens=False, tokenize=False
+            ),
         )
 
         # remove the EOU token from current utterance
         ix = convo_text.rfind("<|im_end|>")
         text = convo_text[:ix]
-        return text  # type: ignore
+        return text
 
     def initialize(self) -> None:
         logger = logging.getLogger("transformers")
@@ -130,7 +133,7 @@ class _EUORunnerBase(_InferenceRunner):
             self._session = ort.InferenceSession(
                 local_path_onnx, providers=["CPUExecutionProvider"], sess_options=sess_options
             )
-            self._tokenizer = AutoTokenizer.from_pretrained(  # type: ignore[no-untyped-call]
+            self._tokenizer = AutoTokenizer.from_pretrained(
                 HG_MODEL,
                 revision=revision,
                 local_files_only=True,
@@ -181,7 +184,7 @@ class _EUORunnerBase(_InferenceRunner):
         from transformers import AutoTokenizer
 
         # ensure the tokenizer is downloaded
-        AutoTokenizer.from_pretrained(HG_MODEL, revision=cls.model_revision())  # type: ignore[no-untyped-call]
+        AutoTokenizer.from_pretrained(HG_MODEL, revision=cls.model_revision())
         _download_from_hf_hub(
             HG_MODEL, ONNX_FILENAME, subfolder="onnx", revision=cls.model_revision()
         )
