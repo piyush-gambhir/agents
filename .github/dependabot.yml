@@ -1,0 +1,128 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
+  - package-ecosystem: docker
+    directories:
+      - "/examples"
+      - "/examples/avatar"
+      - "/examples/drive-thru"
+      - "/examples/frontdesk"
+      - "/examples/healthcare"
+      - "/examples/inference"
+      - "/examples/survey"
+      - "/tests"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      dependencies:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: pip
+    directories:
+      - "/examples/avatar"
+      - "/examples/avatar_agents/audio_wave"
+      - "/examples/avatar_agents/bithuman"
+      - "/examples/drive-thru"
+      - "/examples/frontdesk"
+      - "/examples/healthcare"
+      - "/examples/inference"
+      - "/examples/other/text-to-speech"
+      - "/examples/survey"
+      - "/examples/voice_agents"
+      - "/livekit-agents"
+      - "/livekit-plugins/livekit-blingfire"
+      - "/livekit-plugins/livekit-blockguard"
+      - "/livekit-plugins/livekit-durable"
+      - "/livekit-plugins/livekit-plugins-anam"
+      - "/livekit-plugins/livekit-plugins-anthropic"
+      - "/livekit-plugins/livekit-plugins-assemblyai"
+      - "/livekit-plugins/livekit-plugins-asyncai"
+      - "/livekit-plugins/livekit-plugins-avatario"
+      - "/livekit-plugins/livekit-plugins-avatartalk"
+      - "/livekit-plugins/livekit-plugins-aws"
+      - "/livekit-plugins/livekit-plugins-azure"
+      - "/livekit-plugins/livekit-plugins-baseten"
+      - "/livekit-plugins/livekit-plugins-bey"
+      - "/livekit-plugins/livekit-plugins-bithuman"
+      - "/livekit-plugins/livekit-plugins-browser"
+      - "/livekit-plugins/livekit-plugins-cambai"
+      - "/livekit-plugins/livekit-plugins-cartesia"
+      - "/livekit-plugins/livekit-plugins-cerebras"
+      - "/livekit-plugins/livekit-plugins-clova"
+      - "/livekit-plugins/livekit-plugins-deepgram"
+      - "/livekit-plugins/livekit-plugins-did"
+      - "/livekit-plugins/livekit-plugins-elevenlabs"
+      - "/livekit-plugins/livekit-plugins-fal"
+      - "/livekit-plugins/livekit-plugins-fireworksai"
+      - "/livekit-plugins/livekit-plugins-fishaudio"
+      - "/livekit-plugins/livekit-plugins-gladia"
+      - "/livekit-plugins/livekit-plugins-gnani"
+      - "/livekit-plugins/livekit-plugins-google"
+      - "/livekit-plugins/livekit-plugins-gradium"
+      - "/livekit-plugins/livekit-plugins-groq"
+      - "/livekit-plugins/livekit-plugins-hamming"
+      - "/livekit-plugins/livekit-plugins-hedra"
+      - "/livekit-plugins/livekit-plugins-hume"
+      - "/livekit-plugins/livekit-plugins-inworld"
+      - "/livekit-plugins/livekit-plugins-keyframe"
+      - "/livekit-plugins/livekit-plugins-krisp"
+      - "/livekit-plugins/livekit-plugins-langchain"
+      - "/livekit-plugins/livekit-plugins-lemonslice"
+      - "/livekit-plugins/livekit-plugins-liveavatar"
+      - "/livekit-plugins/livekit-plugins-lmnt"
+      - "/livekit-plugins/livekit-plugins-minimal"
+      - "/livekit-plugins/livekit-plugins-minimax"
+      - "/livekit-plugins/livekit-plugins-mistralai"
+      - "/livekit-plugins/livekit-plugins-murf"
+      - "/livekit-plugins/livekit-plugins-neuphonic"
+      - "/livekit-plugins/livekit-plugins-nltk"
+      - "/livekit-plugins/livekit-plugins-nvidia"
+      - "/livekit-plugins/livekit-plugins-openai"
+      - "/livekit-plugins/livekit-plugins-perplexity"
+      - "/livekit-plugins/livekit-plugins-phonic"
+      - "/livekit-plugins/livekit-plugins-resemble"
+      - "/livekit-plugins/livekit-plugins-respeecher"
+      - "/livekit-plugins/livekit-plugins-rime"
+      - "/livekit-plugins/livekit-plugins-rtzr"
+      - "/livekit-plugins/livekit-plugins-runway"
+      - "/livekit-plugins/livekit-plugins-sarvam"
+      - "/livekit-plugins/livekit-plugins-silero"
+      - "/livekit-plugins/livekit-plugins-simli"
+      - "/livekit-plugins/livekit-plugins-simplismart"
+      - "/livekit-plugins/livekit-plugins-slng"
+      - "/livekit-plugins/livekit-plugins-smallestai"
+      - "/livekit-plugins/livekit-plugins-soniox"
+      - "/livekit-plugins/livekit-plugins-speechify"
+      - "/livekit-plugins/livekit-plugins-speechmatics"
+      - "/livekit-plugins/livekit-plugins-spitch"
+      - "/livekit-plugins/livekit-plugins-tavus"
+      - "/livekit-plugins/livekit-plugins-telnyx"
+      - "/livekit-plugins/livekit-plugins-trugen"
+      - "/livekit-plugins/livekit-plugins-turn-detector"
+      - "/livekit-plugins/livekit-plugins-ultravox"
+      - "/livekit-plugins/livekit-plugins-upliftai"
+      - "/livekit-plugins/livekit-plugins-xai"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      dependencies:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: uv
+    directories:
+      - "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      dependencies:
+        patterns: ["*"]
+        update-types: [minor, patch]
