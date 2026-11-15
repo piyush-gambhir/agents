@@ -261,9 +261,6 @@ async def test_summarize():
         print(json.dumps(summary.to_dict(), indent=2))
 
 
-# --- summarize unit tests (no credentials required) ---
-
-
 class _FixedSummaryLLM(FakeLLM):
     """FakeLLM that returns a fixed summary string for any input."""
 
@@ -362,11 +359,6 @@ async def test_summarize_head_tail_split_with_renderables():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=2)
 
-    # With keep_last_turns=2, the backward walk counts 4 ChatMessages:
-    #   "You are under warranty." (1), "Thanks." (2),
-    #   "Found your order..." (3), "Order #123." (4) ← split here
-    # The FunctionCall + FunctionCallOutput between "Order #123." and
-    # "Found your order..." fall inside the tail and must be preserved.
     tail_msgs = [
         it
         for it in result.items
@@ -430,11 +422,9 @@ async def test_summarize_preserves_structural_items():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=1)
 
-    # system message preserved
     system_msgs = [it for it in result.items if it.type == "message" and it.role == "system"]
     assert len(system_msgs) == 1
 
-    # agent handoff preserved
     handoffs = [it for it in result.items if it.type == "agent_handoff"]
     assert len(handoffs) == 1
     assert handoffs[0].old_agent_id == "AgentA"
@@ -455,13 +445,9 @@ async def test_summarize_skips_when_not_enough_messages():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=1)
 
-    # budget covers all messages, so nothing to summarize — early return
     assert len(result.items) == len(original_items)
     for a, b in zip(result.items, original_items, strict=True):
         assert a.id == b.id
-
-
-# --- truncate tests ---
 
 
 def _make_ctx(*roles: str):
@@ -499,9 +485,9 @@ def test_truncate_basic():
 def test_truncate_preserves_system_instruction():
     ctx = _make_ctx("system", "user", "assistant", "user", "assistant")
     ctx.truncate(max_items=2)
-    # system should be re-inserted at the front
+
     assert ctx.items[0].role == "system"
-    assert len(ctx.items) == 3  # system + last 2
+    assert len(ctx.items) == 3
 
 
 def test_truncate_preserves_developer_instruction():
@@ -515,7 +501,7 @@ def test_truncate_no_duplication():
     """When the instruction is already in the truncated tail, don't insert it again."""
     ctx = _make_ctx("system", "user", "assistant")
     ctx.truncate(max_items=3)
-    # system is already within the last 3 items, so no duplication
+
     system_items = [item for item in ctx.items if getattr(item, "role", None) == "system"]
     assert len(system_items) == 1
     assert len(ctx.items) <= 3
@@ -533,7 +519,7 @@ def test_truncate_multiple_instructions():
     ctx.add_message(role="user", content="u3")
 
     ctx.truncate(max_items=2)
-    # first instruction is the system msg
+
     assert ctx.items[0].role == "system"
     assert ctx.items[0].content == ["first"]
 
@@ -543,13 +529,11 @@ def test_instructions_serialization():
     from livekit.agents.beta import Instructions
     from livekit.agents.llm import ChatContext, ChatMessage
 
-    # Pydantic preserves Instructions type
     instr = Instructions("audio variant", text="text variant")
     msg = ChatMessage(role="system", content=[instr])
     assert isinstance(msg.content[0], Instructions)
     assert msg.content[0].text == "text variant"
 
-    # to_dict serializes both variants as a dict
     ctx = ChatContext([ChatMessage(role="system", content=[instr])])
     data = ctx.to_dict()
     serialized = data["items"][0]["content"][0]
@@ -557,19 +541,16 @@ def test_instructions_serialization():
     assert serialized["audio"] == "audio variant"
     assert serialized["text"] == "text variant"
 
-    # from_dict reconstructs Instructions
     restored = ChatContext.from_dict(ctx.to_dict())
     restored_content = restored.items[0].content[0]
     assert isinstance(restored_content, Instructions)
     assert restored_content.audio == "audio variant"
     assert restored_content.text == "text variant"
 
-    # Plain str content stays as str after round-trip
     plain_ctx = ChatContext([ChatMessage(role="user", content=["hello"])])
     plain_restored = ChatContext.from_dict(plain_ctx.to_dict())
     assert type(plain_restored.items[0].content[0]) is str
 
-    # Instructions without text variant round-trips (falls back to audio)
     audio_only = Instructions("audio only")
     audio_ctx = ChatContext([ChatMessage(role="system", content=[audio_only])])
     audio_restored = ChatContext.from_dict(audio_ctx.to_dict())
@@ -583,7 +564,6 @@ def test_instructions_string_operations():
     """Instructions supports + and r+ operations, propagating both variants."""
     from livekit.agents.beta import Instructions
 
-    # Instructions + Instructions
     a = Instructions("audio A", text="text A")
     b = Instructions("audio B", text="text B")
     result = a + b
@@ -591,24 +571,20 @@ def test_instructions_string_operations():
     assert result.audio == "audio Aaudio B"
     assert result.text == "text Atext B"
 
-    # Instructions + str
     instr = Instructions("audio", text="text")
     result = instr + " suffix"
     assert result.audio == "audio suffix"
     assert result.text == "text suffix"
 
-    # str + Instructions (radd)
     result = "prefix " + instr
     assert result.audio == "prefix audio"
     assert result.text == "prefix text"
 
-    # Adding to Instructions without text variant keeps text=None
     audio_only = Instructions("audio only")
     result = audio_only + " more"
     assert result._text_variant is None
     assert result.audio == "audio only more"
 
-    # One side has text variant, other doesn't
     a = Instructions("audio A", text="text A")
     b = Instructions("audio B")
     result = a + " " + b
@@ -624,34 +600,28 @@ def test_instructions_as_modality():
 
     instr = Instructions("audio instructions", text="text instructions")
 
-    # as_modality('audio')
     resolved = instr.as_modality("audio")
     assert str(resolved) == "audio instructions"
     assert resolved.audio == "audio instructions"
     assert resolved.text == "text instructions"
 
-    # as_modality('text')
     resolved = instr.as_modality("text")
     assert str(resolved) == "text instructions"
 
-    # Can switch modality after resolving
     resolved_text = instr.as_modality("text")
     resolved_audio = resolved_text.as_modality("audio")
     assert str(resolved_audio) == "audio instructions"
 
-    # Instructions without text variant returns audio for both modalities
     audio_only = Instructions("audio only")
     assert str(audio_only.as_modality("audio")) == "audio only"
     assert str(audio_only.as_modality("text")) == "audio only"
 
-    # apply_instructions_modality() on ChatContext
     ctx = ChatContext([ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instr])])
     apply_instructions_modality(ctx, modality="audio")
     assert str(ctx.items[0].content[0]) == "audio instructions"
     apply_instructions_modality(ctx, modality="text")
     assert str(ctx.items[0].content[0]) == "text instructions"
 
-    # Re-applying after copy
     base_ctx = ChatContext(
         [ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instr])]
     )

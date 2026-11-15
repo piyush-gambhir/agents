@@ -316,7 +316,6 @@ class _HandoffJudge:
         llm: LLM | None = None,
     ) -> JudgmentResult:
         if not _has_handoffs(chat_ctx):
-            # No handoffs, automatically pass with perfect score
             return JudgmentResult(
                 verdict="pass",
                 reasoning="No agent handoffs occurred in this conversation.",

@@ -23,7 +23,6 @@ def to_chat_ctx(
         if not group.message and not group.tool_calls and not group.tool_outputs:
             continue
 
-        # one message can contain zero or more tool calls
         msg = _to_chat_item(group.message) if group.message else {"role": "assistant"}
         tool_calls = []
         for tool_call in group.tool_calls:
@@ -40,7 +39,6 @@ def to_chat_ctx(
             msg["tool_calls"] = tool_calls  # type: ignore[assignment]
         messages.append(msg)
 
-        # append tool outputs following the tool calls
         for tool_output in group.tool_outputs:
             messages.append(_to_chat_item(tool_output))
 
@@ -60,8 +58,6 @@ def _to_chat_item(msg: llm.ChatItem) -> dict[str, Any]:
                 list_content.append(_to_image_content(content))
 
         if not list_content:
-            # certain providers require text-only content in a string vs a list.
-            # for max-compatibility, we will combine all text content into a single string.
             result: dict[str, Any] = {"role": msg.role, "content": text_content}
         else:
             if text_content:
@@ -185,9 +181,6 @@ def _to_responses_chat_item(msg: llm.ChatItem) -> dict[str, Any]:
                 list_content.append({"type": "input_text", "text": text_content})
             item = {"role": msg.role, "content": list_content}
 
-        # Re-attach the assistant message phase (commentary / final_answer) captured from
-        # the Responses API. Dropping it on follow-up requests can degrade performance for
-        # models like gpt-5.3-codex.
         if msg.role == "assistant":
             phase = msg.extra.get("openai", {}).get("phase")
             if phase is not None:

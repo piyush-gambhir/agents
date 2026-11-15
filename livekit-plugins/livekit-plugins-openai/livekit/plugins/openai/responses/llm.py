@@ -153,8 +153,6 @@ class _LLMOptions:
 
 
 class LLM(llm.LLM):
-    # the plugin's ProviderTool subclass; subclasses (e.g. xAI) override this so server-side
-    # provider tools are recognized when serializing the request. See to_responses_fnc_ctx.
     _provider_tool_type: type[llm.ProviderTool] = OpenAITool
 
     def __init__(
@@ -217,7 +215,7 @@ class LLM(llm.LLM):
         self._parallel_generation: bool = False
         self._prev_resp_id = ""
         self._prev_chat_ctx: ChatContext | None = None
-        self._pending_tool_calls = set[str]()  # tool call ids that are pending for a response
+        self._pending_tool_calls = set[str]()
 
         if use_websocket:
             resolved_api_key = api_key if is_given(api_key) else os.environ.get("OPENAI_API_KEY")
@@ -340,10 +338,9 @@ class LLM(llm.LLM):
             if ChatContext(items=chat_ctx.items[:n]).is_equivalent(
                 self._prev_chat_ctx
             ) and self._pending_tool_calls_completed(chat_ctx.items[n:]):
-                # send only the new items appended since the last response
                 input_chat_ctx = ChatContext(items=chat_ctx.items[n:])
                 extra["previous_response_id"] = self._prev_resp_id
-            # if the context was modified otherwise, resend the whole context and omit previous response id
+
         return LLMStream(
             self,
             model=self._opts.model,
@@ -480,9 +477,7 @@ class LLMStream(llm.LLMStream):
                 raise APIConnectionError(retryable=retryable) from e
 
     def _parse_ws_event(self, event: dict) -> ResponseStreamEvent | None:
-        # Strip prompt_cache_retention from any response object before validation:
-        # the OpenAI SDK Pydantic type doesn't match actual API values (e.g. "in_memory"
-        # vs "in-memory"). We don't use this field so dropping it is safe.
+
         if (
             isinstance(event.get("response"), dict)
             and "prompt_cache_retention" in event["response"]
@@ -549,11 +544,6 @@ class LLMStream(llm.LLMStream):
 
     def _handle_response_completed(self, event: ResponseCompletedEvent) -> llm.ChatChunk | None:
         for item in event.response.output:
-            # Every item.type is a discriminator of openai's ResponseOutputItem union.
-            # Of those, only these are produced/consumed by the agent itself; all other
-            # members of the union are tools the Responses API runs server-side (e.g.
-            # openai web_search, xAI web_search and x_search's custom_tool_call subcalls),
-            # so anything not in this set is a provider-executed tool.
             if item.type not in ("message", "reasoning", "function_call", "function_call_output"):
                 logger.info(
                     "provider tool executed",
@@ -603,8 +593,6 @@ class LLMStream(llm.LLMStream):
             )
             self._pending_tool_calls.add(event.item.call_id)
         elif isinstance(event.item, ResponseOutputMessage) and event.item.phase is not None:
-            # Models like gpt-5.3-codex label assistant messages as intermediate
-            # `commentary` or the `final_answer`
             chunk = llm.ChatChunk(
                 id=self._response_id,
                 delta=llm.ChoiceDelta(

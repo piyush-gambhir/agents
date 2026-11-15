@@ -74,11 +74,10 @@ class _FillerScheduler:
                 self._speaking_ev.clear()
                 try:
                     await asyncio.wait_for(self._speaking_ev.wait(), timeout=self._delay)
-                    continue  # reset dwell delay
+                    continue
                 except asyncio.TimeoutError:
                     pass
 
-                # no await allowed below
                 src = self._source
                 if callable(src):
                     step = len(self._created_speeches)

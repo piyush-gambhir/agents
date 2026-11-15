@@ -30,7 +30,6 @@ from openai.types.realtime.realtime_audio_config_input import NoiseReduction
 
 from ..log import logger
 
-# default values got from a "default" session from their API
 DEFAULT_TURN_DETECTION = realtime.realtime_audio_input_turn_detection.SemanticVad(
     type="semantic_vad",
     create_response=True,
@@ -44,7 +43,7 @@ DEFAULT_INPUT_AUDIO_TRANSCRIPTION = AudioTranscription(
     model="gpt-4o-mini-transcribe",
 )
 
-# use beta version TurnDetection and InputAudioTranscription for compatibility
+
 AZURE_DEFAULT_TURN_DETECTION = TurnDetection(
     type="server_vad",
     threshold=0.5,
@@ -57,7 +56,7 @@ AZURE_DEFAULT_INPUT_AUDIO_TRANSCRIPTION = InputAudioTranscription(
     model="whisper-1",
 )
 
-DEFAULT_MAX_SESSION_DURATION = 20 * 60  # 20 minutes
+DEFAULT_MAX_SESSION_DURATION = 20 * 60
 
 
 def to_noise_reduction(
@@ -186,7 +185,7 @@ def livekit_item_to_openai_item(item: llm.ChatItem) -> realtime.ConversationItem
             )
         elif item.role == "user":
             user_content: list[realtime.realtime_conversation_item_user_message.Content] = []
-            # only user messages could be a list of content
+
             for c in item.content:
                 if isinstance(c, str):
                     user_content.append(

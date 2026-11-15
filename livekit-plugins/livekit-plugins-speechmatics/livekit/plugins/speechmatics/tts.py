@@ -149,7 +149,6 @@ class ChunkedStream(tts.ChunkedStream):
                     mime_type="audio/pcm",
                 )
 
-                # Process the response in streaming chunks
                 buffer = b""
 
                 async for data, _ in resp.content.iter_chunks():
@@ -158,13 +157,12 @@ class ChunkedStream(tts.ChunkedStream):
 
                     buffer += data
 
-                    # Emit all complete 2-byte int16 samples from buffer
                     if len(buffer) >= 2:
                         complete_samples = len(buffer) // 2
                         complete_bytes = complete_samples * 2
 
                         audio_data = buffer[:complete_bytes]
-                        buffer = buffer[complete_bytes:]  # Keep remaining bytes for next iteration
+                        buffer = buffer[complete_bytes:]
 
                         output_emitter.push(audio_data)
 

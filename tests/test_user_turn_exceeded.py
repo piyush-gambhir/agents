@@ -96,8 +96,6 @@ async def test_reset_on_agent_speaking() -> None:
     speed = 5.0
     agent = _CapturingAgent()
 
-    # Turn 1: user says 3 words, agent replies successfully (reaches speaking)
-    # Turn 2: user says 3 words — should NOT trigger with max_words=5
     actions = FakeActions()
     actions.add_user_speech(0.5, 1.5, "one two three", stt_delay=0.2)
     actions.add_llm("reply one", ttft=0.1, duration=0.1)
@@ -114,7 +112,6 @@ async def test_reset_on_agent_speaking() -> None:
 
     await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-    # Neither turn alone exceeds 5 words, and counters reset between them
     assert len(agent.exceeded_events) == 0
 
 
@@ -144,16 +141,13 @@ async def test_no_accumulation_after_clear_user_turn() -> None:
     try:
         await session.start(agent)
 
-        # turn 1: 3 words accumulate in the tracker via the normal path
         recognition = session._activity._audio_recognition  # type: ignore[union-attr]
         recognition._check_user_turn_limit("one two three")
         assert recognition._turn_tracker.words == 3
         assert len(agent.exceeded_events) == 0
 
-        # discard turn 1 (push-to-talk cancel)
         session.clear_user_turn()
 
-        # turn 2: 3 more words. With the bug, words would be 6 (>=5) and fire the event.
         recognition._check_user_turn_limit("four five six")
         assert recognition._turn_tracker.words == 3
         assert len(agent.exceeded_events) == 0
@@ -176,7 +170,7 @@ async def test_accumulation_across_interrupted_turns() -> None:
 
     actions = FakeActions()
     actions.add_user_speech(0.5, 1.5, turn1, stt_delay=0.2)
-    # Very slow LLM so the agent never reaches speaking before turn 2 interrupts
+
     actions.add_llm("reply one", ttft=5.0, duration=0.1)
     actions.add_tts(0.5, ttfb=0.5, duration=0.5)
     actions.add_user_speech(2.2, 3.2, turn2, stt_delay=0.2)
@@ -194,10 +188,8 @@ async def test_accumulation_across_interrupted_turns() -> None:
     assert len(agent.exceeded_events) == 1
     ev = agent.exceeded_events[0]
 
-    # current (last) transcript is turn 2
     assert ev.transcript == turn2
 
-    # turn 1 was committed to chat context via the normal on_user_turn_completed path
     user_texts = [
         item.text_content
         for item in agent.chat_ctx.items
@@ -205,7 +197,6 @@ async def test_accumulation_across_interrupted_turns() -> None:
     ]
     assert turn1 in user_texts, f"turn1 not found in chat_ctx: {user_texts}"
 
-    # accumulated_transcript = prior turn (in chat ctx) + last transcript
     assert ev.accumulated_transcript == f"{turn1} {turn2}"
 
 
@@ -263,7 +254,6 @@ async def test_skipped_when_new_turns_blocked() -> None:
         activity = session._activity
         assert activity is not None
 
-        # simulate the transition window opened by update_agent()
         activity._new_turns_blocked = True
 
         ev = UserTurnExceededEvent(
@@ -315,12 +305,11 @@ async def test_inflight_task_aborts_when_handoff_starts() -> None:
             accumulated_word_count=4,
             duration=1.0,
         )
-        # schedule normally — task enters the wait phase
+
         activity.on_user_turn_exceeded(ev)
         task = activity._user_turn_exceeded_atask
         assert task is not None
 
-        # transition starts while the task is waiting
         activity._new_turns_blocked = True
 
         await asyncio.wait_for(task, timeout=2.0)

@@ -27,7 +27,7 @@ class AvailableSlot:
 
     @property
     def unique_hash(self) -> str:
-        # unique id based on the start_time & duration_min
+
         raw = f"{self.start_time.isoformat()}|{self.duration_min}".encode()
         digest = hashlib.blake2s(raw, digest_size=5).digest()
         return f"ST_{base64.b32encode(digest).decode().rstrip('=').lower()}"
@@ -56,16 +56,14 @@ class FakeCalendar(Calendar):
             return
 
         today = datetime.datetime.now(self.tz).date()
-        for day_offset in range(1, 90):  # generate slots for the next 90 days
+        for day_offset in range(1, 90):
             current_day = today + datetime.timedelta(days=day_offset)
             if current_day.weekday() >= 5:
                 continue
 
-            # build all possible 30-min slots between 09:00 and 17:00
             day_start = datetime.datetime.combine(current_day, datetime.time(9, 0), tzinfo=self.tz)
             slots_in_day = [
-                day_start + datetime.timedelta(minutes=30 * i)
-                for i in range(int((17 - 9) * 2))  # (17-9)=8 hours => 16 slots
+                day_start + datetime.timedelta(minutes=30 * i) for i in range(int((17 - 9) * 2))
             ]
 
             num_slots = random.randint(3, 6)
@@ -80,7 +78,7 @@ class FakeCalendar(Calendar):
     async def schedule_appointment(
         self, *, start_time: datetime.datetime, attendee_email: str
     ) -> None:
-        # fake it by just removing it from our slots list
+
         self._slots = [slot for slot in self._slots if slot.start_time != start_time]
 
     async def list_available_slots(
@@ -88,8 +86,6 @@ class FakeCalendar(Calendar):
     ) -> list[AvailableSlot]:
         return [slot for slot in self._slots if start_time <= slot.start_time < end_time]
 
-
-# --- cal.com impl ---
 
 CAL_COM_EVENT_TYPE = "livekit-front-desk"
 EVENT_DURATION_MIN = 30
@@ -157,7 +153,7 @@ class CalComCalendar(Calendar):
             json={
                 "start": start_time.isoformat(),
                 "attendee": {
-                    "name": attendee_email,  # TODO(theomonnom): add name prompt
+                    "name": attendee_email,
                     "email": attendee_email,
                     "timeZone": self.tz.tzname(None),
                 },

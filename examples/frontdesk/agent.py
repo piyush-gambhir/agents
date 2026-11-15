@@ -49,9 +49,7 @@ class Userdata:
     cal: Calendar
     booked_times: list[str] = field(default_factory=list)
     slot_unavailable_count: int = 0
-    # Optional UI for the LiveKit Playground. ``None`` when the agent
-    # is running anywhere else — the tool handlers no-op on it and
-    # the rest of the code stays oblivious to the playground.
+
     ui: UIView | None = None
 
 
@@ -119,8 +117,7 @@ class FrontDeskAgent(Agent):
                 )
             except RuntimeError:
                 pass
-            # exceptions other than ToolError are treated as "An internal error occurred" for the LLM.
-            # Tell the LLM this slot isn't available anymore
+
             raise ToolError("This slot isn't available anymore") from None
 
         local = slot.start_time.astimezone(self.tz)
@@ -204,15 +201,12 @@ server = AgentServer()
 
 
 async def on_session_end(ctx: JobContext) -> None:
-    # `on_session_end` runs even if the job crashed before the AgentSession
-    # started (e.g. a bad timezone, a calendar fault) — make_session_report
-    # raises in that case, and there's nothing to evaluate anyway.
+
     try:
         report = ctx.make_session_report()
     except RuntimeError:
         return
 
-    # Skip evaluation for very short conversations
     chat = report.chat_history.copy(exclude_function_call=True, exclude_instructions=True)
     if len(chat.items) < 3:
         return

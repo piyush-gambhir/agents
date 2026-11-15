@@ -97,7 +97,7 @@ class TTS(tts.TTS):
         self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
             connect_cb=self._connect_ws,
             close_cb=self._close_ws,
-            max_session_duration=3600,  # 1 hour
+            max_session_duration=3600,
             mark_refreshed_on_get=False,
         )
 
@@ -136,13 +136,9 @@ class TTS(tts.TTS):
 
     async def _close_ws(self, ws: aiohttp.ClientWebSocketResponse) -> None:
         try:
-            # Send Flush and Close messages to ensure Deepgram processes all remaining audio
-            # and properly terminates the session, preventing lingering TTS sessions
             await ws.send_str(SynthesizeStream._FLUSH_MSG)
             await ws.send_str(SynthesizeStream._CLOSE_MSG)
 
-            # Wait for server acknowledgment to prevent race conditions and ensure
-            # proper cleanup, avoiding 429 Too Many Requests errors from lingering sessions
             try:
                 await asyncio.wait_for(ws.receive(), timeout=1.0)
             except asyncio.TimeoutError:
@@ -265,7 +261,7 @@ class SynthesizeStream(tts.SynthesizeStream):
         )
 
         async def _tokenize_input() -> None:
-            # Converts incoming text into WordStreams and sends them into segments_ch
+
             word_stream = None
             async for input in self._input_ch:
                 if isinstance(input, str):
@@ -317,7 +313,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                 await ws.send_str(json.dumps(speak_msg))
                 input_sent_event.set()
 
-            # always flush after a segment
             flush_msg = {"type": "Flush"}
             await ws.send_str(json.dumps(flush_msg))
             input_sent_event.set()

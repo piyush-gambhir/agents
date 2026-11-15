@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -83,7 +83,7 @@ class _DefaultLoadCalc:
     _instance_lock = threading.Lock()
 
     def __init__(self) -> None:
-        self._m_avg = utils.MovingAverage(5)  # avg over 2.5
+        self._m_avg = utils.MovingAverage(5)
         self._cpu_monitor = get_cpu_monitor()
         self._thread = threading.Thread(
             target=self._calc_load, daemon=True, name="worker_cpu_load_monitor"
@@ -122,7 +122,6 @@ class WorkerPermissions:
 
 
 if sys.platform.startswith("win"):
-    # Some python versions on Windows gets a BrokenPipeError when creating a new process
     _default_job_executor_type = JobExecutorType.THREAD
 else:
     _default_job_executor_type = JobExecutorType.PROCESS
@@ -172,7 +171,6 @@ def _validate_and_normalize_log_level(
     return log_level.upper()
 
 
-# NOTE: this object must be pickle-able
 @dataclass
 class ServerOptions:
     entrypoint_fnc: Callable[[JobContext], Awaitable[None]]
@@ -242,7 +240,7 @@ class ServerOptions:
     Can also be set via the ``LIVEKIT_LOG_LEVEL`` environment variable or
     the ``--log-level`` CLI argument (CLI takes highest precedence)."""
 
-    host: str = ""  # default to all interfaces
+    host: str = ""
     port: int | ServerEnvOption[int] = ServerEnvOption(dev_default=0, prod_default=8081)
     """Port for local HTTP server to listen on.
 
@@ -315,7 +313,7 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         ws_url: str | None = None,
         api_key: str | None = None,
         api_secret: str | None = None,
-        host: str = "",  # default to all interfaces
+        host: str = "",
         port: int | ServerEnvOption[int] = _default_port,
         http_proxy: NotGivenOr[str | None] = NOT_GIVEN,
         multiprocessing_context: Literal["spawn", "forkserver"] = (
@@ -332,8 +330,8 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         self._api_key = api_key or os.environ.get("LIVEKIT_API_KEY") or ""
         self._api_secret = api_secret or os.environ.get("LIVEKIT_API_SECRET") or ""
 
-        self._worker_token = os.environ.get("LIVEKIT_WORKER_TOKEN") or ""  # hosted agents
-        self._deployment = os.environ.get("LIVEKIT_AGENT_DEPLOYMENT") or ""  # hosted agents
+        self._worker_token = os.environ.get("LIVEKIT_WORKER_TOKEN") or ""
+        self._deployment = os.environ.get("LIVEKIT_AGENT_DEPLOYMENT") or ""
 
         self._host = host
         self._port = port
@@ -363,12 +361,10 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         self._server_type = ServerType.ROOM
         self._id = "unregistered"
 
-        # currently only one rtc_session
         self._entrypoint_fnc: Callable[[JobContext], Awaitable[None]] | None = None
         self._request_fnc: Callable[[JobRequest], Awaitable[None]] | None = None
         self._session_end_fnc: Callable[[JobContext], Awaitable[None]] | None = None
 
-        # worker cb
         self._setup_fnc: Callable[[JobProcess], Any] | None = setup_fnc
         self._load_fnc: Callable[[AgentServer], float] | Callable[[], float] | None = load_fnc
 
@@ -593,7 +589,7 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                     initialize_timeout=5 * 60,
                     close_timeout=5,
                     memory_warn_mb=2000,
-                    memory_limit_mb=0,  # no limit
+                    memory_limit_mb=0,
                     ping_interval=5,
                     ping_timeout=60,
                     high_ping_threshold=2.5,
@@ -627,7 +623,7 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                 self._host, ServerEnvOption.getvalue(self._port, devmode)
             )
             self._worker_load: float = 0.0
-            self._reserved_slots: int = 0  # jobs we said "available" to but not yet launched
+            self._reserved_slots: int = 0
 
             async def health_check(_: Any) -> web.Response:
                 if self._inference_executor and not self._inference_executor.is_alive():
@@ -883,10 +879,9 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             await self._update_worker_status()
 
             async def _drain() -> None:
-                # wait for in-flight availability tasks to finish launching their jobs
+
                 await asyncio.gather(*self._job_lifecycle_tasks, return_exceptions=True)
 
-                # then wait for the launched jobs to complete
                 while True:
                     procs = [p for p in self._proc_pool.processes if p.running_job]
                     if not procs:
@@ -895,7 +890,7 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                         await proc.join()
 
             if timeout:
-                await asyncio.wait_for(_drain(), timeout)  # raises asyncio.TimeoutError on timeout
+                await asyncio.wait_for(_drain(), timeout)
             else:
                 await _drain()
 
@@ -911,7 +906,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
     ) -> None:
         async with self._lock:
             if token is not None:
-                # read identity from token if provided
                 agent_identity = api.TokenVerifier().verify(token, verify_signature=False).identity
 
             if agent_identity is None:
@@ -925,8 +919,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                     raise ValueError("room_info is None but fake_job is False")
 
                 room_info = models.Room(sid=utils.shortuuid("SRM_"), name=room)
-
-            # room_info = await self._api.room.create_room(api.CreateRoomRequest(name=room))
 
             job = agent.Job(
                 id=utils.shortuuid("job-") if not fake_job else utils.shortuuid("mock-job-"),
@@ -975,8 +967,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             if self._load_task is not None:
                 await utils.aio.cancel_and_wait(self._load_task)
 
-            # let in-flight availability tasks finish launching their jobs
-            # before closing the proc pool (they accepted before shutdown)
             await asyncio.gather(*self._job_lifecycle_tasks, return_exceptions=True)
 
             await self._proc_pool.aclose()
@@ -992,7 +982,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
             await self._api.aclose()  # type: ignore
 
-            # await asyncio.sleep(0.25)  # see https://github.com/aio-libs/aiohttp/issues/1925
             self._msg_chan.close()
 
             if not self._close_future.done():
@@ -1049,7 +1038,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
                 retry_count = 0
 
-                # register the worker
                 req = agent.WorkerMessage()
                 req.register.type = self._server_type.value
                 req.register.allowed_permissions.CopyFrom(
@@ -1068,7 +1056,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                 req.register.version = __version__
                 await ws.send_bytes(req.SerializeToString())
 
-                # wait for the register response before running this connection
                 first_msg_b = await ws.receive_bytes()
                 msg = agent.ServerMessage()
                 msg.ParseFromString(first_msg_b)
@@ -1079,7 +1066,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                 self._handle_register(msg.register)
                 self._connecting = False
 
-                # report all active jobs to the server after registration
                 await self._report_active_jobs()
 
                 await self._run_ws(ws)
@@ -1195,7 +1181,7 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             )
 
             # take the original jwt token and extend it while keeping all the same data that was generated  # noqa: E501
-            # by the SFU for the original join token.
+
             original_token = aj.token
             decoded = jwt.decode(original_token, self._api_secret, algorithms=["HS256"])
             decoded["exp"] = int(datetime.datetime.now(datetime.timezone.utc).timestamp()) + 3600
@@ -1273,8 +1259,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         if math.isinf(load_threshold):
             return True
 
-        # Use effective load so we don't over-accept when two requests arrive
-        # before either job appears in active_jobs.
         return self._get_effective_load() < load_threshold
 
     async def _answer_availability(self, msg: agent.AvailabilityRequest) -> None:
@@ -1289,8 +1273,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             await self._queue_msg(availability_resp)
             return
 
-        # Reserve a slot immediately so concurrent availability checks see updated
-        # load before the user's request_fnc runs or calls accept().
         self._reserved_slots += 1
         answered = False
 
@@ -1324,7 +1306,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             self._pending_assignments[job_req.id] = wait_assignment
             await self._queue_msg(availability_resp)
 
-            # the job was accepted by the user, wait for the server assignment
             try:
                 await asyncio.wait_for(wait_assignment, ASSIGNMENT_TIMEOUT)
             except asyncio.TimeoutError:
@@ -1413,7 +1394,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
     async def _handle_termination(self, msg: agent.JobTermination) -> None:
         proc = self._proc_pool.get_by_job_id(msg.job_id)
         if not proc:
-            # safe to ignore
             return
         await proc.aclose()
 
@@ -1437,7 +1417,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
         update = agent.UpdateWorkerStatus(load=self._worker_load, status=status, job_count=job_cnt)
 
-        # only log if status has changed
         if self._previous_status != status and not self._draining:
             self._previous_status = status
             extra = {"load": effective_load, "threshold": load_threshold}

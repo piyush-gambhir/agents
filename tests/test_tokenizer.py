@@ -7,7 +7,7 @@ from livekit.plugins import nltk
 
 pytestmark = pytest.mark.unit
 
-# Download the punkt tokenizer, will only download if not already present
+
 nltk.NltkPlugin().download_files()
 
 TEXT = (
@@ -60,7 +60,6 @@ EXPECTED_MIN_20_NLTK = [
     "A short sentence. A longer sentence that is longer than the previous sentence.",
     "f(x) = x * 2.54 + 42.",
     "Hey! Hi! Hello! This is a sentence.",
-    # nltk does not support character-based languages like CJK
     "这是一个中文句子。これは日本語の文章です。你好！LiveKit是一个直播音频和视频应用程序和服务的平台。\nThis is a sentence contains   consecutive spaces.",  # noqa: E501
 ]
 
@@ -97,7 +96,7 @@ def test_sent_tokenizer(tokenizer: tokenize.SentenceTokenizer, expected: list[st
 
 @pytest.mark.parametrize("tokenizer, expected", SENT_TOKENIZERS)
 async def test_streamed_sent_tokenizer(tokenizer: tokenize.SentenceTokenizer, expected: list[str]):
-    # divide text by chunks of arbitrary length (1-4)
+
     pattern = [1, 2, 4]
     text = TEXT
     chunks = []
@@ -147,7 +146,7 @@ def test_word_tokenizer(tokenizer: tokenize.WordTokenizer):
 
 @pytest.mark.parametrize("tokenizer", WORD_TOKENIZERS)
 async def test_streamed_word_tokenizer(tokenizer: tokenize.WordTokenizer):
-    # divide text by chunks of arbitrary length (1-4)
+
     pattern = [1, 2, 4]
     text = WORDS_TEXT
     chunks = []
@@ -225,7 +224,7 @@ def test_punct_word_tokenizer(tokenizer: tokenize.WordTokenizer):
 
 @pytest.mark.parametrize("tokenizer", WORD_PUNCT_TOKENIZERS)
 async def test_streamed_punct_word_tokenizer(tokenizer: tokenize.WordTokenizer):
-    # divide text by chunks of arbitrary length (1-4)
+
     pattern = [1, 2, 4]
     text = WORDS_PUNCT_TEXT
     chunks = []
@@ -346,23 +345,23 @@ PARAGRAPH_TEST_CASES = [
         [("Paragraph with leading and trailing spaces.", 4, 47)],
     ),
     (
-        "Para 1.\n\n\n\nPara 2.",  # Multiple newlines between paragraphs
+        "Para 1.\n\n\n\nPara 2.",
         [("Para 1.", 0, 7), ("Para 2.", 11, 18)],
     ),
     (
-        "Para 1.\n \n \nPara 2.",  # Newlines with spaces between paragraphs
+        "Para 1.\n \n \nPara 2.",
         [("Para 1.", 0, 7), ("Para 2.", 12, 19)],
     ),
     (
-        "",  # Empty string
+        "",
         [],
     ),
     (
-        "\n\n\n",  # Only newlines
+        "\n\n\n",
         [],
     ),
     (
-        "Line 1\nLine 2\nLine 3",  # Single paragraph with newlines
+        "Line 1\nLine 2\nLine 3",
         [("Line 1\nLine 2\nLine 3", 0, 20)],
     ),
 ]

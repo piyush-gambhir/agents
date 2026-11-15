@@ -103,7 +103,6 @@ class AvatarSession(BaseAvatarSession):
             .with_identity(self._avatar_participant_identity)
             .with_name(self._avatar_participant_name)
             .with_grants(api.VideoGrants(room_join=True, room=room.name))
-            # allow the avatar agent to publish audio and video on behalf of your local agent
             .with_attributes({ATTRIBUTE_PUBLISH_ON_BEHALF: local_participant_identity})
             .to_jwt()
         )

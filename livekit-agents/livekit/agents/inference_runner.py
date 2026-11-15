@@ -12,7 +12,6 @@ class _RunnerMeta(Protocol):
 _RunnersDict = dict[str, type["_InferenceRunner"]]
 
 
-# kept private until we stabilize the API (only used for EOU today)
 class _InferenceRunner(ABC, _RunnerMeta):
     registered_runners: _RunnersDict = {}
 

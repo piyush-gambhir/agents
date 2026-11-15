@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -47,13 +47,11 @@ from livekit.agents.voice.io import TimedString
 from .log import logger
 from .models import TTSEncoding, TTSModels
 
-# by default, use 22.05kHz sample rate at 32kbps
-# in our testing,  reduce TTFB by about ~110ms
 _DefaultEncoding: TTSEncoding = "mp3_22050_32"
 
 
 def _sample_rate_from_format(output_format: TTSEncoding) -> int:
-    split = output_format.split("_")  # e.g: mp3_44100
+    split = output_format.split("_")
     return int(split[1])
 
 
@@ -70,10 +68,10 @@ def _encoding_to_mimetype(encoding: TTSEncoding) -> str:
 
 @dataclass
 class VoiceSettings:
-    stability: float  # [0.0 - 1.0]
-    similarity_boost: float  # [0.0 - 1.0]
-    style: NotGivenOr[float] = NOT_GIVEN  # [0.0 - 1.0]
-    speed: NotGivenOr[float] = NOT_GIVEN  # [0.8 - 1.2]
+    stability: float
+    similarity_boost: float
+    style: NotGivenOr[float] = NOT_GIVEN
+    speed: NotGivenOr[float] = NOT_GIVEN
     use_speaker_boost: NotGivenOr[bool] = NOT_GIVEN
 
 
@@ -114,7 +112,7 @@ class TTS(tts.TTS):
         word_tokenizer: NotGivenOr[tokenize.WordTokenizer | tokenize.SentenceTokenizer] = NOT_GIVEN,
         enable_ssml_parsing: bool = False,
         enable_logging: bool = True,
-        chunk_length_schedule: NotGivenOr[list[int]] = NOT_GIVEN,  # range is [50, 500]
+        chunk_length_schedule: NotGivenOr[list[int]] = NOT_GIVEN,
         http_session: aiohttp.ClientSession | None = None,
         language: NotGivenOr[str] = NOT_GIVEN,
         sync_alignment: bool = True,
@@ -451,7 +449,7 @@ class SynthesizeStream(tts.SynthesizeStream):
             xml_content: list[str] = []
             async for data in sent_tokenizer_stream:
                 text = data.token
-                # send xml tags fully formed
+
                 xml_start_tokens = ["<phoneme", "<break"]
                 xml_end_tokens = ["</phoneme>", "/>"]
 
@@ -472,8 +470,8 @@ class SynthesizeStream(tts.SynthesizeStream):
                     else:
                         continue
 
-                formatted_text = f"{text} "  # must always end with a space
-                # when using auto_mode, we are flushing for each sentence
+                formatted_text = f"{text} "
+
                 connection.send_content(
                     _SynthesizeContent(self._context_id, formatted_text, flush=flush_on_chunk)
                 )
@@ -683,7 +681,6 @@ class _Connection:
                     if msg.flush:
                         pkt["flush"] = True
 
-                    # start timeout timer for this context
                     self._start_timeout_timer(msg.context_id)
 
                     await self._ws.send_json(pkt)
@@ -714,7 +711,6 @@ class _Connection:
                     aiohttp.WSMsgType.CLOSING,
                 ):
                     if not self._closed and len(self._context_data) > 0:
-                        # websocket will be closed after all contexts are closed
                         raise APIStatusError(
                             "ElevenLabs websocket connection closed unexpectedly",
                             status_code=self._ws.close_code or -1,
@@ -726,8 +722,7 @@ class _Connection:
                     continue
 
                 data = json.loads(msg.data)
-                # ElevenLabs currently sends snake_case context IDs on the websocket API,
-                # while older responses and some examples use camelCase.
+
                 context_id = data.get("contextId") or data.get("context_id")
                 ctx = self._context_data.get(context_id) if context_id is not None else None
 
@@ -758,7 +753,6 @@ class _Connection:
                 emitter = ctx.emitter
                 stream = ctx.stream
 
-                # ensure alignment
                 alignment = (
                     data.get("normalizedAlignment")
                     if self.preferred_alignment == "normalized"
@@ -770,7 +764,7 @@ class _Connection:
                     durs = alignment.get("charDurationsMs") or alignment.get("charsDurationsMs")
                     if starts and durs and len(chars) == len(durs) and len(starts) == len(durs):
                         stream._text_buffer += "".join(chars)
-                        # in case item in chars has multiple characters
+
                         for char, start, dur in zip(chars, starts, durs, strict=False):
                             if len(char) > 1:
                                 stream._start_times_ms += [start] * (len(char) - 1)
@@ -854,8 +848,6 @@ class _Connection:
 
         for ctx in self._context_data.values():
             if not ctx.waiter.done():
-                # do not cancel the future as it becomes difficult to catch
-                # all pending tasks will be aborted with an exception
                 ctx.waiter.set_exception(APIStatusError("connection closed"))
             if ctx.timeout_timer:
                 ctx.timeout_timer.cancel()
@@ -930,7 +922,7 @@ def _to_timed_words(
     if not text:
         return [], ""
 
-    timestamps = start_times_ms + [start_times_ms[-1] + durations_ms[-1]]  # N+1
+    timestamps = start_times_ms + [start_times_ms[-1] + durations_ms[-1]]
 
     words = split_words(text, ignore_punctuation=False, split_character=True)
     if not words:
@@ -939,7 +931,7 @@ def _to_timed_words(
     timed_words = []
     _, start_indices, _ = zip(*words, strict=False)
     end = 0
-    # we don't know if the last word is complete, always leave it as remaining
+
     for start, end in zip(start_indices[:-1], start_indices[1:], strict=False):
         start_t = timestamps[start] / 1000
         end_t = timestamps[end] / 1000

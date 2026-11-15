@@ -10,5 +10,5 @@ MODEL_ID_WITH_EMBEDDINGS_AND_EXPERIMENTAL_CONTROLS = "sonic-2-2025-03-07"
 USER_AGENT = f"LiveKit Agents Cartesia Plugin/{__version__}"
 REQUEST_ID_HEADER = "X-Request-Id"
 
-# LiveKit uses this encoding for all audio
+
 AUDIO_ENCODING: Literal["pcm_s16le"] = "pcm_s16le"

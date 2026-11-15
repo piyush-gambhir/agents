@@ -30,18 +30,16 @@ async def entrypoint(ctx: JobContext) -> None:
         framerate=30,
     )
 
-    # Access raw paint frames and audio data
     @page.on("paint")
     def on_paint(data: PaintData):
-        # data.frame is an rtc.VideoFrame (BGRA), data.width/height, data.dirty_rects
+
         pass
 
     @page.on("audio")
     def on_audio(data: AudioData):
-        # data.frame is an rtc.AudioFrame, data.pts is the presentation timestamp
+
         pass
 
-    # Use Playwright for programmatic browser control (CDP)
     async with browser_ctx.playwright() as browser:
         pages = browser.contexts[0].pages
         if pages:

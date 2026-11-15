@@ -11,10 +11,6 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-## This example demonstrates a more complex application that allows the user to
-## toggle audio and text input/output on the fly.
-## The example makes use of LiveKit's RPC system to exchange messages between the
-## client and the server.
 
 server = AgentServer()
 

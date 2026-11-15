@@ -66,11 +66,6 @@ STTs: list[Callable[[], stt.STT]] = [
         azure,
         aws,
         sarvam,
-        # rtzr,
-        # TODO: only Business account allowed outside South Korea
-        # clova,
-        # TODO: https://github.com/spi-tch/spitch-python/issues/162
-        # spitch,
     ]
 ] + [
     pytest.param(lambda: cartesia.STT(model="ink-whisper"), id="livekit.plugins.cartesia._legacy"),
@@ -123,11 +118,10 @@ async def batch_recognize(
 @pytest.mark.usefixtures("job_process")
 @pytest.mark.parametrize("stt_factory", STTs)
 async def test_recognize(stt_factory: Callable[[], stt.STT], request):
-    plugin_id = request.node.callspec.id.split("-")[0]  # e.g., "livekit.plugins.deepgram"
+    plugin_id = request.node.callspec.id.split("-")[0]
     sample_rate = SAMPLE_RATE
     frames, transcript, duration = await make_test_speech(sample_rate=sample_rate)
 
-    # TODO: differentiate missing key vs other errors
     try:
         stt_instance = stt_factory()
     except ValueError as e:
@@ -142,7 +136,6 @@ async def test_recognize(stt_factory: Callable[[], stt.STT], request):
             try:
                 start_time = time.time()
 
-                # WARN: Sarvam only supports <30s audio chunks
                 if stt.provider == "Sarvam" and duration > 30:
                     frames, *_ = await make_test_speech(
                         sample_rate=sample_rate, chunk_duration_ms=5 * 1000
@@ -156,7 +149,6 @@ async def test_recognize(stt_factory: Callable[[], stt.STT], request):
 
                 print(f"WER: {wer(text, transcript)} for {stt} in {dt:.2f}s")
 
-                # Relaxed WER threshold for some providers
                 if stt.provider in {
                     "Gladia",
                 }:
@@ -180,7 +172,6 @@ async def test_stream(stt_factory: Callable[[], STT], request):
     plugin_id = request.node.callspec.id.split("-")[0]
     frames, transcript, _ = await make_test_speech(chunk_duration_ms=10, sample_rate=sample_rate)
 
-    # TODO: differentiate missing key vs other errors
     try:
         stt_instance: STT = stt_factory()
     except ValueError as e:
@@ -207,7 +198,7 @@ async def test_stream(stt_factory: Callable[[], STT], request):
 
                 async def _stream_output(stream: RecognizeStream, state: dict = state):
                     text = ""
-                    # make sure the events are sent in the right order
+
                     recv_start, recv_end = False, True
                     start_time = time.time()
                     got_final_transcript = False
@@ -226,13 +217,13 @@ async def test_stream(stt_factory: Callable[[], STT], request):
                             if text != "":
                                 text += " "
                             text += event.alternatives[0].text
-                            # ensure STT is tagging languages correctly
+
                             language = event.alternatives[0].language
                             if stt.provider not in {"FireworksAI", "RTZR", "livekit"}:
                                 assert language is not None
                                 assert language.lower().startswith("en")
                             got_final_transcript = True
-                            # Some providers don't send END_OF_SPEECH, break after final transcript
+
                             if state["closing"]:
                                 break
 
@@ -245,9 +236,9 @@ async def test_stream(stt_factory: Callable[[], STT], request):
 
                     dt = time.time() - start_time
                     print(f"WER: {wer(text, transcript)} for streamed {stt} in {dt:.2f}s")
-                    # Relaxed WER threshold for some providers
+
                     if stt.provider in {
-                        "RTZR",  # RTZR defaults to Korean
+                        "RTZR",
                         "Deepgram",
                         "Sarvam",
                         "FireworksAI",

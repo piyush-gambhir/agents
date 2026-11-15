@@ -24,17 +24,11 @@ load_dotenv()
 logger = logging.getLogger("translator")
 
 
-# This example demonstrates how to transcribe audio and translate the text to another language.
-# The user transcript is translated and spoken by the agent.
-
-
 class Translator(Agent):
     def __init__(self):
         super().__init__(
             instructions="not-needed",
             stt=openai.STT(),
-            # you can also enable TTS to speak the translation
-            # tts=openai.TTS(),
         )
         self._http_session = utils.http_context.http_session()
 
@@ -58,12 +52,10 @@ class Translator(Agent):
         user_transcript = new_message.text_content
         logger.info(f" -> {user_transcript}")
 
-        # translate the user's text
         translated = await self.translate_text(user_transcript)
         if translated:
             self.session.say(translated)
 
-        # skip agent LLM response
         raise StopResponse()
 
 
@@ -75,7 +67,6 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
     session = AgentSession(
-        # vad is only needed for non-streaming STT implementations
         vad=silero.VAD.load(),
     )
 
@@ -88,9 +79,6 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             text_output=room_io.TextOutputOptions(sync_transcription=False),
-            # audio track is created to emit legacy transcription events for agent
-            # you can disable audio output if you are using the text stream
-            # https://docs.livekit.io/agents/build/text/
             audio_output=True,
         ),
     )

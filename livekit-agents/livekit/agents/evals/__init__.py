@@ -18,15 +18,12 @@ from .judge import (
 )
 
 __all__ = [
-    # Evaluation
     "EvaluationResult",
     "Evaluator",
     "JudgeGroup",
-    # Core types
     "Judge",
     "JudgmentResult",
     "Verdict",
-    # Built-in judges
     "accuracy_judge",
     "coherence_judge",
     "conciseness_judge",

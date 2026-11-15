@@ -24,7 +24,6 @@ class PreConnectAudioHandler:
         self._timeout = timeout
         self._max_delta_s = max_delta_s
 
-        # track id -> buffer
         self._buffers: dict[str, asyncio.Future[_PreConnectAudioBuffer]] = {}
         self._tasks: set[asyncio.Task[Any]] = set()
 
@@ -62,7 +61,7 @@ class PreConnectAudioHandler:
         await utils.aio.cancel_and_wait(*self._tasks)
 
     async def wait_for_data(self, track_id: str) -> list[rtc.AudioFrame]:
-        # the handler is enabled by default, log a warning only if the buffer is actually used
+
         if self._registered_after_connect:
             logger.warning(
                 "pre-connect audio handler registered after room connection, "
@@ -98,7 +97,6 @@ class PreConnectAudioHandler:
             return
 
         if (fut := self._buffers.get(track_id)) and fut.done():
-            # reset the buffer if it's already set
             self._buffers.pop(track_id)
         self._buffers.setdefault(track_id, asyncio.Future())
         fut = self._buffers[track_id]
@@ -116,10 +114,8 @@ class PreConnectAudioHandler:
 
             duration: float = 0
 
-            # check if we need to decode opus
             is_opus = False
             if reader.info.mime_type:
-                # JS may send "mime_type" as "audio/opus" or "audio/webm;codecs=opus"
                 is_opus = (
                     reader.info.mime_type == "audio/opus" or "codecs=opus" in reader.info.mime_type
                 )
@@ -138,14 +134,12 @@ class PreConnectAudioHandler:
                     buf.frames.append(decoded_frame)
                     duration += decoded_frame.duration
             else:
-                # Process raw audio directly through AudioByteStream
                 audio_stream = utils.audio.AudioByteStream(sample_rate, num_channels)
                 async for chunk in reader:
                     for frame in audio_stream.push(chunk):
                         buf.frames.append(frame)
                         duration += frame.duration
 
-                # Get any remaining frames
                 for frame in audio_stream.flush():
                     buf.frames.append(frame)
                     duration += frame.duration

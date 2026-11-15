@@ -38,7 +38,7 @@ class SessionReport:
 
         for event in self.events:
             if event.type == "metrics_collected":
-                continue  # metrics are too noisy, Cloud is using the chat_history as the source of thruth
+                continue
 
             events_dict.append(event.model_dump())
 

@@ -6,7 +6,6 @@ from .events import SonicEventBuilder
 logger = logging.getLogger("livekit.plugins.aws")
 
 
-# https://jakob-bagterp.github.io/colorist-for-python/ansi-escape-codes/standard-16-colors/#bright-colors
 class AnsiColors:
     RED = "\033[91m"
     GREEN = "\033[92m"

@@ -18,9 +18,6 @@ import json
 import sys
 from unittest.mock import MagicMock
 
-# ---------------------------------------------------------------------------
-# Stub out the optional AWS Smithy/Bedrock SDK not installed in the base venv.
-# ---------------------------------------------------------------------------
 _AWS_STUBS = [
     "aws_sdk_bedrock_runtime",
     "aws_sdk_bedrock_runtime.client",
@@ -83,14 +80,13 @@ class TestHandleToolOutputContentEvent:
         session = _make_fake_session(captured)
 
         inner_json = json.dumps({"input": {"date": "2026-04-10"}})
-        doubly_encoded = json.dumps(inner_json)  # wrap in another JSON string
+        doubly_encoded = json.dumps(inner_json)
         event = _make_tool_event(doubly_encoded)
 
         await RealtimeSession._handle_tool_output_content_event(session, event)
 
         assert len(captured) == 1
-        # arguments must be the inner JSON string (one layer removed), not the
-        # doubly-encoded original
+
         assert captured[0].arguments == inner_json
 
     async def test_single_encoded_string_passed_through(self):
@@ -140,13 +136,13 @@ class TestHandleToolOutputContentEvent:
         captured = []
         session = _make_fake_session(captured)
 
-        string_arg = json.dumps("hello")  # produces '"hello"'
+        string_arg = json.dumps("hello")
         event = _make_tool_event(string_arg)
 
         await RealtimeSession._handle_tool_output_content_event(session, event)
 
         assert len(captured) == 1
-        # Must be the original '"hello"', not the bare string 'hello'
+
         assert captured[0].arguments == string_arg
 
     async def test_tool_name_and_id_forwarded_correctly(self):

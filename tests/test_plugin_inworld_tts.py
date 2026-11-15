@@ -80,8 +80,7 @@ async def _capture_first_ws_create_packet(opts) -> dict:
         ws_url="wss://example.invalid/",
         authorization="Basic test",
     )
-    # Skip real connect(); inject the fake websocket directly so `_send_loop`
-    # reads from it as if a connection had been established.
+
     conn._ws = fake_ws
 
     await conn._outbound_queue.put(_CreateContextMsg(context_id="ctx-1", opts=opts))
@@ -144,8 +143,7 @@ def _patch_session_to_capture_post(tts, captured: dict[str, object]) -> None:
 
     class _FakePostCM:
         async def __aenter__(self):
-            # Raise after capture so ChunkedStream._run unwinds quickly; the
-            # body has already been recorded by _fake_post.
+
             raise RuntimeError("short-circuit")
 
         async def __aexit__(self, *exc):

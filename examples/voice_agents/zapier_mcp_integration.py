@@ -32,7 +32,6 @@ class Assistant(Agent):
             stt=inference.STT("deepgram/nova-3"),
             llm=inference.LLM("google/gemini-2.5-flash"),
             tts=inference.TTS("rime/arcana"),
-            # use LiveKit's transformer-based turn detector
             turn_detection=MultilingualModel(),
         )
 
@@ -57,15 +56,12 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # Wait for the first participant to connect
     participant = await ctx.wait_for_participant()
     logger.info(f"starting voice assistant for participant {participant.identity}")
 
-    # Log metrics as they are collected
     def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
         metrics.log_metrics(agent_metrics)
 
-    # Get MCP server URL from environment variable
     zapier_mcp_server = os.getenv("ZAPIER_MCP_SERVER")
     mcp_servers = []
     if zapier_mcp_server:
@@ -79,12 +75,10 @@ async def entrypoint(ctx: JobContext):
         # minimum delay for endpointing, used when turn detector believes the user is done with their turn  # noqa: E501
         min_endpointing_delay=0.5,
         # maximum delay for endpointing, used when turn detector does not believe the user is done with their turn  # noqa: E501
-        # this should be increased more if latency is an issue
         max_endpointing_delay=5.0,
         mcp_servers=mcp_servers,
     )
 
-    # Trigger the on_metrics_collected function when metrics are collected
     session.on("metrics_collected", on_metrics_collected)
 
     await session.start(

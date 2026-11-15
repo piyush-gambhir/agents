@@ -37,7 +37,7 @@ async def test_streaming_recognize_response_to_speech_data_01():
 
 
 async def test_streaming_recognize_response_to_speech_data_02():
-    # final result should be returned regardless of confidence
+
     srr = cloud_speech_v2.StreamingRecognizeResponse(
         results=[
             cloud_speech_v2.StreamingRecognitionResult(

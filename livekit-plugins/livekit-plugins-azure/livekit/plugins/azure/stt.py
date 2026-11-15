@@ -1,12 +1,12 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -43,18 +43,16 @@ from .log import logger
 class STTOptions:
     speech_key: NotGivenOr[str]
     speech_region: NotGivenOr[str]
-    # see https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-container-stt?tabs=container#use-the-container
+
     speech_host: NotGivenOr[str]
-    # for using Microsoft Entra auth (see https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-configure-azure-ad-auth?tabs=portal&pivots=programming-language-python)
+
     speech_auth_token: NotGivenOr[str]
     sample_rate: int
     num_channels: int
     segmentation_silence_timeout_ms: NotGivenOr[int]
     segmentation_max_time_ms: NotGivenOr[int]
     segmentation_strategy: NotGivenOr[str]
-    language: list[
-        str
-    ]  # see https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=stt
+    language: list[str]
     speech_endpoint: NotGivenOr[str] = NOT_GIVEN
     profanity: NotGivenOr[speechsdk.enums.ProfanityOption] = NOT_GIVEN
     phrase_list: NotGivenOr[list[str] | None] = NOT_GIVEN
@@ -324,7 +322,6 @@ class SpeechStream(stt.SpeechStream):
         if not detected_lg and self._opts.language:
             detected_lg = LanguageCode(self._opts.language[0])
 
-        # TODO: @chenghao-mou get confidence from NBest with `detailed` output format
         final_data = stt.SpeechData(
             language=detected_lg,
             confidence=1.0,
@@ -417,7 +414,7 @@ class SpeechStream(stt.SpeechStream):
 def _create_speech_recognizer(
     *, config: STTOptions, stream: speechsdk.audio.AudioInputStream
 ) -> speechsdk.SpeechRecognizer:
-    # let the SpeechConfig constructor to validate the arguments
+
     speech_config = speechsdk.SpeechConfig(
         subscription=config.speech_key if is_given(config.speech_key) else None,
         region=config.speech_region if is_given(config.speech_region) else None,
@@ -444,7 +441,6 @@ def _create_speech_recognizer(
     if is_given(config.profanity):
         speech_config.set_profanity(config.profanity)
 
-    # Set punctuation behavior if specified
     if config.explicit_punctuation:
         speech_config.set_service_property(
             "punctuation", "explicit", speechsdk.ServicePropertyChannel.UriQueryParameter
@@ -456,8 +452,6 @@ def _create_speech_recognizer(
 
     kwargs: dict[str, Any] = {}
     if config.language and len(config.language) > 1:
-        # Enable Continuous LanguageCode ID for multiple languages
-        # This ensures language detection updates throughout the streaming session
         speech_config.set_property(
             speechsdk.PropertyId.SpeechServiceConnection_LanguageIdMode, "Continuous"
         )
@@ -472,7 +466,6 @@ def _create_speech_recognizer(
         speech_config=speech_config, audio_config=audio_config, **kwargs
     )
 
-    # Add phrase list for keyword boosting if provided
     if is_given(config.phrase_list) and isinstance(config.phrase_list, list) and config.phrase_list:
         phrase_list_grammar = speechsdk.PhraseListGrammar.from_recognizer(speech_recognizer)
         for phrase in config.phrase_list:

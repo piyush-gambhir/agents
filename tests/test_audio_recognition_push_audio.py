@@ -51,7 +51,6 @@ def test_push_audio_substitutes_stt_frame_only_on_stt_path() -> None:
 
     ar.push_audio(real, stt_frame=silence)
 
-    # STT pipeline sees the substitute (silence), nothing else does.
     ar._stt_pipeline.audio_ch.send_nowait.assert_called_once_with(silence)
     ar._vad_ch.send_nowait.assert_called_once_with(real)
     ar._session.amd.push_audio.assert_called_once_with(real)
@@ -65,7 +64,6 @@ def test_push_audio_skips_optional_consumers_when_unset() -> None:
     ar._interruption_ch = None  # type: ignore[attr-defined]
     ar._session.amd = None
 
-    # Should not raise even when every downstream consumer is absent.
     ar.push_audio(_make_frame())
 
 

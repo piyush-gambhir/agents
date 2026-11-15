@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 def record_exception(span: trace.Span, exception: Exception) -> None:
     span.record_exception(exception)
     span.set_status(trace.Status(trace.StatusCode.ERROR, str(exception)))
-    # set the exception in span attributes in case the exception event is not rendered
+
     span.set_attributes(
         {
             trace_types.ATTR_EXCEPTION_TYPE: exception.__class__.__name__,
@@ -44,10 +44,7 @@ def record_realtime_metrics(span: trace.Span, ev: RealtimeModelMetrics) -> None:
     }
     if ev.ttft != -1:
         completion_start_time = ev.timestamp + ev.ttft
-        # This attribute is used by LangFuse to calculate "time to first token metric"
-        # in same way we calculate in livekit (ttft = first_token_timestamp - ev.timestamp)
-        # So providing it explicitly here so we can graph and search by ttft.
-        # Must be provided as UTC isoformat string for LangFuse
+
         completion_start_time_utc = datetime.fromtimestamp(
             completion_start_time, tz=timezone.utc
         ).isoformat()
@@ -57,7 +54,6 @@ def record_realtime_metrics(span: trace.Span, ev: RealtimeModelMetrics) -> None:
     else:
         from .traces import tracer
 
-        # create a dedicated child span for orphaned metrics
         with trace.use_span(span):
             with tracer.start_span("realtime_metrics") as child:
                 child.set_attributes(attrs)

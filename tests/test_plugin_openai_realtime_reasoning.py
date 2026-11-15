@@ -22,7 +22,6 @@ def _session_update_payload(model: RealtimeModel) -> dict[str, Any]:
         session: dict[str, Any] = event["session"]
         return session
     finally:
-        # the model never connects in these tests; just tear the session down
         sess._msg_ch.close()
 
 
@@ -50,7 +49,7 @@ async def test_reasoning_absent_by_default() -> None:
 
 
 async def test_reasoning_in_azure_legacy_session_update() -> None:
-    # legacy Azure (api_version set) converts to the flat session format
+
     model = RealtimeModel(
         azure_deployment="gpt-realtime-2",
         api_key="sk-test",

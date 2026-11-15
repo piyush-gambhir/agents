@@ -30,13 +30,8 @@ class LogQueueListener:
         if self._thread is None:
             return
 
-        # join the thread first so it can drain all remaining log records
-        # from the socket buffer before we close the duplex. The sending end
-        # must already be closed (child process exited) so recv_bytes() will
-        # see EOF after the buffer is consumed and the thread will exit.
         self._thread.join(timeout=2)
         if self._thread.is_alive():
-            # fallback: force-close the duplex to unblock the thread
             self._duplex.close()
             self._thread.join()
         else:
@@ -92,23 +87,19 @@ class LogQueueHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
-            # Check if Python is shutting down
             if sys.is_finalizing():
                 return
 
-            # from https://github.com/python/cpython/blob/91b7f2e7f6593acefda4fa860250dd87d6f849bf/Lib/logging/handlers.py#L1453
             msg = self.format(record)
             record = copy.copy(record)
             record.message = msg
             record.msg = msg
             record.args = None
             record.exc_info = None
-            # pass formatted exc_text since stack trace is not pickleable
+
             record.exc_text = record.exc_text
             record.stack_info = None
 
-            # https://websockets.readthedocs.io/en/stable/topics/logging.html#logging-to-json
-            # webosckets library add "websocket" attribute to log records, which is not pickleable
             if hasattr(record, "websocket"):
                 record.websocket = None
 

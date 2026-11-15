@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 _meter = metrics_api.get_meter("livekit-agents")
 
-# -- Per-turn latency histograms --
+
 _turn_e2e_latency = _meter.create_histogram(
     "lk.agents.turn.e2e_latency",
     unit="s",
@@ -51,7 +51,7 @@ _turn_on_user_turn_completed_delay = _meter.create_histogram(
     description="Time to invoke the on_user_turn_completed callback",
 )
 
-# -- Usage counters --
+
 _llm_input_tokens = _meter.create_counter("lk.agents.usage.llm_input_tokens")
 _llm_input_cached_tokens = _meter.create_counter("lk.agents.usage.llm_input_cached_tokens")
 _llm_output_tokens = _meter.create_counter("lk.agents.usage.llm_output_tokens")
@@ -74,7 +74,7 @@ _stt_audio_duration = _meter.create_counter(
 )
 _interruption_num_requests = _meter.create_counter("lk.agents.usage.interruption_num_requests")
 
-# -- Connection metrics --
+
 _connection_acquire_time = _meter.create_histogram(
     "lk.agents.connection.acquire_time",
     unit="s",
@@ -175,7 +175,6 @@ def collect_usage(ev: AgentMetrics) -> None:
         if ev.num_requests:
             _interruption_num_requests.add(ev.num_requests, attributes=attrs)
 
-    # Connection timing
     if isinstance(ev, (STTMetrics, TTSMetrics, RealtimeModelMetrics)):
         if ev.acquire_time > 0:
             conn_attrs = _model_attrs(ev.metadata)

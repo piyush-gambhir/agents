@@ -93,7 +93,7 @@ class TestToolProxyToolset:
 
         assert len(ts.tools) == 2
         await ts._handle_search({"query": "weather"})
-        assert len(ts.tools) == 2  # still just search + call
+        assert len(ts.tools) == 2
 
     async def test_search_returns_full_schemas(self):
         """search_tools returns tool schemas with full JSON schema for parameters."""
@@ -112,7 +112,6 @@ class TestToolProxyToolset:
         names = [t["name"] for t in parsed]
         assert "weather_tool" in names
 
-        # Check schema has full JSON schema with types
         weather = next(t for t in parsed if t["name"] == "weather_tool")
         assert "Get weather for a city" in weather["description"]
         assert "parameters" in weather
@@ -223,7 +222,6 @@ class TestToolProxyToolset:
         error_msg = exc_info.value.message
         print(f"Missing arg error: {error_msg}")
 
-        # Error message should contain the missing field name and indicate it's required
         assert "city" in error_msg
         assert "type=missing" in error_msg
 
@@ -244,7 +242,6 @@ class TestToolProxyToolset:
         error_msg = exc_info.value.message
         print(f"Wrong type error: {error_msg}")
 
-        # Error message should contain the field name and indicate a type parsing issue
         assert "days" in error_msg
         assert "int_parsing" in error_msg
 
@@ -295,13 +292,11 @@ class TestToolProxyToolset:
         ts = ToolProxyToolset(id="proxy", tools=[OuterToolset()])
         await ts.setup()
 
-        # Search should find tools from nested toolsets
         result = await ts._handle_search({"query": "weather stock"})
         parsed = [json.loads(schema) for schema in result.split("\n")]
         names = [t["name"] for t in parsed]
         assert "weather_tool" in names or "stock_tool" in names
 
-        # call_tool should work for nested tools
         result = await ts._handle_call(
             _mock_ctx(), {"name": "weather_tool", "parameters": {"city": "Paris"}}
         )

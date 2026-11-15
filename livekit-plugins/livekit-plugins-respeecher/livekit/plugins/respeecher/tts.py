@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -175,7 +175,7 @@ class TTS(tts.TTS):
 
     async def _connect_ws(self, timeout: float) -> aiohttp.ClientWebSocketResponse:
         session = self._ensure_session()
-        # WebSocket protocol does not support custom headers, using query parameter
+
         ws_url = self._opts.base_url.replace("https://", "wss://").replace("http://", "ws://")
         if not ws_url.startswith("wss://"):
             logger.error("Insecure WebSocket connection detected, wss:// required")
@@ -202,11 +202,7 @@ class TTS(tts.TTS):
         """Update TTS options"""
         if is_given(model) and model != self._opts.model:
             self._opts.model = model
-            # The model is baked into the WebSocket URL, so existing pooled
-            # connections can't serve the new model. Retire the old pool
-            # (letting any in-flight stream finish using its connection) and
-            # route new requests through a fresh pool. The retired pool is
-            # closed during aclose().
+
             self._retired_pools.append(self._pool)
             self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
                 connect_cb=self._connect_ws,
@@ -287,7 +283,6 @@ class ChunkedStream(tts.ChunkedStream):
                     request_id=utils.shortuuid(),
                     sample_rate=self._opts.sample_rate,
                     num_channels=1,
-                    # /tts/bytes returns WAV-wrapped PCM; the WebSocket stream returns raw PCM.
                     mime_type="audio/wav",
                 )
 

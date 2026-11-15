@@ -102,7 +102,7 @@ class RealtimeSession(openai.realtime.RealtimeSession):
         await super()._run_ws(ws_conn)
 
     async def aclose(self) -> None:
-        # emit session duration metrics before closing (for xAI's per-minute billing)
+
         if self._session_connected_at > 0:
             session_duration = time.time() - self._session_connected_at
             metrics = RealtimeModelMetrics(
@@ -122,7 +122,6 @@ class RealtimeSession(openai.realtime.RealtimeSession):
     def _create_tools_update_event(self, tools: list[llm.Tool]) -> dict[str, Any]:
         event = super()._create_tools_update_event(tools)
 
-        # inject supported Toolset
         xai_tools: list[dict[str, Any]] = []
         for tool in tools:
             if isinstance(tool, XAITool):
@@ -139,8 +138,7 @@ class RealtimeSession(openai.realtime.RealtimeSession):
         super()._handle_function_call(item)
 
     def _handle_conversion_item_added(self, event: ConversationItemAdded) -> None:
-        # xAI's `conversation.item.added` event always has the previous_item_id as None
-        # replace it with the last item in the remote chat context
+
         if event.previous_item_id is None:
             event.previous_item_id = (
                 self._remote_chat_ctx._tail.item.id if self._remote_chat_ctx._tail else None
@@ -149,8 +147,7 @@ class RealtimeSession(openai.realtime.RealtimeSession):
         super()._handle_conversion_item_added(event)
 
     def _handle_conversion_item_deleted(self, event: ConversationItemDeletedEvent) -> None:
-        # xAI's `conversation.item.deleted` event has item_id empty
-        # assuming it's the first item in the deletion list
+
         if event.item_id == "" and self._item_delete_future:
             event.item_id = list(self._item_delete_future.keys())[0]
 
@@ -159,8 +156,7 @@ class RealtimeSession(openai.realtime.RealtimeSession):
     def _handle_conversion_item_input_audio_transcription_completed(
         self, event: ConversationItemInputAudioTranscriptionCompletedEvent
     ) -> None:
-        # audio transcription is included when the item is added
-        # clear the content before appending the transcript to avoid duplicates
+
         if remote_item := self._remote_chat_ctx.get(event.item_id):
             if (
                 remote_item.item.type == "message"

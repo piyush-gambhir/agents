@@ -43,7 +43,7 @@ class WeatherAgent(Agent):
             async with session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    # response from the function call is returned to the LLM
+
                     weather_data = {
                         "temperature": data["current"]["temperature_2m"],
                         "temperature_unit": "Celsius",
@@ -59,7 +59,7 @@ server = AgentServer()
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    # each log entry will include these fields
+
     ctx.log_context_fields = {
         "room_name": ctx.room.name,
         "user_id": "your user_id",

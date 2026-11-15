@@ -13,7 +13,7 @@ logger = logging.getLogger("drive-thru.order")
 
 
 def order_uid() -> str:
-    alphabet = string.ascii_uppercase + string.digits  # b36
+    alphabet = string.ascii_uppercase + string.digits
     return "O_" + "".join(secrets.choice(alphabet) for _ in range(6))
 
 
@@ -49,9 +49,7 @@ OrderedItem = Annotated[OrderedCombo | OrderedHappy | OrderedRegular, Field(disc
 @dataclass
 class OrderState:
     items: dict[str, OrderedItem]
-    # Optional async hook fired after every add/remove. The agent
-    # wires this up to push the current cart to the playground UI;
-    # exceptions inside the hook never block the order mutation.
+
     on_change: Callable[[], Awaitable[None]] | None = field(default=None)
 
     async def _fire(self) -> None:

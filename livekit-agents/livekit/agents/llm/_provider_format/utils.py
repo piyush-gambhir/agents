@@ -70,13 +70,10 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
     Returns:
         A list of _ChatItemGroup objects representing the grouped conversation
     """
-    item_groups: dict[str, _ChatItemGroup] = OrderedDict()  # item_id to group of items
+    item_groups: dict[str, _ChatItemGroup] = OrderedDict()
     tool_outputs: list[llm.FunctionCallOutput] = []
     for item in chat_ctx.items:
         if (item.type == "message" and item.role == "assistant") or item.type == "function_call":
-            # only assistant messages and function calls can be grouped
-            # For function calls, use group_id if available (for parallel function calls),
-            # otherwise fall back to id-based grouping for backwards compatibility
             if item.type == "function_call" and item.group_id:
                 group_id = item.group_id
             else:
@@ -90,7 +87,6 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
         else:
             item_groups[item.id] = _ChatItemGroup().add(item)
 
-    # add tool outputs to their corresponding groups
     call_id_to_group: dict[str, _ChatItemGroup] = {
         tool_call.call_id: group for group in item_groups.values() for tool_call in group.tool_calls
     }
@@ -104,7 +100,6 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
 
         call_id_to_group[tool_output.call_id].add(tool_output)
 
-    # validate that each group and remove invalid tool calls and tool outputs
     for group in item_groups.values():
         group.remove_invalid_tool_calls()
 

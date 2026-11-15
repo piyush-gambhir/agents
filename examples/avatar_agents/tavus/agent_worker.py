@@ -26,7 +26,6 @@ async def entrypoint(ctx: JobContext):
     tavus_avatar = tavus.AvatarSession(persona_id=persona_id, replica_id=replica_id)
     await tavus_avatar.start(session, room=ctx.room)
 
-    # start the agent, it will join the room and wait for the avatar to join
     await session.start(
         agent=Agent(instructions="Talk to me!"),
         room=ctx.room,

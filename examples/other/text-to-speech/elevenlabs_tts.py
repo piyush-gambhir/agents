@@ -24,7 +24,7 @@ def _text_to_chunks(text: str) -> list[str]:
             chunks.append(text[i : i + size])
             i += size
 
-    chunks.append(text[i:])  # remaining
+    chunks.append(text[i:])
     return chunks
 
 
@@ -43,9 +43,7 @@ server = AgentServer()
 
 @server.rtc_session()
 async def entrypoint(job: JobContext):
-    # Using LiveKit inference for TTS, to use elevenlabs with your own API key, you can change it to:
-    # from livekit.plugins import elevenlabs
-    # tts_11labs = elevenlabs.TTS(model="elevenlabs/eleven_multilingual_v2", voice_id="hpp4J3VqNfWAUOO0d1Us")
+
     tts_11labs = inference.TTS("elevenlabs/eleven_multilingual_v2", voice="hpp4J3VqNfWAUOO0d1Us")
 
     source = rtc.AudioSource(tts_11labs.sample_rate, tts_11labs.num_channels)
@@ -70,7 +68,7 @@ async def entrypoint(job: JobContext):
     streamed_text = "Bonjour, ceci est un autre example avec la méthode utilisant un websocket."
     logger.info('Streaming text "%s"', streamed_text)
     stream = tts_11labs.stream()
-    for chunk in _text_to_chunks(streamed_text):  # split into chunk just for the demonstration
+    for chunk in _text_to_chunks(streamed_text):
         stream.push_text(chunk)
 
     stream.flush()

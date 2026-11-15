@@ -55,7 +55,7 @@ REALTIME_MODELS: list = [
     pytest.param(_xai_model, id="xai", marks=_skip_xai),
 ]
 
-# xAI doesn't support conversation.item.delete or sequential response.create
+
 OPENAI_AND_AZURE: list = [
     pytest.param(_openai_model, id="openai"),
     pytest.param(_azure_model, id="azure"),
@@ -69,11 +69,8 @@ async def rt_session(request, job_process):
     session = model.session()
     yield session
     await session.aclose()
-    # small delay between tests to avoid rate limiting (especially xAI)
+
     await asyncio.sleep(0.5)
-
-
-# -- Helpers --
 
 
 async def _collect_text(gen_ev: llm.GenerationCreatedEvent) -> str:
@@ -95,7 +92,7 @@ def _load_wav(name: str) -> list[rtc.AudioFrame]:
     with wave.open(str(TESTS_DIR / f"{name}.wav"), "rb") as wf:
         sr, ch = wf.getframerate(), wf.getnchannels()
         raw = wf.readframes(wf.getnframes())
-    chunk = sr // 50  # 20ms
+    chunk = sr // 50
     frames, off = [], 0
     while off + chunk <= len(raw) // (ch * 2):
         frames.append(
@@ -115,9 +112,6 @@ async def _push_speech(session: llm.RealtimeSession, wav_name: str = "hello_worl
         session.push_audio(frame)
         await asyncio.sleep(0.02)
     session.push_audio(_silence())
-
-
-# -- Basic generation --
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -158,9 +152,6 @@ async def test_multiple_sequential_replies(rt_session: llm.RealtimeSession):
         )
         text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
         assert len(text) > 0, f"Reply {i} was empty"
-
-
-# -- Audio I/O --
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -245,14 +236,10 @@ async def test_input_audio_transcription(rt_session: llm.RealtimeSession):
     assert "weather" in full or "paris" in full
 
 
-# -- Chat context --
-
-
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
 async def test_update_chat_ctx(rt_session: llm.RealtimeSession):
     chat_ctx = llm.ChatContext()
-    # TODO(long): fix assistant message for openai azure
-    # chat_ctx.add_message(role="assistant", content="What is your favorite number?")
+
     chat_ctx.add_message(role="user", content="My favorite number is seven")
     await asyncio.wait_for(rt_session.update_chat_ctx(chat_ctx), timeout=10)
 
@@ -276,7 +263,6 @@ async def test_chat_ctx_populated_after_reply(rt_session: llm.RealtimeSession):
     assert any(item.type == "message" and item.role == "assistant" for item in ctx.items)
 
 
-# xAI doesn't support conversation.item.delete
 @pytest.mark.parametrize("rt_session", OPENAI_AND_AZURE, indirect=True)
 async def test_update_chat_ctx_replaces_history(rt_session: llm.RealtimeSession):
     ctx1 = llm.ChatContext()
@@ -293,9 +279,6 @@ async def test_update_chat_ctx_replaces_history(rt_session: llm.RealtimeSession)
     )
     text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
     assert "blue" in text.lower()
-
-
-# -- Interruption --
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -327,7 +310,6 @@ async def test_generate_reply_cancellation(rt_session: llm.RealtimeSession):
     fut.cancel()
     assert fut.cancelled()
 
-    # Brief wait so the response.cancel reaches the server before the next call.
     await asyncio.sleep(1.0)
 
     gen_ev = await asyncio.wait_for(
@@ -336,9 +318,6 @@ async def test_generate_reply_cancellation(rt_session: llm.RealtimeSession):
     )
     text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
     assert "pineapple" in text.lower()
-
-
-# -- Function tools --
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -401,9 +380,6 @@ async def test_function_tool_reply(rt_session: llm.RealtimeSession):
     assert "paris" in text.lower()
 
 
-# -- Session reuse across handoffs --
-
-
 @pytest.mark.parametrize(
     "model_factory",
     [
@@ -416,7 +392,6 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
     model = model_factory()
     loop = asyncio.get_event_loop()
 
-    # build a long chat context
     long_ctx = llm.ChatContext()
     for i in range(10):
         long_ctx.add_message(role="user", content=f"Tell me fact #{i + 1}")
@@ -425,7 +400,7 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
     new_instructions = "You are a math tutor. Answer in one sentence."
     question = "What is 2 + 2?"
 
-    timings: list[tuple[str, float, float]] = []  # (label, handoff_time, reply_time)
+    timings: list[tuple[str, float, float]] = []
 
     async def _run_trial(label: str, *, reuse: bool, chat_ctx: llm.ChatContext) -> None:
         if reuse:
@@ -437,19 +412,16 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
         try:
             t0 = loop.time()
 
-            # measure handoff
             await asyncio.wait_for(
                 session._update_session(instructions=new_instructions, chat_ctx=chat_ctx),
                 timeout=15,
             )
             handoff_time = loop.time() - t0
 
-            # measure first reply after handoff
             ctx = session.chat_ctx.copy()
             ctx.add_message(role="user", content=question)
             await asyncio.wait_for(session.update_chat_ctx(ctx), timeout=15)
 
-            # t1 = loop.time()
             gen = await asyncio.wait_for(session.generate_reply(), timeout=15)
             reply_time = loop.time() - t0
             text = await asyncio.wait_for(_collect_text(gen), timeout=15)
@@ -466,16 +438,12 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
     await _run_trial("fresh (copy ctx)", reuse=False, chat_ctx=long_ctx.copy())
     await _run_trial("fresh (empty ctx)", reuse=False, chat_ctx=llm.ChatContext())
 
-    # print timing table
     print("\n┌──────────────────────┬──────────────┬──────────────┐")
     print("│ Mode                 │ Handoff (s)  │ Reply (s)    │")
     print("├──────────────────────┼──────────────┼──────────────┤")
     for label, ht, rt in timings:
         print(f"│ {label:<20} │ {ht:>12.3f} │ {rt:>12.3f} │")
     print("└──────────────────────┴──────────────┴──────────────┘")
-
-
-# -- Remote item tracking --
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)

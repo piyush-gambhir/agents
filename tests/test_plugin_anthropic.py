@@ -60,7 +60,7 @@ class TestHttpxTimeoutCustom:
             api_key="sk-ant-test",
             http_client=httpx.AsyncClient(timeout=httpx.Timeout(1.0)),
         )
-        # timeout= argument should have no effect here
+
         llm = _make_llm(client=tight_client, timeout=httpx.Timeout(5.0, read=999.0))
         assert llm._client._client.timeout.read == 1.0
 

@@ -56,7 +56,6 @@ async def wait_for_agent(
     room.on("connection_state_changed", on_connection_state_changed)
 
     try:
-        # Check existing participants
         for p in room.remote_participants.values():
             if matches_agent(p):
                 return p
@@ -117,7 +116,6 @@ async def wait_for_participant_attribute(
     room.on("connection_state_changed", _on_connection_state_changed)
 
     try:
-        # defensive double check
         existing = room.remote_participants.get(identity)
         if existing is None:
             raise RuntimeError(f"participant {identity!r} is not in the room")

@@ -11,9 +11,6 @@ T_co = TypeVar("T_co", covariant=True)
 T_contra = TypeVar("T_contra", contravariant=True)
 
 
-# Based on asyncio.Queue, see https://github.com/python/cpython/blob/main/Lib/asyncio/queues.py
-
-
 class ChanClosed(Exception):
     pass
 
@@ -54,7 +51,7 @@ class Chan(Generic[T]):
     ) -> None:
         self._loop = loop or asyncio.get_event_loop()
         self._maxsize = max(maxsize, 0)
-        #        self._finished_ev = asyncio.Event()
+
         self._close_ev = asyncio.Event()
         self._closed = False
         self._gets: deque[asyncio.Future[T | None]] = deque()
@@ -125,8 +122,7 @@ class Chan(Generic[T]):
             else:
                 raise ChanEmpty
         item = self._queue.popleft()
-        #        if self.empty() and self._close_ev.is_set():
-        #            self._finished_ev.set()
+
         self._wakeup_next(self._puts)
         return item
 
@@ -145,15 +141,9 @@ class Chan(Generic[T]):
         while self._gets:
             self._wakeup_next(self._gets)
 
-    #        if self.empty():
-    #            self._finished_ev.set()
-
     @property
     def closed(self) -> bool:
         return self._closed
-
-    #    async def join(self) -> None:
-    #        await self._finished_ev.wait()
 
     def qsize(self) -> int:
         """the number of elements queued (unread) in the channel buffer"""

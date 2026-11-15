@@ -149,7 +149,6 @@ class JudgeGroup:
         from ..job import get_job_context
         from ..log import logger
 
-        # Run all judges concurrently
         async def run_judge(judge: Evaluator) -> tuple[str, JudgmentResult | BaseException]:
             try:
                 result = await judge.evaluate(
@@ -164,7 +163,6 @@ class JudgeGroup:
 
         results = await asyncio.gather(*[run_judge(j) for j in self._judges])
 
-        # Filter out failed judges
         judgments: dict[str, JudgmentResult] = {}
         for name, result in results:
             if isinstance(result, JudgmentResult):
@@ -181,11 +179,10 @@ class JudgeGroup:
                 else:
                     print(f"  [{name}] ERROR: {result}\n")
 
-        # Auto-tag if running within a job context
         try:
             ctx = get_job_context()
             ctx.tagger._evaluation(evaluation_result)
         except RuntimeError:
-            pass  # Not in a job context, skip tagging
+            pass
 
         return evaluation_result

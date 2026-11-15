@@ -173,8 +173,6 @@ class Serializable:
         function_state = state["function"]
         frame_state = state["frame"]
 
-        # Recreate the generator/coroutine by looking up the constructor
-        # and calling it with the same args/kwargs.
         key, filename, lineno, code_hash, args, kwargs = (
             function_state["key"],
             function_state["filename"],
@@ -201,7 +199,6 @@ class Serializable:
             else:
                 g = rfn.fn(*args, **kwargs)
 
-            # Restore the frame.
             ext.set_frame_ip(g, frame_state["ip"])
             ext.set_frame_sp(g, frame_state["sp"])
             for i, (is_null, obj) in enumerate(frame_state["stack"]):

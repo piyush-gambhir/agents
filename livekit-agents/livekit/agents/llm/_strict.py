@@ -16,19 +16,6 @@ def to_strict_json_schema(model: type[BaseModel] | TypeAdapter[Any]) -> dict[str
     return _ensure_strict_json_schema(schema, path=(), root=schema)
 
 
-# from https://platform.openai.com/docs/guides/function-calling?api-mode=responses&strict-mode=disabled#strict-mode
-# Strict mode
-# Setting strict to true will ensure function calls reliably adhere to the function schema,
-# instead of being best effort. We recommend always enabling strict mode.
-#
-# Under the hood, strict mode works by leveraging our structured outputs feature and therefore
-# introduces a couple requirements:
-#
-# additionalProperties must be set to false for each object in the parameters.
-# All fields in properties must be marked as required.
-# You can denote optional fields by adding null as a type option (see example below).
-
-
 def _ensure_strict_json_schema(
     json_schema: object,
     *,
@@ -59,8 +46,6 @@ def _ensure_strict_json_schema(
     if typ == "object" and "additionalProperties" not in json_schema:
         json_schema["additionalProperties"] = False
 
-    # object types
-    # { 'type': 'object', 'properties': { 'a':  {...} } }
     properties = json_schema.get("properties")
     if is_dict(properties) and properties:
         json_schema["required"] = list(properties.keys())
@@ -69,19 +54,10 @@ def _ensure_strict_json_schema(
             for key, prop_schema in properties.items()
         }
 
-    # arrays
-    # { 'type': 'array', 'items': {...} }
     items = json_schema.get("items")
     if is_dict(items):
         json_schema["items"] = _ensure_strict_json_schema(items, path=(*path, "items"), root=root)
 
-    # unions (anyOf / oneOf)
-    # Strip empty schema objects ({}) — they are JSON Schema's identity element
-    # for anyOf (match anything) and cause OpenAI strict mode to reject the schema.
-    # Common when Union[..., Any] or ForwardRef patterns produce bare {} entries.
-    # Also convert oneOf → anyOf because OpenAI strict mode does not permit oneOf.
-    # Pydantic emits oneOf for discriminated unions, but anyOf is semantically equivalent
-    # for the LLM's purposes and is accepted by the API.
     for union_key in ("anyOf", "oneOf"):
         variants = json_schema.get(union_key)
         if is_list(variants):
@@ -100,7 +76,6 @@ def _ensure_strict_json_schema(
             else:
                 json_schema.pop(union_key, None)
 
-    # intersections
     all_of = json_schema.get("allOf")
     if is_list(all_of):
         if len(all_of) == 1:
@@ -114,12 +89,9 @@ def _ensure_strict_json_schema(
                 for i, entry in enumerate(all_of)
             ]
 
-    # strict mode doesn't support default
     if "default" in json_schema:
         json_schema.pop("default", None)
 
-        # Treat any parameter with a default value as optional. If the parameter’s type doesn't
-        # support None, the default will be used instead.
         t = json_schema.get("type")
         if isinstance(t, str):
             json_schema["type"] = [t, "null"]
@@ -134,11 +106,6 @@ def _ensure_strict_json_schema(
     json_schema.pop("title", None)
     json_schema.pop("discriminator", None)
 
-    # we can't use `$ref`s if there are also other properties defined, e.g.
-    # `{"$ref": "...", "description": "my description"}`
-    #
-    # so we unravel the ref
-    # `{"type": "string", "description": "my description"}`
     ref = json_schema.get("$ref")
     if ref and has_more_than_n_keys(json_schema, 1):
         assert isinstance(ref, str), f"Received non-string $ref - {ref}"
@@ -149,18 +116,15 @@ def _ensure_strict_json_schema(
                 f"Expected `$ref: {ref}` to resolved to a dictionary but got {resolved}"
             )
 
-        # properties from the json schema take priority over the ones on the `$ref`
         json_schema.update({**resolved, **json_schema})
         json_schema.pop("$ref")
         # Since the schema expanded from `$ref` might not have `additionalProperties: false` applied,  # noqa: E501
         # we call `_ensure_strict_json_schema` again to fix the inlined schema and ensure it's valid.  # noqa: E501
         return _ensure_strict_json_schema(json_schema, path=path, root=root)
 
-    # simplify nullable unions (“anyOf” or “oneOf”)
     for union_key in ("anyOf", "oneOf"):
         variants = json_schema.get(union_key)
         if is_list(variants) and len(variants) == 2 and {"type": "null"} in variants:
-            # pick out the non-null branch
             non_null = next(
                 (item for item in variants if item != {"type": "null"}),
                 None,
@@ -201,8 +165,7 @@ def resolve_ref(*, root: dict[str, object], ref: str) -> object:
 
 
 def is_dict(obj: object) -> TypeGuard[dict[str, object]]:
-    # just pretend that we know there are only `str` keys
-    # as that check is not worth the performance cost
+
     return isinstance(obj, dict)
 
 

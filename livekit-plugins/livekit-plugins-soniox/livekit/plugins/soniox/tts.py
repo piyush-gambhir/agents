@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -45,7 +45,7 @@ DEFAULT_LANGUAGE = "en"
 DEFAULT_VOICE = "Maya"
 DEFAULT_AUDIO_FORMAT = "pcm_s16le"
 DEFAULT_SAMPLE_RATE = 24000
-KEEPALIVE_INTERVAL = 10  # seconds
+KEEPALIVE_INTERVAL = 10
 KEEPALIVE_MESSAGE = json.dumps({"keep_alive": True})
 
 
@@ -115,7 +115,6 @@ class TTS(tts.TTS):
         self._session = http_session
         self._streams = weakref.WeakSet[SynthesizeStream]()
 
-        # One persistent connection shared across streams (see _Connection).
         self.__current_connection: _Connection | None = None
         self.__conn_lock = asyncio.Lock()
 
@@ -143,8 +142,6 @@ class TTS(tts.TTS):
             if conn is not None and conn.is_current and not conn.closed:
                 return conn, 0.0, True
 
-            # Discard any stale connection reference so it can drain and close
-            # itself once any outstanding streams finish.
             if conn is not None and not conn.closed:
                 conn.mark_non_current()
 
@@ -199,7 +196,6 @@ class TTS(tts.TTS):
         try:
             asyncio.create_task(_task(), name="soniox-tts-prewarm")
         except RuntimeError:
-            # No running event loop (e.g. called outside async context) — skip.
             pass
 
     async def aclose(self) -> None:
@@ -343,8 +339,7 @@ class _StreamData:
     waiter: asyncio.Future[None]
     opts: _TTSOptions
     audio_ended: bool = False
-    # Client cancel and server abort produce identical `terminated` messages.
-    # This flag is how recv loop tells them apart.
+
     cancel_sent: bool = False
     config_sent: bool = False
 
@@ -426,12 +421,11 @@ class _Connection:
         if stream_id in self._streams:
             raise ValueError(f"stream_id {stream_id} already registered")
 
-        # Server starts a per-stream timeout on _StartConfig receipt; we queue it lazily in send_text.
         self._streams[stream_id] = _StreamData(emitter=emitter, waiter=waiter, opts=opts)
 
     def unregister_stream(self, stream_id: str) -> None:
         self._streams.pop(stream_id, None)
-        # If flagged non-current and idle, self-close.
+
         if not self._is_current and not self._streams and not self._closed:
             asyncio.create_task(self.aclose(), name="soniox-tts-conn-drain-close")
 
@@ -441,12 +435,10 @@ class _Connection:
 
         stream = self._streams[stream_id]
 
-        # Empty text would make the server hallucinate audio; handle the two cases locally.
         if not text:
             if not text_end:
                 return
             if not stream.config_sent:
-                # Server doesn't know about this stream; resolve locally.
                 if not stream.waiter.done():
                     stream.waiter.set_result(None)
                 self._streams.pop(stream_id, None)
@@ -464,7 +456,6 @@ class _Connection:
         if stream is None:
             return
         if not stream.config_sent:
-            # Server doesn't know about this stream; resolve locally.
             if not stream.waiter.done():
                 stream.waiter.set_result(None)
             self._streams.pop(stream_id, None)
@@ -535,7 +526,6 @@ class _Connection:
                 stream_id = resp.get("stream_id")
 
                 if stream_id is None:
-                    # Connection-level message (only errors are expected here).
                     if resp.get("error_code"):
                         logger.error(
                             f"Soniox TTS connection-level error: "
@@ -548,7 +538,6 @@ class _Connection:
                     logger.debug(f"Ignoring message for unknown stream {stream_id}")
                     continue
 
-                # Per-stream error.
                 if resp.get("error_code"):
                     logger.error(
                         f"Soniox TTS error: {resp.get('error_code')} - {resp.get('error_message')}",
@@ -556,9 +545,7 @@ class _Connection:
                     )
                     if not stream.waiter.done():
                         code: int = resp.get("error_code", 500)
-                        # 408/429 are transient (timeout, rate limit); 5xx is
-                        # server-side. Other 4xx (400/401/402) is config/auth
-                        # and retrying won't help.
+
                         retryable = code in (408, 429) or code >= 500
                         stream.waiter.set_exception(
                             APIStatusError(
@@ -576,17 +563,11 @@ class _Connection:
 
                 if resp.get("audio_end"):
                     stream.audio_ended = True
-                    # end_segment() is called from SynthesizeStream._run's finally
-                    # block (covers cancel/error paths too).
 
                 if resp.get("terminated"):
-                    # Don't clobber an exception already raised on the error_code path.
                     if not stream.waiter.done():
-                        # Server aborted on its own - no audio_end, no cancel from us.
                         server_error = not stream.audio_ended and not stream.cancel_sent
                         if server_error:
-                            # Raise so the framework retries, otherwise the
-                            # turn completes with no audio (silent muteness).
                             logger.warning(
                                 "Soniox TTS stream terminated without audio_end",
                                 extra={"stream_id": stream_id},
@@ -601,7 +582,6 @@ class _Connection:
                                 )
                             )
                         else:
-                            # Normal end: audio_end seen, or our own cancel landed.
                             stream.waiter.set_result(None)
                     self._streams.pop(stream_id, None)
         except Exception as e:
@@ -648,7 +628,6 @@ class _Connection:
             except Exception as e:
                 logger.debug(f"Error closing Soniox TTS WebSocket: {e}")
 
-        # Cancel all loops except the current task (avoid self-deadlock).
         current = asyncio.current_task()
         to_cancel = [
             t

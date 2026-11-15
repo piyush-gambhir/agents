@@ -160,9 +160,6 @@ class DriveThruAgent(Agent):
             available_sizes = list({item.size for item in drink_sizes if item.size})
             if drink_size not in available_sizes:
                 drink_size = None
-                # raise ToolError(
-                #     f"error: unknown size {drink_size} for {drink_id}. Available sizes: {', '.join(available_sizes)}."
-                # )
 
             if sauce_id and not find_items_by_id(sauce_items, sauce_id):
                 raise ToolError(f"error: the sauce {sauce_id} was not found")
@@ -284,7 +281,6 @@ class DriveThruAgent(Agent):
                 ),
             ],
             size: Annotated[
-                # models don't seem to understand `ItemSize | None`, adding the `null` inside the enum list as a workaround
                 Literal["S", "M", "L", "null"] | None,
                 Field(
                     description="Size of the item, if applicable (e.g., 'S', 'M', 'L'), otherwise 'null'. "
@@ -319,9 +315,6 @@ class DriveThruAgent(Agent):
 
             if size is not None and not available_sizes:
                 size = None
-                # raise ToolError(
-                #     f"error: size should not be specified for item {item_id} as it does not support sizing options."
-                # )
 
             if (size and available_sizes) and size not in available_sizes:
                 raise ToolError(
@@ -499,14 +492,6 @@ async def drive_thru_agent(ctx: JobContext) -> None:
         ),
     )
 
-    # Push the cart as markdown to the playground's cart view
-    # whenever it changes. Coalesced + serialized: rapid changes
-    # (e.g. batch-remove that pops items one at a time) collapse
-    # into a single trailing push of the *latest* cart state, so
-    # an empty-cart payload can't get reordered behind a stale
-    # mid-state push. Fire-and-forget at the call site — the
-    # function tool that mutated the order shouldn't block on the
-    # RPC round-trip.
     push_pending = False
     push_running = False
 

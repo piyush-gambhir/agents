@@ -16,7 +16,6 @@ from .tts import (
     TTSCapabilities,
 )
 
-# already a retry mechanism in TTS.synthesize, don't retry in stream adapter
 DEFAULT_STREAM_ADAPTER_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -84,7 +83,7 @@ class StreamAdapterWrapper(SynthesizeStream):
         self._wrapped_tts_conn_options = conn_options
 
     async def _metrics_monitor_task(self, event_aiter: AsyncIterable[SynthesizedAudio]) -> None:
-        pass  # do nothing
+        pass
 
     async def _run(self, output_emitter: AudioEmitter) -> None:
         sent_stream = self._tts._sentence_tokenizer.stream()

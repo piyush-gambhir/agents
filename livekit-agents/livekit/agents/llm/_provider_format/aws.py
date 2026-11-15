@@ -37,7 +37,6 @@ def to_chat_ctx(
         elif msg.type == "function_call_output":
             role = "user"
 
-        # if the effective role changed, finalize the previous turn.
         if role != current_role:
             if current_content and current_role is not None:
                 messages.append({"role": current_role, "content": current_content})
@@ -75,11 +74,9 @@ def to_chat_ctx(
                 }
             )
 
-    # Finalize the last message if there’s any content left
     if current_role is not None and current_content:
         messages.append({"role": current_role, "content": current_content})
 
-    # Ensure the message list starts with a "user" message
     if inject_dummy_user_message and (not messages or messages[0]["role"] != "user"):
         messages.insert(0, {"role": "user", "content": [{"text": "(empty)"}]})
 

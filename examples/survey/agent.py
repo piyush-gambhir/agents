@@ -326,7 +326,7 @@ class SurveyAgent(Agent):
 
         results = await task_group
         results = results.task_results
-        # TaskGroup returns a TaskGroupResult object. The task_results field holds a dictionary with Task IDs as the keys and the results as the values
+
         summary = self.chat_ctx.items[-1]
         evaluation = await evaluate_candidate(llm_model=self.session.llm, summary=summary)
         results["name"] = self.session.userdata.candidate_name

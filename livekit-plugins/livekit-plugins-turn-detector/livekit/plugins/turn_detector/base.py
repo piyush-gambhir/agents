@@ -75,7 +75,6 @@ class _EUORunnerBase(_InferenceRunner):
 
             content = self._normalize_text(msg["content"])
 
-            # need to combine adjacent turns together to match training data
             if last_msg and last_msg["role"] == msg["role"]:
                 last_msg["content"] += f" {content}"
             else:
@@ -90,7 +89,6 @@ class _EUORunnerBase(_InferenceRunner):
             ),
         )
 
-        # remove the EOU token from current utterance
         ix = convo_text.rfind("<|im_end|>")
         text = convo_text[:ix]
         return text
@@ -106,7 +104,7 @@ class _EUORunnerBase(_InferenceRunner):
                 )
 
         filt = _SuppressSpecific()
-        # filter this log since it conflicts with the console CLI (since it directly prints to stdout)
+
         logger.addFilter(filt)
         try:
             import onnxruntime as ort  # type: ignore
@@ -167,7 +165,7 @@ class _EUORunnerBase(_InferenceRunner):
             max_length=MAX_HISTORY_TOKENS,
             truncation=True,
         )
-        # run inference
+
         outputs = self._session.run(None, {"input_ids": inputs["input_ids"].astype("int64")})
         eou_probability = outputs[0].flatten()[-1]
         end_time = time.perf_counter()
@@ -183,7 +181,6 @@ class _EUORunnerBase(_InferenceRunner):
     def _download_files(cls) -> None:
         from transformers import AutoTokenizer
 
-        # ensure the tokenizer is downloaded
         AutoTokenizer.from_pretrained(HG_MODEL, revision=cls.model_revision())
         _download_from_hf_hub(
             HG_MODEL, ONNX_FILENAME, subfolder="onnx", revision=cls.model_revision()
@@ -203,10 +200,8 @@ class EOUPlugin(Plugin):
 class EOUModelBase(ABC):
     def __init__(
         self,
-        model_type: EOUModelType = "en",  # default to smaller, english-only model
+        model_type: EOUModelType = "en",
         inference_executor: InferenceExecutor | None = None,
-        # if set, overrides the per-language threshold tuned for accuracy.
-        # not recommended unless you're confident in the impact.
         unlikely_threshold: float | None = None,
         load_languages: bool = True,
     ) -> None:
@@ -240,17 +235,14 @@ class EOUModelBase(ABC):
         if language is None:
             return None
 
-        # try the full language code first
         lang_data = self._languages.get(language.iso)
 
-        # try the base language if the full language code is not found
         if lang_data is None:
             lang_data = self._languages.get(language.language)
 
         if not lang_data:
             return None
 
-        # if a custom threshold is provided, use it
         if self._unlikely_threshold is not None:
             return self._unlikely_threshold
         else:
@@ -259,7 +251,6 @@ class EOUModelBase(ABC):
     async def supports_language(self, language: LanguageCode | None) -> bool:
         return await self.unlikely_threshold(language) is not None
 
-    # our EOU model inference should be fast, 3 seconds is more than enough
     async def predict_end_of_turn(
         self,
         chat_ctx: llm.ChatContext,

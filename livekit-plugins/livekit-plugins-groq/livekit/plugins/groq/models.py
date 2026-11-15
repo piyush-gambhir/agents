@@ -1,7 +1,5 @@
 from typing import Literal
 
-# listing production models from https://console.groq.com/docs/models
-
 STTModels = Literal[
     "whisper-large-v3",
     "whisper-large-v3-turbo",
@@ -23,14 +21,12 @@ TTSModels = Literal[
 ]
 
 TTSVoices = Literal[
-    # english voices
     "autumn",
     "diana",
     "hannah",
     "austin",
     "daniel",
     "troy",
-    # arabic voices
     "fahad",
     "sultan",
     "lulwa",

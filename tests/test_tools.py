@@ -235,7 +235,7 @@ class TestToolContext:
         assert provider2 in all_tools
 
     def test_toolset_with_regular_tools(self):
-        toolset = MockToolset1()  # contains mock_tool_1, mock_tool_2
+        toolset = MockToolset1()
         ctx = ToolContext([toolset, mock_tool_3])
 
         all_tools = ctx.flatten()
@@ -245,22 +245,20 @@ class TestToolContext:
         assert len(ctx.function_tools) == 3
         assert toolset in ctx.toolsets
 
-        # copy should preserve toolsets
         ctx_copy = ctx.copy()
         assert ctx == ctx_copy
         assert toolset in ctx_copy.toolsets
 
     def test_toolset_same_instance_dedup(self):
-        # same instance appearing in multiple places is allowed (deduplication)
-        toolset = MockToolset1()  # contains mock_tool_1, mock_tool_2
-        ToolContext([toolset, mock_tool_1])  # same mock_tool_1 instance, no conflict
+
+        toolset = MockToolset1()
+        ToolContext([toolset, mock_tool_1])
         ToolContext([mock_tool_1, toolset])
-        ToolContext([MockToolset1(), MockToolset2()])  # same mock_tool_2 instance
+        ToolContext([MockToolset1(), MockToolset2()])
 
     def test_toolset_duplicate_name_conflict(self):
-        toolset = MockToolset1()  # contains mock_tool_1, mock_tool_2
+        toolset = MockToolset1()
 
-        # different instances with the same name should raise
         @function_tool
         async def mock_tool_1() -> str:
             """Duplicate name, different instance"""
@@ -272,17 +270,14 @@ class TestToolContext:
     def test_toolset_equality(self):
         toolset = MockToolset1()
 
-        # same toolset instance -> equal
         ctx1 = ToolContext([toolset, mock_tool_3])
-        ctx2 = ToolContext([mock_tool_3, toolset])  # different order
+        ctx2 = ToolContext([mock_tool_3, toolset])
         assert ctx1 == ctx2
 
-        # different toolset instances -> not equal
         ctx3 = ToolContext([MockToolset1()])
         ctx4 = ToolContext([MockToolset1()])
         assert ctx3 != ctx4
 
-        # toolset vs expanded tools -> not equal
         ctx5 = ToolContext([toolset])
         ctx6 = ToolContext([mock_tool_1, mock_tool_2])
         assert ctx5 != ctx6
@@ -349,9 +344,7 @@ class TestToolExecution:
         }
 
     def test_field_constraints_preserved(self):
-        # Field(...) constraints (ge/le/pattern/...) live in FieldInfo.metadata,
-        # not its attributes; they must survive the signature -> pydantic model
-        # conversion so the model both advertises and enforces them.
+
         @function_tool
         async def book(count: Annotated[int, Field(ge=1, le=10, description="how many")]) -> str:
             """Book a thing."""
@@ -363,7 +356,7 @@ class TestToolExecution:
         assert prop["maximum"] == 10
         assert prop["description"] == "how many"
 
-        model(count=5)  # within bounds
+        model(count=5)
         for bad in (0, 11):
             with pytest.raises(ValidationError):
                 model(count=bad)
@@ -438,13 +431,12 @@ class TestToolExecution:
     def test_repairs_malformed_json_arguments(self):
         """LLMs occasionally emit syntactically invalid JSON for tool calls.
         We should recover via json_repair instead of giving up immediately."""
-        # Missing closing brace.
+
         args, kwargs = prepare_function_arguments(
             fnc=mock_tool_1, json_arguments='{"arg1": "hi", "opt_arg2": "yo"'
         )
         assert args == ("hi", "yo")
 
-        # Unquoted-style payload (json_repair handles loose forms).
         args, kwargs = prepare_function_arguments(fnc=mock_tool_1, json_arguments="{arg1: 'hi'}")
         assert args == ("hi", None)
 
@@ -464,10 +456,6 @@ class TestToolExecution:
         async def remove_order_item(order_id: list[str]) -> str:
             return ",".join(order_id)
 
-        # Real failing payload captured from a Gemma 4 deployment. The model
-        # tried to emit `{"order_id": ["O_WAAB70"]}` but `<|"|"` template
-        # tokens leaked around the value, breaking the JSON (the string is
-        # never properly closed before `]}`).
         leaked = '{"order_id": ["<|\\"|\\"O_WAAB70<|\\"|\\"]}'
 
         args, kwargs = prepare_function_arguments(fnc=remove_order_item, json_arguments=leaked)
@@ -485,7 +473,7 @@ class TestToolExecution:
         from livekit.agents.llm.utils import parse_function_arguments
 
         assert parse_function_arguments('{"a": 1, "b": [2, 3]}') == {"a": 1, "b": [2, 3]}
-        # Empty/None payloads normalize to {}.
+
         assert parse_function_arguments("{}") == {}
         assert parse_function_arguments("null") == {}
 
@@ -496,8 +484,7 @@ class TestToolExecution:
 
         with pytest.raises(ValueError, match="expected dict"):
             parse_function_arguments("[1, 2, 3]")
-        # Bare JSON strings hit the Nova-Sonic double-encoded unwrap path,
-        # which raises a more specific error.
+
         with pytest.raises(ValueError, match="non-JSON string"):
             parse_function_arguments('"just a string"')
 
@@ -531,7 +518,6 @@ class TestToolExecution:
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is False
 
-        # Whatever ended up in fnc_call.arguments must decode to the same dict.
         assert json.loads(result.fnc_call.arguments) == {"arg1": "hello", "opt_arg2": "world"}
 
     @pytest.mark.asyncio
@@ -560,9 +546,6 @@ class TestToolExecution:
         assert result.fnc_call_out.is_error is False
         assert result.fnc_call_out.output == "O_WAAB70"
 
-        # The arguments stored on the FunctionCall should now be valid JSON
-        # that re-serializes cleanly to the repaired payload — so subsequent
-        # LLM turns don't choke on broken syntax in the history.
         assert result.fnc_call.arguments != raw_broken
         parsed = json.loads(result.fnc_call.arguments)
         assert parsed == {"order_id": ["O_WAAB70"]}
@@ -581,8 +564,7 @@ class TestToolExecution:
             return str(arg1)
 
         tool_ctx = ToolContext([take_int])
-        # malformed JSON that json_repair can fix, but the value is the wrong
-        # type for pydantic validation (string where int is required)
+
         raw_broken = '{arg1: "not_an_int"}'
         tool_call = FunctionToolCall(
             name="take_int", arguments=raw_broken, call_id="call-validate-fail"
@@ -590,11 +572,9 @@ class TestToolExecution:
 
         result = await execute_function_call(tool_call, tool_ctx)
 
-        # Validation failed
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is True
 
-        # But fnc_call.arguments was canonicalized despite the validation error
         assert result.fnc_call.arguments != raw_broken
         parsed = json.loads(result.fnc_call.arguments)
         assert parsed == {"arg1": "not_an_int"}
@@ -761,7 +741,7 @@ class TestEmptySchemaStripping:
         """When stripping {} leaves a single variant, anyOf should be unwrapped."""
         schema = to_strict_json_schema(_OpenEnumModel)
         pref = schema["properties"]["preference"]
-        # After stripping {}, the union should be simplified (no single-element anyOf)
+
         any_of = pref.get("anyOf")
         if any_of is not None:
             assert len(any_of) != 1, (
@@ -782,7 +762,7 @@ class TestExecuteFunctionCallValidationErrors:
         tool_ctx = ToolContext([mock_tool_1])
         tool_call = FunctionToolCall(
             name="mock_tool_1",
-            arguments="{}",  # missing required 'arg1'
+            arguments="{}",
             call_id="test-call-1",
         )
 
@@ -790,8 +770,7 @@ class TestExecuteFunctionCallValidationErrors:
 
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is True
-        # The error message should contain details about what went wrong,
-        # NOT the generic "An internal error occurred"
+
         assert "An internal error occurred" not in result.fnc_call_out.output
         assert "arg1" in result.fnc_call_out.output
 
@@ -805,7 +784,7 @@ class TestExecuteFunctionCallValidationErrors:
         tool_ctx = ToolContext([mock_tool_2])
         tool_call = FunctionToolCall(
             name="mock_tool_2",
-            arguments='{"arg1": 12345}',  # should be a MockOption string, not int
+            arguments='{"arg1": 12345}',
             call_id="test-call-2",
         )
 
@@ -851,7 +830,7 @@ class TestExecuteFunctionCallValidationErrors:
 
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is True
-        # Should contain error details, not generic message
+
         assert "An internal error occurred" not in result.fnc_call_out.output
 
 
@@ -903,14 +882,14 @@ class TestConfirmDuplicateSchema:
     def test_legacy_schema_has_confirm_param(self):
         params = build_legacy_openai_schema(self._confirm_tool)["function"]["parameters"]
         assert "lk_agents_confirm_duplicate" in params["properties"]
-        # legacy: not in required, has a default
+
         assert "lk_agents_confirm_duplicate" not in params.get("required", [])
         assert params["properties"]["lk_agents_confirm_duplicate"]["default"] is False
 
     def test_strict_schema_has_confirm_param(self):
         params = build_strict_openai_schema(self._confirm_tool)["function"]["parameters"]
         assert "lk_agents_confirm_duplicate" in params["properties"]
-        # strict: in required, nullable type for optionality
+
         assert "lk_agents_confirm_duplicate" in params["required"]
         prop_type = params["properties"]["lk_agents_confirm_duplicate"]["type"]
         assert "null" in prop_type and "boolean" in prop_type
@@ -928,13 +907,13 @@ class TestConfirmDuplicateSchema:
 
     @pytest.mark.asyncio
     async def test_direct_call_with_typed_args(self):
-        # Wrapper preserves direct invocation with the original signature.
+
         result = await self._confirm_tool(origin="NYC", destination="Tokyo")
         assert result == {"origin": "NYC", "destination": "Tokyo"}
 
     @pytest.mark.asyncio
     async def test_wrapper_drops_confirm_kwarg(self):
-        # The wrapper pops lk_agents_confirm_duplicate before calling the user fn.
+
         result = await self._confirm_tool(
             origin="NYC", destination="Tokyo", lk_agents_confirm_duplicate=True
         )
@@ -950,7 +929,6 @@ class TestAsyncToolOptions:
             _resolve_async_tool_options,
         )
 
-        # None → all defaults
         resolved = _resolve_async_tool_options(None)
         assert resolved == _ASYNC_TOOL_OPTIONS_DEFAULTS
 
@@ -962,7 +940,7 @@ class TestAsyncToolOptions:
 
         resolved = _resolve_async_tool_options({"update_template": "custom-update"})
         assert resolved["update_template"] == "custom-update"
-        # other keys retain the module default
+
         assert (
             resolved["duplicate_reject_template"]
             == _ASYNC_TOOL_OPTIONS_DEFAULTS["duplicate_reject_template"]
@@ -977,12 +955,12 @@ class TestAsyncToolOptions:
 
         executor = _ToolExecutor(async_tool_options={"duplicate_reject_template": "rejected!"})
         assert executor._tool_options["duplicate_reject_template"] == "rejected!"
-        # unspecified key falls back to default, NOT to anything else
+
         assert "{function_name}" in executor._tool_options["update_template"]
 
     @staticmethod
     def _mock_scope(session_update: str = "session", agent_update: str | None = None):
-        # minimal stand-ins for what AsyncToolset._attach_activity reads from
+
         from livekit.agents.types import NOT_GIVEN
         from livekit.agents.voice.tool_executor import _resolve_async_tool_options
 
@@ -1017,8 +995,7 @@ class TestAsyncToolOptions:
         ts = AsyncToolset(id="t", tools=[mock_tool_1])
         session, activity = self._mock_scope(agent_update="agent")
         ts._attach_activity(activity=activity, session=session)
-        # whole-value override: only `update_template` was given on agent, the rest fall
-        # back to module defaults (NOT to session options)
+
         assert ts._executor._tool_options["update_template"] == "agent"
 
     def test_toolset_inherits_session_when_no_agent_no_override(self):
@@ -1030,8 +1007,7 @@ class TestAsyncToolOptions:
         assert ts._executor._tool_options["update_template"] == "session"
 
     def test_session_scoped_toolset_skips_agent(self):
-        # _attach_activity(activity=None) marks the toolset as session-scoped;
-        # agent options are ignored even if present.
+
         from livekit.agents.llm.async_toolset import AsyncToolset
 
         ts = AsyncToolset(id="t", tools=[mock_tool_1])
@@ -1048,9 +1024,8 @@ class TestAsyncToolOptions:
         default = _ToolExecutor()
         mapping = _build_executor_map(toolsets=[ts], default=default)
 
-        # tool inside AsyncToolset routes to that toolset's executor
         assert mapping["mock_tool_1"] is ts._executor
-        # tools not in the map fall back to default at the call site
+
         assert mapping.get("not_in_map") is None
 
     def test_build_executor_map_nested_async_toolset_wins(self):
@@ -1061,26 +1036,22 @@ class TestAsyncToolOptions:
         inner = AsyncToolset(id="inner", tools=[mock_tool_2])
         outer_async = AsyncToolset(id="outer", tools=[mock_tool_1, inner])
 
-        # routing keeps inner's executor for inner's tools, outer's for outer's
         mapping = _build_executor_map(toolsets=[outer_async], default=_ToolExecutor())
         assert mapping["mock_tool_1"] is outer_async._executor
         assert mapping["mock_tool_2"] is inner._executor
 
-        # plain Toolset doesn't change executor; its tools route to the surrounding default
         plain = Toolset(id="plain", tools=[mock_tool_3])
         default = _ToolExecutor()
         mapping2 = _build_executor_map(toolsets=[plain], default=default)
         assert mapping2["mock_tool_3"] is default
 
     def test_session_stores_resolved_options(self):
-        # session-level options are resolved and stored at __init__; the actual
-        # wiring onto toolset executors happens later at activity start (so
-        # toolsets added after session.__init__ are picked up).
+
         from livekit.agents.voice.agent_session import AgentSession
 
         session = AgentSession(tool_handling={"async_options": {"update_template": "from-session"}})
         assert session._async_tool_options["update_template"] == "from-session"
-        # other keys fall back to defaults, not to anything else
+
         assert "{function_name}" in session._async_tool_options["duplicate_reject_template"]
 
     def test_agent_stores_raw_options(self):
@@ -1093,9 +1064,6 @@ class TestAsyncToolOptions:
         )
         assert is_given(agent._async_tool_options)
         assert agent._async_tool_options["update_template"] == "from-agent"
-
-
-# --- helpers for executor / RunContext tests ----------------------------------
 
 
 def _make_run_context(
@@ -1340,7 +1308,7 @@ class TestCheckDuplicate:
                 "tool_x", on_duplicate="confirm", confirm_duplicate=False
             )
             assert isinstance(result, str) and "confirm duplicate" in result.lower()
-            # with confirm=True, the policy lets the new call through
+
             assert (
                 await executor._check_duplicate(
                     "tool_x", on_duplicate="confirm", confirm_duplicate=True
@@ -1380,7 +1348,7 @@ class TestCheckDuplicate:
                 await executor._check_duplicate(
                     "tool_x", on_duplicate="replace", confirm_duplicate=None
                 )
-            assert not t.cancelled()  # the running tool was left alone
+            assert not t.cancelled()
         finally:
             await _cleanup_fakes(t)
 
@@ -1399,7 +1367,7 @@ class TestCheckDuplicate:
                 executor._check_duplicate("tool_x", on_duplicate="reject", confirm_duplicate=None)
             )
             await _asyncio.sleep(0)
-            assert not pending.done()  # blocked on the lock
+            assert not pending.done()
             executor._duplicate_check_lock.release()
             result = await pending
             assert isinstance(result, str) and "already running" in result
@@ -1418,7 +1386,6 @@ class TestCancelAll:
         cancellable = _register_fake(executor, "c", "tool_c", allow_cancellation=True)
         non_cancellable = _register_fake(executor, "nc", "tool_nc", allow_cancellation=False)
         try:
-            # drain cancels the cancellable but awaits the non-cancellable
             import asyncio as _asyncio
 
             drain_task = _asyncio.create_task(executor.drain())
@@ -1457,7 +1424,7 @@ class TestCancelAll:
 
         executor = _ToolExecutor()
         t = _register_fake(executor, "a", "tool_x", allow_cancellation=False)
-        # cancel_task reads from the module-level registry, keyed by session
+
         run_ctx = executor._running_tasks["a"].ctx
         _RunningTasks[run_ctx.session] = executor._running_tasks
         try:
@@ -1490,7 +1457,7 @@ class TestToolExecutorLifecycle:
         result = await executor.execute(tool=quick_tool, run_ctx=run_ctx, raw_arguments={})
         assert result == "ok"
 
-        await _asyncio.sleep(0)  # let _on_done fire
+        await _asyncio.sleep(0)
         assert run_ctx._executor is None
         assert run_ctx._first_update_fut is None
 

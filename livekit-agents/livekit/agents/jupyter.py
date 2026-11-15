@@ -46,7 +46,6 @@ def run_app(server: AgentServer | WorkerOptions, *, jupyter_url: str | None = No
 
     server._job_executor_type = JobExecutorType.THREAD
 
-    # create user and agent tokens
     if jupyter_url:
 
         async def fetch_join_tokens(url: str) -> tuple[str, str, str]:
@@ -73,7 +72,6 @@ def run_app(server: AgentServer | WorkerOptions, *, jupyter_url: str | None = No
         api_key = server._api_key
         api_secret = server._api_secret
 
-        # manually create the user_token and agent_token using the provided api key and secret
         room_name = f"jupyter-room-{uuid.uuid4()}"
         user_token = (
             api.AccessToken(api_key, api_secret)

@@ -8,9 +8,6 @@ class AssignmentTimeoutError(Exception):
     pass
 
 
-# errors used by our plugins
-
-
 class APIError(Exception):
     """Raised when an API request failed.
     This is used on our TTS/STT/LLM plugins."""
@@ -66,10 +63,6 @@ class APIStatusError(APIError):
         if retryable is None:
             retryable = True
 
-        # 4xx client errors are not retryable, except for transient codes:
-        # 408 (Request Timeout), 429 (Too Many Requests), 499 (Client Closed Request / gRPC CANCELLED).
-        # This overrides any caller-provided retryable=True, since a client
-        # error (bad URL, auth, bad request) will keep failing on retry.
         if 400 <= status_code < 500 and status_code not in (408, 429, 499):
             retryable = False
 

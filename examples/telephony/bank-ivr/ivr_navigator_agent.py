@@ -95,14 +95,10 @@ async def dtmf_session(ctx: JobContext) -> None:
         llm=inference.LLM("openai/gpt-4.1"),
         stt=inference.STT("deepgram/nova-3"),
         tts=inference.TTS("rime/arcana"),
-        # This flag does two things:
-        # 1. Helps agent avoid getting stuck listening to repeating IVR loops by actively responding when a loop is detected.
-        # 2. Automatically gives the agent the `send_dtmf_events` tool to allow it to dial DTMF digits.
         ivr_detection=True,
         min_endpointing_delay=5,
     )
 
-    # Get the single user request from the room metadata (set by the dispatcher)
     user_request = (
         "Summarize jordan carter checking account, including balance and recent transactions. "
         'Use account number "1 0 0 0 0 0 0 1" and PIN "0 0 0 0" to authenticate and navigate the IVR.'

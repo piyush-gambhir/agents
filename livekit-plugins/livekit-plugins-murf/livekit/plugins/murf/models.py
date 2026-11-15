@@ -53,9 +53,7 @@ TTSStyles = Literal[
     "Clown",
 ]
 
-TTSEncoding = Literal[
-    "pcm",  # pcm_s16le
-]
+TTSEncoding = Literal["pcm",]
 
 TTSDefaultVoiceId = "en-US-matthew"
 TTSDefaultVoiceStyle = "Conversation"

@@ -1,14 +1,14 @@
 # Copyright 2026 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -83,7 +83,6 @@ class _GoogleBearerAuth(httpx.Auth):
         if self._token_provider is not None:
             return self._token_provider()
         if self._credentials is not None:
-            # Credentials.valid is False when token is missing or expired.
             if not self._credentials.valid:
                 assert self._refresh_request is not None
                 self._credentials.refresh(self._refresh_request)  # type: ignore[no-untyped-call]
@@ -204,7 +203,6 @@ class AIPlatformLLM(llm.LLM):
             resolved_credentials = credentials
             resolved_token = access_token if is_given(access_token) else None
             if token_provider is None and resolved_credentials is None and resolved_token is None:
-                # Fall back to application default credentials.
                 resolved_credentials, _ = google.auth.default(
                     scopes=["https://www.googleapis.com/auth/cloud-platform"]
                 )

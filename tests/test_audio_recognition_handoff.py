@@ -19,7 +19,7 @@ def _make_activity(agent: Agent, stt: object) -> MagicMock:
     act._audio_recognition = MagicMock()
     act._audio_recognition.detach_stt = AsyncMock(return_value=MagicMock())
     type(act).stt = PropertyMock(return_value=stt)
-    # rt session reuse checks need these
+
     act._rt_session = None
     type(act).llm = PropertyMock(return_value=None)
     type(act).tools = PropertyMock(return_value=[])
@@ -32,11 +32,6 @@ async def _detach_stt_if_reusable(old: MagicMock, new: MagicMock) -> object | No
     return resources.stt_pipeline
 
 
-# ---------------------------------------------------------------------------
-# STT pipeline reuse via _detach_reusable_resources
-# ---------------------------------------------------------------------------
-
-
 async def test_reusable_same_class_same_stt() -> None:
     """Two plain Agent instances sharing the same STT object → reusable."""
     shared_stt = MagicMock()
@@ -44,7 +39,7 @@ async def test_reusable_same_class_same_stt() -> None:
     new = _make_activity(Agent(instructions="b"), shared_stt)
 
     result = await _detach_stt_if_reusable(old, new)
-    assert result is not None  # detach_stt was called
+    assert result is not None
     old._audio_recognition.detach_stt.assert_awaited_once()
 
 
@@ -106,9 +101,9 @@ async def test_not_reusable_subclass_inherits_custom_stt_node() -> None:
             return None
 
     class AgentB(AgentA):
-        pass  # inherits AgentA.stt_node without overriding
+        pass
 
-    assert AgentA.stt_node is AgentB.stt_node  # sanity check
+    assert AgentA.stt_node is AgentB.stt_node
 
     old = _make_activity(AgentA(instructions="a"), shared_stt)
     new = _make_activity(AgentB(instructions="b"), shared_stt)

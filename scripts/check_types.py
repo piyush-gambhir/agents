@@ -9,7 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Plugins to exclude from type checking
 EXCLUDED_PLUGINS = [
     "browser",
     "nvidia",
@@ -39,8 +38,6 @@ def get_packages(repo_root: Path) -> list[str]:
     plugins_dir = repo_root / "livekit-plugins"
     for plugin_dir in sorted(plugins_dir.glob("livekit-plugins-*")):
         if plugin_dir.is_dir():
-            # livekit-plugins-openai -> openai
-            # livekit-plugins-turn-detector -> turn_detector
             plugin_name = plugin_dir.name.replace("livekit-plugins-", "").replace("-", "_")
             if plugin_name in EXCLUDED_PLUGINS:
                 continue
@@ -94,7 +91,7 @@ def main() -> None:
     ensure_types_installed(repo_root, pkg_args)
 
     # mypy's incremental mode reads/writes .mypy_cache and skips unchanged
-    # modules, making the second and subsequent runs much faster (~1s vs 30s+).
+
     _run_or_exit(
         ["uv", "run", "mypy", "--untyped-calls-exclude=smithy_aws_core", *pkg_args],
         repo_root,

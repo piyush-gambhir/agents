@@ -57,7 +57,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         llm: NotGivenOr[llm.LLM | llm.RealtimeModel | None] = NOT_GIVEN,
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
-        # deprecated
         extra_instructions: str = "",
         target_phone_number: NotGivenOr[str] = NOT_GIVEN,
     ) -> None:
@@ -100,10 +99,10 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
                 _conversation_history=conversation_history,
             )
 
-        assert is_given(instructions)  # for type checking
+        assert is_given(instructions)
         super().__init__(
             instructions=instructions,
-            chat_ctx=NOT_GIVEN,  # don't pass the chat_ctx
+            chat_ctx=NOT_GIVEN,
             turn_detection=turn_detection,
             tools=tools or [],
             stt=stt,
@@ -131,7 +130,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         if is_given(sip_trunk_id):
             self._sip_trunk_id = sip_trunk_id
         elif self._sip_connection is not None:
-            # explicit sip_connection: don't override with the env var trunk
             self._sip_trunk_id = None
         else:
             self._sip_trunk_id = os.getenv("LIVEKIT_SIP_OUTBOUND_TRUNK", None)
@@ -148,7 +146,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         self._dtmf = dtmf if is_given(dtmf) else None
         self._ringing_timeout = ringing_timeout if is_given(ringing_timeout) else None
 
-        # background audio and io
         self._background_audio = BackgroundAudioPlayer()
         self._hold_audio_handle: PlayHandle | None = None
         self._hold_audio = (
@@ -177,7 +174,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         job_ctx = get_job_context()
         self._caller_room = job_ctx.room
 
-        # start the background audio
         if self._hold_audio is not None:
             await self._background_audio.start(room=self._caller_room)
             self._hold_audio_handle = self._background_audio.play(self._hold_audio, loop=True)
@@ -194,7 +190,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
                 raise RuntimeError()
 
             self._human_agent_sess = dial_human_agent_task.result()
-            # let the human speak first
 
         except Exception:
             logger.exception("could not dial human agent")
@@ -213,7 +208,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         await self._merge_calls()
         self._set_result(WarmTransferResult(human_agent_identity=self._human_agent_identity))
 
-        # when the caller or human agent leaves the room, we'll delete the room
         self._caller_room.on("participant_disconnected", self._on_caller_participant_disconnected)
 
     @function_tool(flags=ToolFlag.IGNORE_ON_ENTER)
@@ -272,7 +266,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         job_ctx = get_job_context()
         ws_url = job_ctx._info.url
 
-        # create a new room for the human agent
         human_agent_room_name = self._caller_room.name + "-human-agent"
         room = rtc.Room()
         token = (
@@ -296,7 +289,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
         )
         await room.connect(ws_url, token)
 
-        # if human agent hung up for whatever reason, we'd resume the caller conversation
         room.on("disconnected", self._on_human_agent_room_close)
 
         human_agent_sess: AgentSession = AgentSession(
@@ -306,7 +298,7 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
             tts=self.session.tts or NOT_GIVEN,
             turn_detection=self.session.turn_detection or NOT_GIVEN,
         )
-        # create a copy of this AgentTask
+
         human_agent_agent = Agent(
             instructions=self.instructions,
             turn_detection=self.turn_detection,
@@ -326,10 +318,9 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
                 delete_room_on_close=True,
                 participant_identity=self._human_agent_identity,
             ),
-            record=False,  # TODO: support recording on multiple sessions?
+            record=False,
         )
 
-        # dial the human agent
         sip_request = api.CreateSIPParticipantRequest(
             sip_trunk_id=self._sip_trunk_id,
             sip_call_to=self._sip_call_to,
@@ -354,7 +345,7 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
 
         job_ctx = get_job_context()
         human_agent_room = self._human_agent_sess.room_io.room
-        # we no longer care about the human agent session. it's supposed to be over
+
         human_agent_room.off("disconnected", self._on_human_agent_room_close)
 
         logger.debug(f"moving {self._human_agent_identity} to caller room {self._caller_room.name}")
@@ -393,7 +384,6 @@ class WarmTransferTask(AgentTask[WarmTransferResult]):
             output.set_video_enabled(enabled and self._original_io_state["video_output"])
 
 
-# instructions
 PERSONA = """\
 # Identity
 

@@ -23,8 +23,6 @@ async def entrypoint(ctx: JobContext):
         encryption_type=rtc.EncryptionType.GCM,
     )
 
-    # Connect to the room with end-to-end encryption (E2EE)
-    # Only clients possessing the same shared key will be able to decode the published tracks
     await ctx.connect(encryption=e2ee_config)
 
 

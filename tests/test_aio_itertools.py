@@ -72,7 +72,6 @@ async def test_tee_cancelled_error_does_not_propagate_to_peers():
 
     async def consume_peer0():
         async for _item in tee[0]:
-            # Block forever after first item so we can cancel this task
             await asyncio.sleep(1000)
 
     async def consume_peer1():
@@ -82,15 +81,12 @@ async def test_tee_cancelled_error_does_not_propagate_to_peers():
     task0 = asyncio.create_task(consume_peer0())
     task1 = asyncio.create_task(consume_peer1())
 
-    # Give tasks a chance to start
     await asyncio.sleep(0.01)
 
-    # Cancel task0 — this should NOT affect task1
     task0.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task0
 
-    # task1 should complete normally without CancelledError
     await asyncio.wait_for(task1, timeout=2.0)
     assert peer1_results == items
 

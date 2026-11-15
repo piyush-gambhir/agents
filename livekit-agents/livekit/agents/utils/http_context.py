@@ -29,7 +29,7 @@ def _new_session_ctx() -> _ClientFactory:
 
             connector = aiohttp.TCPConnector(
                 limit_per_host=50,
-                keepalive_timeout=120,  # the default is only 15s
+                keepalive_timeout=120,
             )
             g_session = aiohttp.ClientSession(proxy=http_proxy, connector=connector)
         return g_session

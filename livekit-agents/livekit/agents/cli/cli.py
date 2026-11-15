@@ -49,8 +49,6 @@ from ..voice.transcription import TranscriptSynchronizer
 from ..worker import AgentServer, ServerEnvOption, WorkerOptions
 from . import proto
 from .log import JsonFormatter, _merge_record_extra, _silence_noisy_loggers
-
-# from .discover import get_import_data
 from .readchar import key, readkey
 
 TRACE_LOG_LEVEL = 5
@@ -59,7 +57,7 @@ if TYPE_CHECKING:
     import sounddevice as sd  # type: ignore
 
 HANDLED_SIGNALS = (
-    signal.SIGINT,  # Unix signal 2. Sent by Ctrl+C.
+    signal.SIGINT,
     signal.SIGTERM,
 )
 
@@ -70,35 +68,6 @@ class _ToggleMode(Exception):
 
 class _ExitCli(BaseException):
     pass
-
-
-# from https://github.com/encode/uvicorn/blob/c1144fd4f130388cffc05ee17b08747ce8c1be11/uvicorn/importer.py#L9C1-L34C20
-# def import_from_string(import_str: Any) -> Any:
-#     if not isinstance(import_str, str):
-#         return import_str
-
-#     module_str, _, attrs_str = import_str.partition(":")
-#     if not module_str or not attrs_str:
-#         message = 'Import string "{import_str}" must be in format "<module>:<attribute>".'
-#         raise RuntimeError(message.format(import_str=import_str))
-
-#     try:
-#         module = importlib.import_module(module_str)
-#     except ModuleNotFoundError as exc:
-#         if exc.name != module_str:
-#             raise exc from None
-#         message = 'Could not import module "{module_str}".'
-#         raise RuntimeError(message.format(module_str=module_str)) from None
-
-#     instance = module
-#     try:
-#         for attr_str in attrs_str.split("."):
-#             instance = getattr(instance, attr_str)
-#     except AttributeError:
-#         message = 'Attribute "{attrs_str}" not found in module "{module_str}".'
-#         raise RuntimeError(message.format(attrs_str=attrs_str, module_str=module_str)) from None
-
-#     return instance
 
 
 ConsoleMode = Literal["text", "audio"]
@@ -115,7 +84,6 @@ class ConsoleAudioInput(io.AudioInput):
 
     def push_frame(self, frame: rtc.AudioFrame) -> None:
         if not self._attached:
-            # drop frames if the input is detached
             return
         self._audio_ch.send_nowait(frame)
 
@@ -153,7 +121,6 @@ class ConsoleAudioOutput(io.AudioOutput):
         self._paused_at: float | None = None
         self._paused_duration: float = 0.0
 
-        # track the segment id to avoid stale async operations
         self._segment_id = 0
 
     @property
@@ -183,7 +150,7 @@ class ConsoleAudioOutput(io.AudioOutput):
 
         self._pushed_duration += frame.duration
         with self._audio_lock:
-            self._output_buf += frame.data  # TODO: optimize
+            self._output_buf += frame.data
             self._output_buf_empty.clear()
 
     def flush(self) -> None:
@@ -199,7 +166,7 @@ class ConsoleAudioOutput(io.AudioOutput):
         with self._audio_lock:
             self._output_buf.clear()
             self._output_buf_empty.set()
-            # redundant (_wait_for_playout does the same, albeit async) but defensive
+
             self._segment_id += 1
             self._playback_started_fired = False
 
@@ -647,7 +614,7 @@ class AgentsConsole:
         try:
             self._apm.set_stream_delay_ms(int(total_delay * 1000))
         except RuntimeError:
-            pass  # setting stream delay in console mode fails often, so we silently continue
+            pass
 
         sr = 24000
         x = indata[:, 0].astype(np.float32) / 32768.0
@@ -685,7 +652,7 @@ class AgentsConsole:
         if not self._io_acquired:
             return
 
-        FRAME_SAMPLES = 240  # 10ms at 24000 Hz
+        FRAME_SAMPLES = 240
         num_frames = frame_count // FRAME_SAMPLES
 
         for i in range(num_frames):
@@ -731,7 +698,7 @@ class AgentsConsole:
                         count=available_bytes // 2,
                     )
                     outdata[available_bytes // 2 :, 0] = 0
-                    del self._io_audio_output.audio_buffer[:available_bytes]  # TODO: optimize
+                    del self._io_audio_output.audio_buffer[:available_bytes]
                     self.io_loop.call_soon_threadsafe(self._io_audio_output.mark_output_empty)
                 else:
                     self._io_audio_output._maybe_mark_playback_started()
@@ -798,7 +765,6 @@ class FrequencyVisualizer:
             console_width = self.c.console.width
 
             if left_width + metrics_width + 4 <= console_width:
-                # fits on the same row — re-do as 3-column layout
                 table = Table.grid(padding=0, expand=True)
                 table.add_column()
                 wide_table = Table.grid(
@@ -813,7 +779,6 @@ class FrequencyVisualizer:
                 wide_table.add_row(Group(label_seg), Group(bar), metrics_text)
                 table.add_row(wide_table)
             else:
-                # metrics on a separate line, right-aligned
                 right_metrics = metrics_text.copy()
                 right_metrics.justify = "right"
                 table.add_row(right_metrics)
@@ -836,7 +801,6 @@ class RichLoggingHandler(logging.Handler):
         super().__init__()
         self.c = agents_console
 
-        # used to avoid rendering two same time
         self._last_time: Text | None = None
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -845,7 +809,7 @@ class RichLoggingHandler(logging.Handler):
                 return s
             if max_width <= 1:
                 return "…"[:max_width]
-            visible = max_width - 1  # leave room for the ellipsis
+            visible = max_width - 1
             left = visible // 2
             right = visible - left
             return s[:left] + "…" + s[-right:]
@@ -856,7 +820,7 @@ class RichLoggingHandler(logging.Handler):
 
         if has_exc:
             exc_info, exc_text = record.exc_info, record.exc_text
-            record.exc_info = None  # temporarily strip for clean message
+            record.exc_info = None
             record.exc_text = None
             try:
                 message = self.format(record)
@@ -907,7 +871,7 @@ class RichLoggingHandler(logging.Handler):
         row.append(msg_text)
 
         console_width = self.c.console.width
-        tag_width = 2  # matches self.c._render_tag(..., tag_width=2)
+        tag_width = 2
         available_width = max(console_width - tag_width - 6, 20)
 
         time_len = log_time_display.cell_len
@@ -1005,8 +969,6 @@ def _configure_logger(c: AgentsConsole | None, log_level: int | str) -> None:
 
 
 class TextModeLogFilter(logging.Filter):
-    # We don't want to remove the DEBUG logs from the agents codebase since they're useful. But we now have duplicate content when using
-    # the text mode, so we use logging.Filter
     _patterns = [
         re.compile(r"\bexecuting tool\b", re.IGNORECASE),
         re.compile(r"\btools execution completed\b", re.IGNORECASE),
@@ -1105,7 +1067,6 @@ def prompt(
             if ch == key.ENTER:
                 break
 
-            # Toggle shortcuts menu with ? (only when buffer is empty) or close with Escape
             if ch == "?" and not buffer:
                 show_shortcuts = not show_shortcuts
                 live.update(render_prompt())
@@ -1268,7 +1229,6 @@ def _format_turn_metrics(
 ) -> Text | None:
     parts: list[tuple[str, str]] = []
 
-    # user-side metrics
     if user_metrics:
         if "end_of_turn_delay" in user_metrics:
             v = user_metrics["end_of_turn_delay"]
@@ -1279,7 +1239,6 @@ def _format_turn_metrics(
             parts.append(("turn_completed_cb: ", "dim"))
             parts.append((_format_duration_ms(v), "dim"))
 
-    # assistant-side metrics
     if assistant_metrics:
         if "llm_node_ttft" in assistant_metrics:
             v = assistant_metrics["llm_node_ttft"]
@@ -1303,8 +1262,8 @@ def _format_turn_metrics(
     for i in range(pair_count):
         if i > 0:
             assembled.append((" \u00b7 ", "dim"))
-        assembled.append(parts[i * 2])  # label
-        assembled.append(parts[i * 2 + 1])  # value
+        assembled.append(parts[i * 2])
+        assembled.append(parts[i * 2 + 1])
 
     if e2e_parts:
         if assembled:
@@ -1469,7 +1428,7 @@ class _ConsoleWorker:
                     self._shutdown_cb()
                     return
 
-            self._server._job_executor_type = JobExecutorType.THREAD  # TODO: better setter
+            self._server._job_executor_type = JobExecutorType.THREAD
 
             @self._server.once("worker_started")
             def _simulate_job() -> None:
@@ -1511,14 +1470,8 @@ def _run_console(
         )
 
     c.print(" ")
-    # c.print(
-    #     "Searching for package file structure from directories with [blue]__init__.py[/blue] files"
-    # )
-    try:
-        # import_data = get_import_data(path=path)
-        # c.print(f"Importing from {import_data.module_data.extra_sys_path}")
-        # c.print(" ")
 
+    try:
         c._validate_device_or_raise(input_device=input_device, output_device=output_device)
 
         exit_triggered = False
@@ -1546,7 +1499,6 @@ def _run_console(
         console_worker = _ConsoleWorker(server=server, shutdown_cb=_on_worker_shutdown)
         console_worker.start()
 
-        # TODO: wait for a session request the agents console context before showing any of the mode
         try:
             c.wait_for_io_acquisition()
 
@@ -1576,7 +1528,7 @@ def _run_console(
 def _run_worker(server: AgentServer, args: proto.CliArgs, jupyter: bool = False) -> None:
     c: AgentsConsole | None = None
     if args.devmode:
-        c = AgentsConsole.get_instance()  # colored logs
+        c = AgentsConsole.get_instance()
 
     exit_triggered = False
 
@@ -1596,7 +1548,7 @@ def _run_worker(server: AgentServer, args: proto.CliArgs, jupyter: bool = False)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.slow_callback_duration = 0.1  # 100ms
+    loop.slow_callback_duration = 0.1
 
     async def _worker_run(worker: AgentServer) -> None:
         try:
@@ -1620,7 +1572,7 @@ def _run_worker(server: AgentServer, args: proto.CliArgs, jupyter: bool = False)
             pass
 
         try:
-            exit_triggered = False  # allow a new _ExitCLI raise
+            exit_triggered = False
             if not args.devmode:
                 try:
                     loop.run_until_complete(server.drain())
@@ -1636,10 +1588,10 @@ def _run_worker(server: AgentServer, args: proto.CliArgs, jupyter: bool = False)
                 logger.warning("exiting forcefully")
                 import os
 
-                os._exit(1)  # TODO(theomonnom): add aclose(force=True) in worker
+                os._exit(1)
     finally:
         if jupyter:
-            loop.close()  # close can only be called from the main thread
+            loop.close()
         else:
             with contextlib.suppress(_ExitCli):
                 try:

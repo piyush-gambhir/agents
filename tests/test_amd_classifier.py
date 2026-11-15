@@ -108,15 +108,13 @@ class TestAMDClassifier:
         assert clf._silence_timer_trigger == "long_speech"
         assert clf._silence_timer is not None
 
-        # Past the would-be HUMAN deadline (0.1s), well before machine deadline (0.3s).
         await asyncio.sleep(0.18)
         assert results == [], "pre-baked HUMAN must not fire after a transcript arrives"
         assert clf._silence_reached is False
 
-        # Past the machine_silence deadline.
         await asyncio.sleep(0.2)
         assert clf._silence_reached is True
-        # No verdict was provided by the (empty) FakeLLM, so nothing emits yet.
+
         assert results == []
 
         await clf.close()
@@ -133,7 +131,7 @@ class TestAMDClassifier:
         t_end = clf._speech_ended_at
         assert t_end is not None
 
-        push_delay = 0.04  # under human_silence_threshold so trigger is still short_speech
+        push_delay = 0.04
         await asyncio.sleep(push_delay)
         clf.push_text("hello")
         assert clf._silence_timer_trigger == "long_speech"
@@ -145,9 +143,7 @@ class TestAMDClassifier:
 
         fired_at = time.time()
         assert clf._silence_reached
-        # Allow generous slack for event-loop jitter; the key assertion is that the
-        # fire time is ~0.3s after t_end, not ~0.34s (which would mean we
-        # re-armed for a full machine_silence_threshold from push_text).
+
         assert fired_at - t_end < 0.3 + 0.15, (
             f"timer fired at {fired_at - t_end:.3f}s after t_end; "
             f"expected ~0.30s, never ~0.34s+ (push_text-anchored)"
@@ -193,7 +189,6 @@ class TestAMDClassifier:
         handle_before = clf._silence_timer
         assert handle_before is not None
 
-        # A second transcript while in the long_speech window must not replace the timer.
         clf.push_text("there")
         assert clf._silence_timer is handle_before
         assert clf._silence_timer_trigger == "long_speech"
@@ -282,11 +277,10 @@ class TestAMDClassifier:
         clf.on("amd_prediction", results.append)
 
         clf.on_user_speech_started()
-        await asyncio.sleep(0.1)  # past human_speech_threshold → long_speech path
+        await asyncio.sleep(0.1)
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail greeting")
 
-        # silence timer fires (verdict already set by LLM); EOT has not.
         await asyncio.sleep(0.4)
         assert clf._silence_reached is True
         assert clf._eot_reached is False
@@ -294,7 +288,6 @@ class TestAMDClassifier:
         assert clf._verdict_result.is_machine
         assert results == [], "machine verdict must wait for EOT"
 
-        # EOT lands → emit.
         clf.on_end_of_turn()
         assert len(results) == 1
         assert results[0].category == AMDCategory.MACHINE_VM
@@ -314,7 +307,6 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail greeting")
 
-        # EOT lands while silence timer is still running.
         await asyncio.sleep(0.05)
         clf.on_end_of_turn()
         assert clf._eot_reached is True
@@ -375,16 +367,16 @@ class TestAMDClassifier:
         assert clf._no_speech_timer is not None
 
         clf.on_user_speech_started()
-        # speech-started already cancels no_speech_timer; we care about detection_timer
+
         assert clf._detection_timeout_timer is not None
 
         await asyncio.sleep(0.1)
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
-        # let LLM commit verdict
+
         await asyncio.sleep(0.2)
         assert clf._verdict_result is not None
-        # detection_timeout must remain armed post-verdict
+
         assert clf._detection_timeout_timer is not None
 
         await clf.close()
@@ -402,12 +394,12 @@ class TestAMDClassifier:
         await asyncio.sleep(0.1)
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
-        await asyncio.sleep(0.4)  # silence timer fires
-        assert clf._detection_timeout_timer is not None  # still armed, EOT pending
+        await asyncio.sleep(0.4)
+        assert clf._detection_timeout_timer is not None
 
         clf.on_end_of_turn()
         await asyncio.sleep(0)
-        # emit happened → timer cancelled
+
         assert clf._detection_timeout_timer is None
 
         await clf.close()
@@ -433,7 +425,6 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
 
-        # well past detection_timeout — but speech was heard and EOT not yet
         await asyncio.sleep(0.7)
         assert results == [], "detection_timeout must not force emit when waiting"
         assert clf._verdict_result is not None
@@ -481,13 +472,11 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
 
-        # silence (0.2) elapses but eot has not yet → still gated
         await asyncio.sleep(0.3)
         assert clf._silence_reached is True
         assert clf._eot_reached is False
         assert results == []
 
-        # the eot backstop (0.4) fires without any on_end_of_turn() call → emit
         await asyncio.wait_for(clf._verdict_ready.wait(), timeout=1.0)
         assert clf._eot_reached is True
         assert len(results) == 1
@@ -504,7 +493,7 @@ class TestAMDClassifier:
             machine_silence_threshold=0.2,
             timeout=0.4,
             wait_until_finished=True,
-            max_endpointing_delay=6.0,  # backstop won't fire; eot comes from on_end_of_turn
+            max_endpointing_delay=6.0,
         )
         clf.start_listening()
         clf.start_detection_timer()
@@ -514,12 +503,11 @@ class TestAMDClassifier:
         clf.on_user_speech_started()
         await asyncio.sleep(0.1)
         clf.on_user_speech_ended(silence_duration=0.0)
-        # no transcript / no verdict produced; turn ends
+
         clf.on_end_of_turn()
         assert clf._eot_reached is True
         assert clf._verdict_result is None
 
-        # detection timeout fires with eot already reached → emit uncertain fallback
         await asyncio.wait_for(clf._verdict_ready.wait(), timeout=1.0)
         assert len(results) == 1
         assert results[0].category == AMDCategory.UNCERTAIN
@@ -537,12 +525,10 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         assert clf._eot_timer is not None
 
-        # user speaks again before the backstop fires
         clf.on_user_speech_started()
         assert clf._eot_timer is None
         assert clf._eot_reached is False
 
-        # well past the original backstop deadline → still not reached
         await asyncio.sleep(0.4)
         assert clf._eot_reached is False
 

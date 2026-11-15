@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -132,7 +132,7 @@ class _ContextLogFieldsFilter(logging.Filter):
         self.job_ctx = job_ctx
 
     def filter(self, record: logging.LogRecord) -> bool:
-        # only add fields for the current job context
+
         if self.job_ctx.proc.executor_type != JobExecutorType.PROCESS:
             try:
                 ctx = get_job_context()
@@ -142,7 +142,6 @@ class _ContextLogFieldsFilter(logging.Filter):
                 if ctx != self.job_ctx:
                     return True
 
-        # add context fields only if they don't already exist in the record
         for key, value in self.job_ctx._log_fields.items():
             if not hasattr(record, key):
                 setattr(record, key, value)
@@ -155,7 +154,6 @@ class JobContext:
         ["JobContext", rtc.RemoteParticipant], Coroutine[None, None, None]
     ]
 
-    # private ctor
     def __init__(
         self,
         *,
@@ -243,7 +241,6 @@ class JobContext:
         if not replay:
             return
 
-        # find the OTLP LoggingHandler that _setup_cloud_tracer just added
         from opentelemetry.sdk._logs import LoggingHandler
 
         for h in logging.getLogger().handlers:
@@ -262,14 +259,12 @@ class JobContext:
 
         c = AgentsConsole.get_instance()
 
-        # in case AgentSession.aclose() was cancelled due to timeout
         if (recorder_io := session._recorder_io) and recorder_io.recording:
             logger.warning("recorder_io is still recording at session end, closing it")
             await recorder_io.aclose()
 
         report = self.make_session_report(session)
 
-        # console recording, dump data to a local file
         if c.enabled and c.record:
             try:
                 report_json = json.dumps(report.to_dict(), indent=2)
@@ -301,8 +296,7 @@ class JobContext:
                 logger.exception("failed to upload the session report to LiveKit Cloud")
 
     def _on_cleanup(self) -> None:
-        # if session.start() was never reached and server wanted recording,
-        # set up OTLP now and flush buffered crash logs
+
         if self._early_log_handler is not None and not self._recording_initialized:
             try:
                 from .voice.agent_session import RecordingOptions
@@ -495,7 +489,6 @@ class JobContext:
         If the participant has already joined, the function will return immediately.
         """
 
-        # handle connection automatically, otherwise wait_for_participant will raise an error
         if not self._room.isconnected():
             await self.connect()
 
@@ -509,7 +502,6 @@ class JobContext:
         auto_subscribe: AutoSubscribe = AutoSubscribe.SUBSCRIBE_ALL,
         rtc_config: rtc.RtcConfiguration | None = None,
         single_peer_connection: bool | None = None,
-        # deprecated
         e2ee: rtc.E2EEOptions | None = None,
     ) -> None:
         """Connect to the room. This method should be called only once.
@@ -720,9 +712,7 @@ class JobContext:
             enable_traces=options["traces"],
             enable_logs=options["logs"],
         )
-        # init_recording is typically called during session.start(), at which point a bunch of
-        # the logs would have already been emitted. we want to capture all of the logs as it
-        # relates to the job
+
         self._flush_early_log_buffer(replay=options["logs"])
 
     def _participant_available(self, p: rtc.RemoteParticipant) -> None:

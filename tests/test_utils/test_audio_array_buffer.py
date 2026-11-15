@@ -172,7 +172,7 @@ class TestSampleRates:
     @pytest.mark.parametrize("sr", [8000, 16000, 24000, 48000], ids=["8k", "16k", "24k", "48k"])
     def test_same_rate_no_resampling(self, sr: int) -> None:
         """Frames matching the buffer's sample rate are stored without resampling."""
-        n = sr * 50 // 1000  # 50ms
+        n = sr * 50 // 1000
         buf = AudioArrayBuffer(buffer_size=sr, sample_rate=sr)
         buf.push_frame(_frame(list(range(n)), sr=sr))
         assert len(buf.read()) == n
@@ -183,7 +183,6 @@ class TestSampleRates:
         n = sr * 50 // 1000
         buf = AudioArrayBuffer(buffer_size=sr, sample_rate=sr)
 
-        # push 1.5s worth of frames to trigger overflow
         for _ in range(30):
             buf.push_frame(_frame(list(range(n)), sr=sr))
         assert len(buf.read()) == sr
@@ -199,7 +198,7 @@ class TestSampleRates:
         buf = AudioArrayBuffer(buffer_size=buf_sr, sample_rate=buf_sr)
         buf.push_frame(_frame(list(range(frame_samples)), sr=frame_sr))
         expected = buf_sr * 50 // 1000
-        assert abs(len(buf.read()) - expected) <= 10  # QUICK quality resampler may round
+        assert abs(len(buf.read()) - expected) <= 10
 
 
 class TestPerformance:

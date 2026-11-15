@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -250,8 +250,6 @@ class AudioContent(BaseModel):
 ChatRole: TypeAlias = Literal["developer", "system", "user", "assistant"]
 
 
-# The metrics are stored in a dict, since some fields may not be relevant
-# in certain context (e.g., text-only mode or when using a speech-to-speech model).
 class MetricsMetadata(TypedDict, total=False):
     model_name: str
     model_provider: str
@@ -488,7 +486,6 @@ class ChatContext:
                 elif isinstance(tool, Toolset):
                     yield from get_tool_names(tool.tools)
                 else:
-                    # TODO(theomonnom): other tools
                     continue
 
         valid_tools = set(get_tool_names(tools)) if tools else set()
@@ -548,7 +545,6 @@ class ChatContext:
 
         new_items = self._items[-max_items:]
 
-        # chat_ctx shouldn't start with function_call or function_call_output
         while new_items and new_items[0].type in [
             "function_call",
             "function_call_output",
@@ -741,11 +737,7 @@ class ChatContext:
         *,
         keep_last_turns: int = 2,
     ) -> ChatContext:
-        # Split self.items into head/tail. Walk backward, counting only
-        # user/assistant ChatMessages toward the keep_last_turns budget (each
-        # turn = one user + one assistant message, so budget = keep_last_turns * 2).
-        # Everything from the split point onward — including any interleaved
-        # FunctionCall/FunctionCallOutput items — is preserved as-is in the tail.
+
         msg_budget = keep_last_turns * 2
         split_idx = len(self.items)
 
@@ -759,7 +751,6 @@ class ChatContext:
                         split_idx = i
                         break
             else:
-                # Not enough messages to fill the budget — nothing to summarize
                 return self
 
         if split_idx == 0:
@@ -767,13 +758,12 @@ class ChatContext:
 
         head_items, tail_items = self.items[:split_idx], self.items[split_idx:]
 
-        # Build summarization input from head_items only.
         to_summarize: list[ChatMessage | FunctionCall | FunctionCallOutput] = []
         for item in head_items:
             if isinstance(item, ChatMessage):
                 if item.role not in ("user", "assistant"):
                     continue
-                if item.extra.get("is_summary") is True:  # avoid making summary of summaries
+                if item.extra.get("is_summary") is True:
                     continue
 
                 text = (item.text_content or "").strip()
@@ -785,7 +775,6 @@ class ChatContext:
         if not to_summarize:
             return self
 
-        # Render items to XML format and collect the contents.
         contents: list[str] = []
         for m in to_summarize:
             if isinstance(m, (FunctionCall, FunctionCallOutput)):
@@ -834,10 +823,6 @@ class ChatContext:
         if not summary:
             return self
 
-        # Rebuild self._items. From head_items, keep only structural
-        # items (system messages, agent handoffs, config updates, prior
-        # summaries) — everything summarizable is replaced by the summary.
-        # Tail items are appended as-is.
         preserved: list[ChatItem] = []
         for it in head_items:
             if isinstance(it, ChatMessage) and it.role in ("user", "assistant"):
@@ -927,7 +912,6 @@ class _ReadOnlyChatContext(ChatContext):
             logger.error(_ReadOnlyChatContext.error_msg)
             raise RuntimeError(_ReadOnlyChatContext.error_msg)
 
-        # override all mutating methods to raise errors
         append = extend = pop = remove = clear = sort = reverse = _raise_error  # type: ignore
         __setitem__ = __delitem__ = __iadd__ = __imul__ = _raise_error  # type: ignore
 

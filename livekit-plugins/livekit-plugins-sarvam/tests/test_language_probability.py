@@ -16,12 +16,6 @@ import pytest
 from livekit.agents import stt
 from livekit.plugins.sarvam.stt import SpeechStream
 
-# ---------------------------------------------------------------------------
-# Helpers — build a minimal STT instance + fake the channel/logger/state that
-# `_handle_transcript_data` touches. We bypass __init__ so the test doesn't
-# need an API key, an HTTP session, or a real WebSocket.
-# ---------------------------------------------------------------------------
-
 
 def _make_stream_under_test() -> tuple[SpeechStream, list[Any]]:
     """Construct a minimal SpeechStream and collect its emitted events.
@@ -65,11 +59,6 @@ def _final_event(captured: list[Any]) -> stt.SpeechEvent:
     return finals[0]
 
 
-# ---------------------------------------------------------------------------
-# WS path — happy cases
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "language_probability, expected_confidence",
     [
@@ -90,15 +79,10 @@ async def test_ws_threads_language_probability_into_confidence(
     assert final.alternatives[0].confidence == pytest.approx(expected_confidence)
 
 
-# ---------------------------------------------------------------------------
-# WS path — defensive fallback cases (absent / null / wrong type)
-# ---------------------------------------------------------------------------
-
-
 async def test_ws_missing_language_probability_falls_back_to_1_0() -> None:
     """When the field is absent, confidence falls back to 1.0 (no crash)."""
     instance, captured = _make_stream_under_test()
-    # _ws_message() helper omits language_probability by default
+
     await instance._handle_transcript_data(_ws_message())
     final = _final_event(captured)
     assert final.alternatives[0].confidence == 1.0
@@ -125,14 +109,8 @@ async def test_ws_unexpected_type_falls_back_to_1_0(bad_value: Any) -> None:
     await instance._handle_transcript_data(_ws_message(language_probability=bad_value))
     final = _final_event(captured)
     assert final.alternatives[0].confidence == 1.0
-    # The defensive branch logs a debug warning so contract drift is visible.
+
     assert instance._logger.debug.called  # type: ignore[attr-defined]
-
-
-# ---------------------------------------------------------------------------
-# WS path — out-of-range values pass through verbatim (clamping is not this
-# layer's job; downstream consumers can clamp if they need to).
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("value", [-0.5, 1.5, 2.0])

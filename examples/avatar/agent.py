@@ -157,8 +157,7 @@ async def entrypoint(ctx: JobContext) -> None:
                 await state.avatar.wait_for_join()
                 session.update_agent(make_agent(new_persona))
                 state.persona = new_persona
-                # Lemonslice's video pipeline needs a beat after wait_for_join
-                # before it actually consumes audio + emits frames.
+
                 await asyncio.sleep(1.2)
 
             if supports_actions(new_persona.id):

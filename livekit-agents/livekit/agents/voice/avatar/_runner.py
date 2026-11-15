@@ -33,9 +33,7 @@ class AvatarRunner:
         video_gen: VideoGenerator,
         options: AvatarOptions,
         _queue_size_ms: int = 100,
-        # queue size of the AV synchronizer
         _lazy_publish: bool = True,
-        # publish video and audio tracks until the first frame pushed
     ) -> None:
         self._room = room
         self._video_gen = video_gen
@@ -52,14 +50,13 @@ class AvatarRunner:
         self._video_publication: rtc.LocalTrackPublication | None = None
         self._lazy_publish = _lazy_publish
 
-        # Audio/video sources
         self._audio_source = rtc.AudioSource(
             sample_rate=options.audio_sample_rate,
             num_channels=options.audio_channels,
             queue_size_ms=self._queue_size_ms,
         )
         self._video_source = rtc.VideoSource(width=options.video_width, height=options.video_height)
-        # AV synchronizer
+
         self._av_sync = rtc.AVSynchronizer(
             audio_source=self._audio_source,
             video_source=self._video_source,
@@ -77,7 +74,6 @@ class AvatarRunner:
     async def start(self) -> None:
         """Start the worker"""
 
-        # start audio receiver
         await self._audio_recv.start()
         self._audio_recv.on("clear_buffer", self._on_clear_buffer)
 
@@ -88,7 +84,6 @@ class AvatarRunner:
         if not self._lazy_publish:
             await self._publish_track()
 
-        # start processing
         self._read_audio_atask = asyncio.create_task(self._read_audio())
         self._forward_video_atask = asyncio.create_task(self._forward_video())
 
@@ -131,7 +126,6 @@ class AvatarRunner:
 
         async for frame in self._video_gen:
             if isinstance(frame, AudioSegmentEnd):
-                # notify the agent that the audio has finished playing
                 if self._audio_playing:
                     notify_task = self._audio_recv.notify_playback_finished(
                         playback_position=self._playback_position,
@@ -140,7 +134,6 @@ class AvatarRunner:
                     self._audio_playing = False
                     self._playback_position = 0.0
                     if asyncio.iscoroutine(notify_task):
-                        # avoid blocking the video forwarding
                         task = asyncio.create_task(notify_task)
                         self._tasks.add(task)
                         task.add_done_callback(self._tasks.discard)

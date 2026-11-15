@@ -34,7 +34,7 @@ async def entrypoint(ctx: JobContext):
     inactivity_task: asyncio.Task | None = None
 
     async def user_presence_task():
-        # try to ping the user 3 times, if we get no answer, close the session
+
         for _ in range(3):
             await session.generate_reply(
                 instructions=(
@@ -52,7 +52,6 @@ async def entrypoint(ctx: JobContext):
             inactivity_task = asyncio.create_task(user_presence_task())
             return
 
-        # ev.new_state: listening, speaking, ..
         if inactivity_task is not None:
             inactivity_task.cancel()
 

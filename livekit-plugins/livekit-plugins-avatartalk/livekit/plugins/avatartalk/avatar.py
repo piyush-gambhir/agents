@@ -149,7 +149,6 @@ class AvatarSession(BaseAvatarSession):
                 room=room,
                 destination_identity="listener",
                 sample_rate=SAMPLE_RATE,
-                # wait_remote_track=rtc.TrackKind.KIND_VIDEO,
             )
         except AvatarTalkException as e:
             logger.error(e)

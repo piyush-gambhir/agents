@@ -49,8 +49,7 @@ class FakeAudioOutput(AudioOutput):
         self._pushed_duration = 0.0
         self._flushed = False
         self._flush_handle: asyncio.TimerHandle | None = None
-        # virtual playout clock: started_at is set on first non-paused capture; paused_at
-        # is set while paused; total_paused accumulates fully-closed pause intervals.
+
         self._started_at: float | None = None
         self._paused_at: float | None = None
         self._total_paused = 0.0
@@ -76,7 +75,7 @@ class FakeAudioOutput(AudioOutput):
             self._flush_handle.cancel()
             self._flush_handle = None
         if self._paused_at is not None:
-            return  # defer until resume()
+            return
 
         pushed_duration = self._pushed_duration
         delay = max(pushed_duration - self._played_duration(), 0.0)
@@ -96,7 +95,7 @@ class FakeAudioOutput(AudioOutput):
 
         self._pushed_duration += frame.duration
         if self._paused_at is not None:
-            return  # frames arriving during pause are held implicitly (no side effects)
+            return
 
         if self._started_at is None:
             self._started_at = time.time()
@@ -115,7 +114,7 @@ class FakeAudioOutput(AudioOutput):
         if self._paused_at is not None:
             self._total_paused += time.time() - self._paused_at
             self._paused_at = None
-        # fire on_playback_started if frames arrived while paused (first frame now plays)
+
         if self._started_at is None and self._pushed_duration > 0:
             self._started_at = time.time()
             self.on_playback_started(created_at=self._started_at)

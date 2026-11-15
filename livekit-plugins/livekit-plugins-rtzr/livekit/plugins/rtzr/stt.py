@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -50,12 +50,12 @@ _IDLE_CHECK_INTERVAL = 1.0
 
 @dataclass
 class _STTOptions:
-    model_name: str = "sommers_ko"  # sommers_ko: "ko", sommers_ja: "ja"
-    language: LanguageCode = LanguageCode("ko")  # ko, ja, en
+    model_name: str = "sommers_ko"
+    language: LanguageCode = LanguageCode("ko")
     sample_rate: int = DEFAULT_SAMPLE_RATE
-    encoding: str = "LINEAR16"  # or "OGG_OPUS" in future
-    domain: str = "CALL"  # CALL, MEETING
-    epd_time: float = 0.8  # endpoint detection time in seconds
+    encoding: str = "LINEAR16"
+    domain: str = "CALL"
+    epd_time: float = 0.8
     noise_threshold: float = 0.60
     active_threshold: float = 0.80
     use_punctuation: bool = False
@@ -65,10 +65,10 @@ class _STTOptions:
 class _StreamState(Enum):
     """State machine for SpeechStream lifecycle."""
 
-    IDLE = auto()  # No active speech, no WS connection
-    ACTIVE = auto()  # Speech active, WS connected
-    CLOSING = auto()  # Sending EOS, waiting for recv completion
-    CLOSED = auto()  # Stream fully closed
+    IDLE = auto()
+    ACTIVE = auto()
+    CLOSING = auto()
+    CLOSED = auto()
 
 
 class STT(stt.STT):
@@ -92,7 +92,6 @@ class STT(stt.STT):
             capabilities=stt.STTCapabilities(
                 streaming=True,
                 interim_results=True,
-                # word timestamps don't seem to work despite the docs saying they do
                 aligned_transcript="chunk",
                 offline_recognize=False,
             )
@@ -307,9 +306,8 @@ class SpeechStream(stt.SpeechStream):
             if has_ended:
                 if self._ws:
                     await self._end_segment()
-                has_ended = False  # always reset - flush without active WS is a no-op
+                has_ended = False
 
-        # Final shutdown
         if self._ws:
             self._state = _StreamState.CLOSING
             try:

@@ -1,14 +1,14 @@
 # Copyright 2024 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -111,11 +111,9 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
     elif resize_opts.strategy == "center_aspect_fit":
         result = Image.new("RGB", (resize_opts.width, resize_opts.height))  # noqa
 
-        # Start with assuming the new image is narrower than the original
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
 
-        # If the new image is wider than the original
         if resize_opts.width / resize_opts.height > image.width / image.height:
             new_height = resize_opts.height
             new_width = int(image.width * (resize_opts.height / image.height))
@@ -134,11 +132,9 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
     elif resize_opts.strategy == "center_aspect_cover":
         result = Image.new("RGB", (resize_opts.width, resize_opts.height))  # noqa
 
-        # Start with assuming the new image is shorter than the original
         new_height = int(image.height * (resize_opts.width / image.width))
         new_width = resize_opts.width
 
-        # If the new image is taller than the original
         if resize_opts.height / resize_opts.width > image.height / image.width:
             new_width = int(image.width * (resize_opts.height / image.height))
             new_height = resize_opts.height
@@ -154,22 +150,18 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
         )
         return result
     elif resize_opts.strategy == "scale_aspect_cover":
-        # Start with assuming width is the limiting dimension
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
 
-        # If height is under the limit, scale based on height instead
         if new_height < resize_opts.height:
             new_height = resize_opts.height
             new_width = int(image.width * (resize_opts.height / image.height))
 
         return image.resize((new_width, new_height))
     elif resize_opts.strategy == "scale_aspect_fit":
-        # Start with assuming width is the limiting dimension
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
 
-        # If height would exceed the limit, scale based on height instead
         if new_height > resize_opts.height:
             new_height = resize_opts.height
             new_width = int(image.width * (resize_opts.height / image.height))

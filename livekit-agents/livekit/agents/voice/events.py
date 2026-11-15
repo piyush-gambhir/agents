@@ -43,7 +43,6 @@ Userdata_T = TypeVar("Userdata_T")
 
 
 class RunContext(Generic[Userdata_T]):
-    # private ctor
     def __init__(
         self,
         *,
@@ -58,10 +57,8 @@ class RunContext(Generic[Userdata_T]):
         self._initial_step_idx = speech_handle.num_steps - 1
         self._filler_schedulers: list[_FillerScheduler] = []
 
-        # synthesized progress-update pairs, populated whether or not an executor is attached
         self._updates: list[tuple[FunctionCall, FunctionCallOutput]] = []
 
-        # set/cleared by the executor around the tool's lifetime
         self._executor: _ToolExecutor | None = None
         self._first_update_fut: asyncio.Future[Any] | None = None
 
@@ -181,8 +178,7 @@ class RunContext(Generic[Userdata_T]):
                 callable receiving ``UpdatePromptArgs``. Defaults to the executor's
                 resolved ``update`` template (or the module default when standalone).
         """
-        # update() is a deliberate agent action — reset any active filler dwell so a
-        # pending filler doesn't race the real update to the speech queue
+
         for s in self._filler_schedulers:
             s.reset_dwell()
 
@@ -205,7 +201,6 @@ class RunContext(Generic[Userdata_T]):
                 },
             )
 
-        # first update keeps the original call_id
         update_step = len(self._updates)
         pair = self._make_update_pair(
             message, call_id_suffix=f"_update_{update_step}" if update_step > 0 else ""
@@ -213,7 +208,7 @@ class RunContext(Generic[Userdata_T]):
         self._updates.append(pair)
 
         if self._executor is None:
-            return  # standalone — nothing else to do
+            return
 
         assert self._first_update_fut is not None
         if not self._first_update_fut.done():
@@ -245,7 +240,7 @@ class RunContext(Generic[Userdata_T]):
         try:
             await asyncio.shield(reply_task)
         except Exception:
-            pass  # reply task's own errors aren't our concern
+            pass
 
     def _make_update_pair(
         self, message: Any, *, call_id_suffix: str = ""
@@ -264,7 +259,7 @@ class RunContext(Generic[Userdata_T]):
             extra=dict(self.function_call.extra),
         )
         tool_output = make_tool_output(fnc_call=fnc_call, output=message, exception=None)
-        # fall back to a stub when the message isn't a valid tool output (e.g. raw object)
+
         if tool_output.fnc_call_out is None:
             fnc_call_out = FunctionCallOutput(
                 name=fnc_call.name,
@@ -326,7 +321,6 @@ class AgentFalseInterruptionEvent(BaseModel):
     """Whether the false interruption was resumed automatically."""
     created_at: float = Field(default_factory=time.time)
 
-    # deprecated
     message: ChatMessage | None = None
     extra_instructions: str | None = None
 
@@ -354,7 +348,7 @@ class SessionUsageUpdatedEvent(BaseModel):
 
 
 class _TypeDiscriminator(BaseModel):
-    type: Literal["unknown"] = "unknown"  # force user to use the type discriminator
+    type: Literal["unknown"] = "unknown"
 
 
 class ConversationItemAddedEvent(BaseModel):

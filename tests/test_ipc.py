@@ -151,7 +151,6 @@ def _new_start_args(mp_ctx: BaseContext) -> _StartArgs:
 def _initialize_proc(proc: JobProcess) -> None:
     start_args: _StartArgs = proc.user_arguments
 
-    # incrementing isn't atomic (the lock should be reentrant by default)
     with start_args.initialize_counter.get_lock():
         start_args.initialize_counter.value += 1
 
@@ -193,7 +192,6 @@ async def _job_entrypoint_session_aclose_hangs(job_ctx: JobContext) -> None:
     _SESSION_ACLOSE_TIMEOUT guardrail must fire so shutdown callbacks still run."""
     from livekit.agents.ipc import job_proc_lazy_main
 
-    # Shrink the hardcoded guardrail so the test doesn't wait the full 60s.
     job_proc_lazy_main._SESSION_ACLOSE_TIMEOUT = 2.0
 
     start_args: _StartArgs = job_ctx.proc.user_arguments
@@ -206,13 +204,10 @@ async def _job_entrypoint_session_aclose_hangs(job_ctx: JobContext) -> None:
 
     class _HangingSession:
         async def aclose(self) -> None:
-            await asyncio.Event().wait()  # never resolves
+            await asyncio.Event().wait()
 
     job_ctx._primary_agent_session = _HangingSession()  # type: ignore[assignment]
 
-    # _on_session_end touches session.history and make_session_report, which
-    # would crash on our minimal fake. Bypass it so the assertion is purely
-    # about the aclose-timeout → shutdown-callback path.
     async def _noop_session_end() -> None:
         return None
 
@@ -239,8 +234,6 @@ async def _job_entrypoint_raises_after_shutdown(job_ctx: JobContext) -> None:
     with start_args.entrypoint_counter.get_lock():
         start_args.entrypoint_counter.value += 1
 
-    # set _shutdown_fut first (mimics the room "disconnected" handler), then
-    # raise from a pending await (mimics wait_for_participant's RuntimeError).
     fut: asyncio.Future[None] = asyncio.Future()
 
     async def _trigger() -> None:
@@ -346,7 +339,6 @@ async def test_proc_pool():
         assert not psutil.pid_exists(pid)
 
     for exitcode in exitcodes:
-        # this test expects graceful shutdown, kill is tested on another test
         assert exitcode == 0, f"process did not exit cleanly: {exitcode}"
 
 
@@ -396,7 +388,6 @@ async def test_slow_initialization():
     await _wait_for_elements(start_q, num_idle_processes)
     await _wait_for_elements(close_q, num_idle_processes)
 
-    # retry batch should also timeout and be killed
     await _wait_for_elements(start_q, num_idle_processes)
     await _wait_for_elements(close_q, num_idle_processes)
 
@@ -518,7 +509,6 @@ async def test_job_slow_shutdown():
     await _poll_until(lambda: start_args.entrypoint_counter.value >= 1)
     await proc.aclose()
 
-    # process is killed when there is a job with slow timeout
     assert proc.exitcode != 0, "process should have been killed"
     assert proc.killed
 
@@ -603,18 +593,15 @@ def test_log_queue_drains_before_stop():
     parent_dup = duplex_unix._Duplex.open(parent_sock)
     child_dup = duplex_unix._Duplex.open(child_sock)
 
-    # -- parent (listener) side --
     class _CapturingListener(LogQueueListener):
         def handle(self, record: logging.LogRecord) -> None:
             received.append(record.getMessage())
-            # slow down processing so the buffer is not fully drained
-            # before stop() is called
+
             time.sleep(0.001)
 
     listener = _CapturingListener(parent_dup, lambda r: None)
     listener.start()
 
-    # -- child (handler) side --
     handler = LogQueueHandler(child_dup)
     test_logger = logging.getLogger("test_log_queue_drain")
     test_logger.addHandler(handler)
@@ -624,12 +611,9 @@ def test_log_queue_drains_before_stop():
     for i in range(NUM_LOGS):
         test_logger.info("msg %d", i)
 
-    # simulate the child process shutting down: close handler then its thread
     handler.close()
     handler.thread.join()
-    # child duplex is now closed by _forward_logs
 
-    # simulate supervised_proc._sync_run: proc.join() returned, now stop listener
     listener.stop()
 
     test_logger.removeHandler(handler)

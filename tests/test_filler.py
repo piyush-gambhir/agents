@@ -67,7 +67,7 @@ class _FakeSession:
         self.say_calls: list[dict[str, Any]] = []
         self._listeners: dict[str, list[Any]] = {}
         self._idle_event = asyncio.Event()
-        self._idle_event.set()  # idle by default
+        self._idle_event.set()
 
     def on(self, event: str, callback: Any) -> Any:
         self._listeners.setdefault(event, []).append(callback)
@@ -143,7 +143,7 @@ async def test_scheduler_stop_is_idempotent() -> None:
     )
 
     await scheduler.aclose()
-    await scheduler.aclose()  # no-op
+    await scheduler.aclose()
 
 
 @pytest.mark.asyncio
@@ -198,17 +198,15 @@ async def test_scheduler_dwell_resets_on_agent_state_change() -> None:
         max_steps=None,
     )
 
-    # halfway through the dwell window, emit "non-idle" → dwell must restart
     await asyncio.sleep(0.05)
     session.emit_agent_state("speaking")
-    # at this point we've used ~0.05s; if dwell didn't reset, fire would land
-    # around t=0.10. With reset, fire shouldn't land until at least t=0.05+0.10=0.15
+
     await asyncio.sleep(0.08)
     fire_count_before = len(session.say_calls)
-    await asyncio.sleep(0.05)  # cross past 0.15
+    await asyncio.sleep(0.05)
     fire_count_after = len(session.say_calls)
     await scheduler.aclose()
-    assert fire_count_before == 0  # didn't fire before reset+delay
+    assert fire_count_before == 0
     assert fire_count_after == 1
 
 
@@ -256,11 +254,10 @@ async def test_scheduler_invokes_callable_source_lazily() -> None:
         max_steps=None,
     )
 
-    # at start, factory should not have run yet
     assert invocations == []
     await asyncio.sleep(0.15)
     await scheduler.aclose()
-    assert invocations == [0]  # first fire, step counter starts at 0
+    assert invocations == [0]
     assert [c["text"] for c in session.say_calls] == ["from callable"]
 
 
@@ -278,9 +275,9 @@ async def test_scheduler_fires_repeatedly_with_interval() -> None:
         max_steps=None,
     )
 
-    await asyncio.sleep(0.35)  # plenty of time for several fires
+    await asyncio.sleep(0.35)
     await scheduler.aclose()
-    # at least 2 fires; exact count depends on timing but cap at a sane upper bound
+
     assert 2 <= len(session.say_calls) <= 6
     assert all(c["text"] == "tick" for c in session.say_calls)
 
@@ -299,7 +296,7 @@ async def test_scheduler_interval_none_fires_once_only() -> None:
         max_steps=None,
     )
 
-    await asyncio.sleep(0.3)  # would fire ~15 times if it looped
+    await asyncio.sleep(0.3)
     await scheduler.aclose()
     assert len(session.say_calls) == 1
 
@@ -325,7 +322,7 @@ async def test_reset_dwell_aborts_current_dwell() -> None:
     await asyncio.sleep(0.05)
     await scheduler.aclose()
     fire_after = len(session.say_calls)
-    assert fire_before == 0  # didn't fire before reset+delay completed
+    assert fire_before == 0
     assert fire_after == 1
 
 
@@ -342,9 +339,9 @@ async def test_reset_dwell_is_safe_to_call_anytime() -> None:
         interval=None,
         max_steps=None,
     )
-    scheduler.reset_dwell()  # must not raise
+    scheduler.reset_dwell()
     await scheduler.aclose()
-    scheduler.reset_dwell()  # also safe after stop
+    scheduler.reset_dwell()
 
 
 @pytest.mark.asyncio
@@ -361,12 +358,12 @@ async def test_scheduler_does_not_fire_after_speech_interrupted() -> None:
         max_steps=None,
     )
 
-    await asyncio.sleep(0.05)  # at least one fire happens
+    await asyncio.sleep(0.05)
     fires_when_interrupted = len(session.say_calls)
     handle.mark_interrupted()
-    await asyncio.sleep(0.2)  # would have fired many more times if uninterrupted
+    await asyncio.sleep(0.2)
     await scheduler.aclose()
-    # at most one additional fire that was already in flight at interrupt time
+
     assert len(session.say_calls) <= fires_when_interrupted + 1
 
 
@@ -424,14 +421,13 @@ async def test_ctx_update_resets_pending_filler_dwell() -> None:
 
     async with ctx.with_filler("ping", delay=0.1, interval=None):
         await asyncio.sleep(0.05)
-        # update() resets the dwell on every active filler before anything else;
-        # fire two back to back to confirm each call resets it
+
         await ctx.update("first")
         await ctx.update("second")
         await asyncio.sleep(0.08)
-        # not yet fired — reset_dwell pushed the fire past 0.05+0.1=0.15
+
         fires_mid = len(session.say_calls)
-        await asyncio.sleep(0.05)  # cross past 0.15
+        await asyncio.sleep(0.05)
         fires_late = len(session.say_calls)
     assert fires_mid == 0
     assert fires_late == 1

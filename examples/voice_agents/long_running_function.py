@@ -20,10 +20,6 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-# This example shows how to interrupt a long running function call.
-# A tool execution won't be canceled after the associated agent speech is finished,
-# it will continue in the background and send the result to the LLM when it's done.
-
 
 class MyAgent(Agent):
     def __init__(self) -> None:
@@ -37,16 +33,12 @@ class MyAgent(Agent):
         """
         logger.info(f"Searching the web for {query}")
 
-        # wait for the task to finish or the agent speech to be interrupted
-        # alternatively, you can disallow interruptions for this function call with
-        # run_ctx.disallow_interruptions()
-
         wait_for_result = asyncio.ensure_future(self._a_long_running_task(query))
         await run_ctx.speech_handle.wait_if_not_interrupted([wait_for_result])
 
         if run_ctx.speech_handle.interrupted:
             logger.info(f"Interrupted searching the web for {query}")
-            # return None to skip the tool reply
+
             wait_for_result.cancel()
             return None
 

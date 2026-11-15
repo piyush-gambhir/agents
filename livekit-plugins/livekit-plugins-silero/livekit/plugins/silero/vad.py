@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -35,7 +35,7 @@ from livekit.agents.utils import is_given
 from . import onnx_model
 from .log import logger
 
-SLOW_INFERENCE_THRESHOLD = 0.2  # late by 200ms
+SLOW_INFERENCE_THRESHOLD = 0.2
 
 
 @dataclass
@@ -69,7 +69,6 @@ class VAD(agents.vad.VAD):
         force_cpu: bool = True,
         onnx_file_path: NotGivenOr[Path | str] = NOT_GIVEN,
         deactivation_threshold: NotGivenOr[float] = NOT_GIVEN,
-        # deprecated
         padding_duration: NotGivenOr[float] = NOT_GIVEN,
     ) -> VAD:
         """
@@ -232,7 +231,7 @@ class VADStream(agents.vad.VADStream):
         self._input_sample_rate = 0
         self._speech_buffer: np.ndarray | None = None
         self._speech_buffer_max_reached = False
-        self._prefix_padding_samples = 0  # (input_sample_rate)
+        self._prefix_padding_samples = 0
 
     def update_options(
         self,
@@ -292,7 +291,6 @@ class VADStream(agents.vad.VADStream):
         inference_f32_data = np.empty(self._model.window_size_samples, dtype=np.float32)
         speech_buffer_index: int = 0
 
-        # "pub_" means public, these values are exposed to the users through events
         pub_speaking = False
         pub_speech_duration = 0.0
         pub_silence_duration = 0.0
@@ -306,7 +304,6 @@ class VADStream(agents.vad.VADStream):
         inference_frames: list[rtc.AudioFrame] = []
         resampler: rtc.AudioResampler | None = None
 
-        # used to avoid drift when the sample_rate ratio is not an integer
         input_copy_remaining_fract = 0.0
 
         extra_inference_time = 0.0
@@ -360,7 +357,6 @@ class VADStream(agents.vad.VADStream):
             if not self._input_sample_rate:
                 self._input_sample_rate = input_frame.sample_rate
 
-                # alloc the buffers now that we know the input sample rate
                 self._prefix_padding_samples = int(
                     self._opts.prefix_padding_duration * self._input_sample_rate
                 )
@@ -372,12 +368,10 @@ class VADStream(agents.vad.VADStream):
                 )
 
                 if self._input_sample_rate != self._opts.sample_rate:
-                    # resampling needed: the input sample rate isn't the same as the model's
-                    # sample rate used for inference
                     resampler = rtc.AudioResampler(
                         input_rate=self._input_sample_rate,
                         output_rate=self._opts.sample_rate,
-                        quality=rtc.AudioResamplerQuality.QUICK,  # VAD doesn't need high quality
+                        quality=rtc.AudioResamplerQuality.QUICK,
                     )
 
             elif self._input_sample_rate != input_frame.sample_rate:
@@ -388,8 +382,6 @@ class VADStream(agents.vad.VADStream):
 
             input_frames.append(input_frame)
             if resampler is not None:
-                # the resampler may have a bit of latency, but it is OK to ignore since it should be
-                # negligible
                 inference_frames.extend(resampler.push(input_frame))
             else:
                 inference_frames.append(input_frame)
@@ -401,12 +393,11 @@ class VADStream(agents.vad.VADStream):
                     [frame.samples_per_channel for frame in inference_frames]
                 )
                 if available_inference_samples < self._model.window_size_samples:
-                    break  # not enough samples to run inference
+                    break
 
                 input_frame = utils.combine_frames(input_frames)
                 inference_frame = utils.combine_frames(inference_frames)
 
-                # convert data to f32
                 np.divide(
                     inference_frame.data[: self._model.window_size_samples],
                     np.iinfo(np.int16).max,
@@ -414,7 +405,6 @@ class VADStream(agents.vad.VADStream):
                     dtype=np.float32,
                 )
 
-                # run the inference
                 p = await self._loop.run_in_executor(None, self._model, inference_f32_data)
                 p = self._exp_filter.apply(exp=1.0, sample=p)
 
@@ -430,7 +420,6 @@ class VADStream(agents.vad.VADStream):
                 to_copy_int = int(to_copy)
                 input_copy_remaining_fract = to_copy - to_copy_int
 
-                # copy the inference window to the speech buffer
                 available_space = len(self._speech_buffer) - speech_buffer_index
                 to_copy_buffer = min(to_copy_int, available_space)
                 if to_copy_buffer > 0:
@@ -439,7 +428,6 @@ class VADStream(agents.vad.VADStream):
                     ] = input_frame.data[:to_copy_buffer]
                     speech_buffer_index += to_copy_buffer
                 elif not self._speech_buffer_max_reached:
-                    # reached self._opts.max_buffered_speech (padding is included)
                     self._speech_buffer_max_reached = True
                     logger.warning(
                         "max_buffered_speech reached, ignoring further data for the current speech input"  # noqa: E501
@@ -472,7 +460,7 @@ class VADStream(agents.vad.VADStream):
                     speech_buffer_index = self._prefix_padding_samples
 
                 def _copy_speech_buffer() -> rtc.AudioFrame:
-                    # copy the data from speech_buffer
+
                     assert self._speech_buffer is not None
                     speech_data = self._speech_buffer[:speech_buffer_index].tobytes()  # noqa: B023
 
@@ -567,11 +555,9 @@ class VADStream(agents.vad.VADStream):
 
                         _reset_write_cursor()
 
-                # remove the frames that were used for inference from the input and inference frames
                 input_frames = []
                 inference_frames = []
 
-                # add the remaining data
                 if len(input_frame.data) - to_copy_int > 0:
                     data = input_frame.data[to_copy_int:].tobytes()
                     input_frames.append(

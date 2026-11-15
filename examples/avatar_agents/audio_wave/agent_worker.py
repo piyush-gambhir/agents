@@ -44,7 +44,6 @@ async def launch_avatar(ctx: JobContext, avatar_dispatcher_url: str, avatar_iden
     This function should be wrapped in a avatar plugin.
     """
 
-    # create a token for the avatar to join the room
     token = (
         api.AccessToken()
         .with_identity(avatar_identity)
@@ -83,18 +82,15 @@ async def entrypoint(ctx: JobContext):
     session.output.audio = DataStreamAudioOutput(
         ctx.room,
         destination_identity=AVATAR_IDENTITY,
-        # (optional) wait for the avatar to publish video track before generating a reply
         wait_remote_track=rtc.TrackKind.KIND_VIDEO,
-        # the example avatar_runner uses AvatarRunner which sends lk.playback_started
         wait_playback_start=True,
     )
 
-    # start agent with room input and room text output
     await session.start(agent=agent, room=ctx.room)
 
     @session.output.audio.on("playback_finished")
     def on_playback_finished(ev: PlaybackFinishedEvent) -> None:
-        # the avatar should notify when the audio playback is finished
+
         logger.info(
             "playback_finished",
             extra={
@@ -105,7 +101,7 @@ async def entrypoint(ctx: JobContext):
 
     @session.output.audio.on("playback_started")
     def on_playback_started(ev: PlaybackStartedEvent) -> None:
-        # the avatar should notify when the audio playback is started
+
         logger.info(
             "playback_started",
             extra={"created_at": ev.created_at},

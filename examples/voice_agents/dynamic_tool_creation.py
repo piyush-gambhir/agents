@@ -25,12 +25,6 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-## This example shows how to create tools dynamically
-## There are 3 options:
-## 1. Create tools when the agent is created
-## 2. Update tools after the agent is created using agent.update_tools()
-## 3. Add temporal tools only for this call of llm_node
-
 
 class MyAgent(Agent):
     def __init__(self, instructions: str, tools: list[FunctionTool]) -> None:
@@ -39,11 +33,10 @@ class MyAgent(Agent):
     async def llm_node(
         self, chat_ctx: ChatContext, tools: list[FunctionTool], model_settings: ModelSettings
     ):
-        # Option 3: add temporal tools only for this call of llm_node
+
         async def _get_weather(location: str) -> str:
             return f"The weather in {location} is sunny."
 
-        # modify the tools list in place
         tools.append(
             function_tool(
                 _get_weather,
@@ -75,18 +68,14 @@ server = AgentServer()
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    # Option 1: create tools when the agent is created
+
     courses = await _get_course_list_from_db()
 
-    # enums will automatically be recognized by the LLMs
     CourseType = Enum("CourseType", {c.replace(" ", "_"): c for c in courses})
 
     class CourseInfo(BaseModel):
         course: CourseType  # type: ignore
         location: Literal["online", "in-person"]
-
-    # BaseModel can also be created using create_model
-    # https://docs.pydantic.dev/2.3/usage/models/#dynamic-model-creation
 
     async def _get_course_info(info: CourseInfo) -> str:
         logger.info(f"get_course_info called: {info}")
@@ -103,7 +92,6 @@ async def entrypoint(ctx: JobContext):
         ],
     )
 
-    # Option 2: update tools after the agent is created using agent.update_tools()
     async def _random_number() -> int:
         num = random.randint(0, 100)
         logger.info(f"random_number called: {num}")

@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -286,10 +286,8 @@ class STT(stt.STT):
         """Create a streaming transcription session."""
         opts_language = LanguageCode(language) if is_given(language) else self._opts.language
 
-        # Create options for the stream
         stream_opts = SimplismartSTTOptions(language=opts_language)
 
-        # Create a fresh session for this stream to avoid conflicts
         stream_session = aiohttp.ClientSession()
 
         if self._api_key is None:
@@ -331,7 +329,7 @@ class SpeechStream(stt.SpeechStream):
     async def _run(self) -> None:
         @utils.log_exceptions(logger=logger)
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
-            # forward audio to simplismart in chunks of 50ms
+
             samples_50ms = self._SAMPLE_RATE // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._SAMPLE_RATE,
@@ -358,12 +356,9 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    # close is expected, see SpeechStream.aclose
-                    # or when the agent session ends, the http session is closed
                     if self._session.closed:
                         return
 
-                    # this will trigger a reconnection, see the _run loop
                     self._reconnect_event.set()
                     return
 
@@ -394,7 +389,6 @@ class SpeechStream(stt.SpeechStream):
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-                    # propagate exceptions from completed tasks
                     for task in done:
                         if task != wait_reconnect_task:
                             task.result()
@@ -407,7 +401,7 @@ class SpeechStream(stt.SpeechStream):
                     await utils.aio.gracefully_cancel(*tasks, wait_reconnect_task)
                     tasks_group.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
-                        tasks_group.exception()  # retrieve the exception
+                        tasks_group.exception()
             finally:
                 if ws is not None:
                     await ws.close()
@@ -453,7 +447,6 @@ class SpeechStream(stt.SpeechStream):
         request_id = self._request_id
 
         try:
-            # Create usage event with proper metrics extraction
             metrics: dict[str, float] = {}
             request_data = {
                 "original_id": request_id,
@@ -468,13 +461,11 @@ class SpeechStream(stt.SpeechStream):
             )
             self._event_ch.send_nowait(usage_event)
 
-            # Create speech data
             speech_data = stt.SpeechData(
                 language=LanguageCode(self._opts.language or "en"),
                 text=transcript_text,
             )
 
-            # Create final transcript event with request_id
             speech_event = stt.SpeechEvent(
                 type=stt.SpeechEventType.FINAL_TRANSCRIPT,
                 request_id=request_id,

@@ -32,7 +32,7 @@ class InputSpeechStoppedEvent:
 @dataclass
 class MessageGeneration:
     message_id: str
-    text_stream: AsyncIterable[str]  # could be io.TimedString
+    text_stream: AsyncIterable[str]
     audio_stream: AsyncIterable[rtc.AudioFrame]
     modalities: Awaitable[list[Literal["text", "audio"]]]
 
@@ -131,8 +131,8 @@ class RealtimeModel:
 
 
 EventTypes = Literal[
-    "input_speech_started",  # serverside VAD (also used for interruptions)
-    "input_speech_stopped",  # serverside VAD
+    "input_speech_started",
+    "input_speech_stopped",
     "input_audio_transcription_completed",
     "generation_created",
     "session_reconnected",
@@ -207,9 +207,7 @@ class RealtimeSession(ABC, rtc.EventEmitter[EventTypes | TEvent], Generic[TEvent
     async def update_instructions(self, instructions: str) -> None: ...
 
     @abstractmethod
-    async def update_chat_ctx(
-        self, chat_ctx: ChatContext
-    ) -> None: ...  # can raise RealtimeError on Timeout
+    async def update_chat_ctx(self, chat_ctx: ChatContext) -> None: ...
 
     @abstractmethod
     async def update_tools(self, tools: list[Tool]) -> None: ...
@@ -230,21 +228,17 @@ class RealtimeSession(ABC, rtc.EventEmitter[EventTypes | TEvent], Generic[TEvent
         instructions: NotGivenOr[str] = NOT_GIVEN,
         tool_choice: NotGivenOr[ToolChoice] = NOT_GIVEN,
         tools: NotGivenOr[list[Tool]] = NOT_GIVEN,
-    ) -> asyncio.Future[GenerationCreatedEvent]: ...  # can raise RealtimeError on Timeout
+    ) -> asyncio.Future[GenerationCreatedEvent]: ...
 
-    # commit the input audio buffer to the server
     @abstractmethod
     def commit_audio(self) -> None: ...
 
-    # clear the input audio buffer to the server
     @abstractmethod
     def clear_audio(self) -> None: ...
 
-    # cancel the current generation (do nothing if no generation is in progress)
     @abstractmethod
     def interrupt(self) -> None: ...
 
-    # message_id is the ID of the message to truncate (inside the ChatCtx)
     @abstractmethod
     def truncate(
         self,

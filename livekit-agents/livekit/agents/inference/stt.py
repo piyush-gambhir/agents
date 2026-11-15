@@ -65,26 +65,26 @@ InworldModels = Literal["inworld/inworld-stt-1",]
 
 
 class CartesiaOptions(TypedDict, total=False):
-    min_volume: float  # default: not specified
-    max_silence_duration_secs: float  # default: not specified
+    min_volume: float
+    max_silence_duration_secs: float
 
 
 class DeepgramOptions(TypedDict, total=False):
-    filler_words: bool  # default: True
-    interim_results: bool  # default: True
-    endpointing: int  # default: 25 (ms)
-    punctuate: bool  # default: True
+    filler_words: bool
+    interim_results: bool
+    endpointing: int
+    punctuate: bool
     smart_format: bool
     keywords: list[tuple[str, float]]
     keyterm: str | list[str]
     profanity_filter: bool
     numerals: bool
-    mip_opt_out: bool  # default: False
-    vad_events: bool  # default: False
-    diarize: bool  # when True, enables speaker diarization (default off)
+    mip_opt_out: bool
+    vad_events: bool
+    diarize: bool
     dictation: bool
     detect_language: bool
-    no_delay: bool  # default: True
+    no_delay: bool
     utterance_end: bool
     redact: str | list[str]
     replace: str | list[str]
@@ -98,25 +98,25 @@ class DeepgramOptions(TypedDict, total=False):
 
 
 class DeepgramFluxOptions(TypedDict, total=False):
-    eager_eot_threshold: float  # range 0.3-0.9, default: 0.5
-    eot_threshold: float  # range 0.5-0.9
+    eager_eot_threshold: float
+    eot_threshold: float
     eot_timeout_ms: int
     keyterm: str | list[str]
-    mip_opt_out: bool  # default: False
+    mip_opt_out: bool
     tag: str | list[str]
     detect_language: bool
 
 
 class AssemblyaiOptions(TypedDict, total=False):
-    format_turns: bool  # default: False
-    end_of_turn_confidence_threshold: float  # default: 0.01
-    min_end_of_turn_silence_when_confident: int  # default: 0
-    max_turn_silence: int  # default: not specified
-    keyterms_prompt: list[str]  # default: not specified
+    format_turns: bool
+    end_of_turn_confidence_threshold: float
+    min_end_of_turn_silence_when_confident: int
+    max_turn_silence: int
+    keyterms_prompt: list[str]
     language_detection: bool
-    inactivity_timeout: float  # seconds
-    prompt: str  # default: not specified (u3-rt-pro only, mutually exclusive with keyterms_prompt)
-    speaker_labels: bool  # when True, enables speaker diarization (default off)
+    inactivity_timeout: float
+    prompt: str
+    speaker_labels: bool
 
 
 class ElevenlabsOptions(TypedDict, total=False):
@@ -130,50 +130,46 @@ class ElevenlabsOptions(TypedDict, total=False):
 
 
 class SpeechmaticsOptions(TypedDict, total=False):
-    domain: str  # e.g. "finance"
-    output_locale: str  # BCP-47 locale for output formatting
-    max_delay: float  # 0.7-4.0 seconds, default 1.0
-    max_delay_mode: str  # "flexible" | "fixed"
-    diarization: str  # "none" | "speaker" | "channel" | "channel_and_speaker_change" | "speaker_change"; non-"none" enables diarization
-    speaker_sensitivity: float  # 0.0-1.0
+    domain: str
+    output_locale: str
+    max_delay: float
+    max_delay_mode: str
+    diarization: str
+    speaker_sensitivity: float
     max_speakers: int
     prefer_current_speaker: bool
-    enable_partials: bool  # default True (overridden by gateway)
+    enable_partials: bool
     enable_entities: bool
     punctuation_overrides: dict[str, Any]
     additional_vocab: list[dict[str, Any]]
-    end_of_utterance_silence_trigger: float  # seconds of silence before final
+    end_of_utterance_silence_trigger: float
     audio_filtering_config: dict[str, Any]
     transcript_filtering_config: dict[str, Any]
 
 
 class XaiOptions(TypedDict, total=False):
-    diarize: bool  # when True, enables speaker diarization (default off)
-    endpointing: int  # silence duration in ms before utterance-final (0-5000)
-    format: bool  # enables Inverse Text Normalization (e.g. "one hundred dollars" -> "$100"); requires language
-    interim_results: bool  # default True; set False to opt out of interim transcripts
+    diarize: bool
+    endpointing: int
+    format: bool
+    interim_results: bool
 
 
 class InworldOptions(TypedDict, total=False):
-    enable_voice_profile: bool  # default: True
-    voice_profile_top_n: int  # range 1-20, default 10
-    include_word_timestamps: bool  # default: True
-    audio_encoding: Literal["LINEAR16", "AUTO_DETECT"]  # default: LINEAR16
-    inactivity_timeout_seconds: int  # >= 0; 0 disables
-    end_of_turn_confidence_threshold: float  # range 0.0-1.0, default 0.5
-    min_end_of_turn_silence_when_confident: int  # >= 0 (ms)
+    enable_voice_profile: bool
+    voice_profile_top_n: int
+    include_word_timestamps: bool
+    audio_encoding: Literal["LINEAR16", "AUTO_DETECT"]
+    inactivity_timeout_seconds: int
+    end_of_turn_confidence_threshold: float
+    min_end_of_turn_silence_when_confident: int
     prompts: list[str]
-    vad_threshold: float  # range 0.0-1.0, default 0.5
+    vad_threshold: float
 
 
-# Diarization is requested via different extra_kwargs keys across
-# providers. Keep this list in one place so adding a new provider is a
-# single-line change and there's no divergence between __init__ and
-# update_options capability inference.
 _DIARIZATION_EXTRA_KEYS: tuple[str, ...] = (
-    "diarize",  # Deepgram, xAI
-    "speaker_labels",  # AssemblyAI
-    "diarization",  # Speechmatics
+    "diarize",
+    "speaker_labels",
+    "diarization",
 )
 
 
@@ -185,7 +181,7 @@ def _diarization_enabled(extra_kwargs: dict[str, Any] | None) -> bool:
         value = extra_kwargs.get(key)
         if not value:
             continue
-        # Speechmatics' "diarization" accepts the string "none" to mean off.
+
         if isinstance(value, str) and value.lower() == "none":
             continue
         return True
@@ -271,7 +267,7 @@ STTModels = (
     | XaiModels
     | SpeechmaticsModels
     | InworldModels
-    | Literal["auto"]  # automatically select a provider based on the language
+    | Literal["auto"]
 )
 STTEncoding = Literal["pcm_s16le"]
 
@@ -494,14 +490,11 @@ class STT(stt.STT):
                 frame is forwarded to the VAD and `session.finalize` is sent to the inference
                 gateway on end of speech. Only applicable to Speechmatics models.
         """
-        # Infer diarization capability from provider-specific extra_kwargs
-        # keys (see _DIARIZATION_EXTRA_KEYS). xAI uses "diarize" (same as
-        # Deepgram); AssemblyAI uses "speaker_labels".
+
         diarization_enabled = _diarization_enabled(
             dict(extra_kwargs) if is_given(extra_kwargs) else None
         )
 
-        # Parse language from model string if provided: "provider/model:language"
         if is_given(model) and isinstance(model, str):
             parsed_model, parsed_language = _parse_model_string(model)
             model = parsed_model
@@ -625,7 +618,6 @@ class STT(stt.STT):
     ) -> None:
         """Update STT configuration options."""
         if is_given(model):
-            # Mirror __init__: strip ":language" suffix and apply if not overridden.
             if isinstance(model, str):
                 parsed_model, parsed_language = _parse_model_string(model)
                 model = parsed_model
@@ -733,7 +725,7 @@ class SpeechStream(stt.SpeechStream):
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
                 num_channels=1,
-                samples_per_channel=self._opts.sample_rate // 20,  # 50ms
+                samples_per_channel=self._opts.sample_rate // 20,
             )
 
             async for ev in self._input_ch:
@@ -897,8 +889,7 @@ class SpeechStream(stt.SpeechStream):
     def _build_speech_data(self, data: dict) -> stt.SpeechData:
         language = LanguageCode(data.get("language", self._opts.language or "en"))
         words = data.get("words", []) or []
-        # The gateway carries provider-specific data on the `extra` field
-        # of the transcript message. We surface it on SpeechData.metadata
+
         extra = data.get("extra")
         metadata = extra if isinstance(extra, dict) and extra else None
         return stt.SpeechData(
@@ -942,7 +933,7 @@ class SpeechStream(stt.SpeechStream):
 
         if not text and not is_final:
             return
-        # We'll have a more accurate way of detecting when speech started when we have VAD
+
         if not self._speaking:
             self._speaking = True
             start_event = stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)

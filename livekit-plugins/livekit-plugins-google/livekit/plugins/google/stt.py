@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -61,15 +61,13 @@ from .models import EndpointingSensitivity, SpeechLanguages, SpeechModels, Speec
 LgType = SpeechLanguages | str
 LanguagesInput = LgType | list[LgType]
 
-# Google STT has a timeout of 5 mins, we'll attempt to restart the session
-# before that timeout is reached
+
 _max_session_duration = 240
 
-# Google is very sensitive to background noise, so we'll ignore results with low confidence
+
 _default_min_confidence = 0.65
 
 
-# This class is only be used internally to encapsulate the options
 @dataclass
 class STTOptions:
     languages: list[LgType]
@@ -134,7 +132,7 @@ class STT(stt.STT):
     def __init__(
         self,
         *,
-        languages: LanguagesInput = "en-US",  # Google STT can accept multiple languages
+        languages: LanguagesInput = "en-US",
         detect_language: bool = True,
         interim_results: bool = True,
         punctuate: bool = True,
@@ -284,9 +282,7 @@ class STT(stt.STT):
         return "Google Cloud Platform"
 
     async def _create_client(self, timeout: float) -> SpeechAsyncClientV2 | SpeechAsyncClientV1:
-        # Add support for passing a specific location that matches recognizer
-        # see: https://cloud.google.com/speech-to-text/v2/docs/speech-to-text-supported-languages
-        # TODO(long): how to set timeout?
+
         client_options = None
         client: SpeechAsyncClientV2 | SpeechAsyncClientV1 | None = None
         client_cls = SpeechAsyncClientV2 if self._config.version == 2 else SpeechAsyncClientV1
@@ -309,13 +305,10 @@ class STT(stt.STT):
         return client
 
     def _get_recognizer(self, client: SpeechAsyncClientV2) -> str:
-        # TODO(theomonnom): should we use recognizers?
-        # recognizers may improve latency https://cloud.google.com/speech-to-text/v2/docs/recognizers#understand_recognizers
 
         if self._project_id is not None:
             return f"projects/{self._project_id}/locations/{self._location}/recognizers/_"
 
-        # TODO(theomonnom): find a better way to access the project_id
         try:
             project_id = client.transport._credentials.project_id  # type: ignore
         except AttributeError:
@@ -498,7 +491,7 @@ class STT(stt.STT):
 
         if is_given(location):
             self._location = location
-            # if location is changed, fetch a new client and recognizer as per the new location
+
             self._pool.invalidate()
         if is_given(denoiser_config):
             self._config.denoiser_config = denoiser_config
@@ -644,7 +637,6 @@ class SpeechStream(stt.SpeechStream):
         self,
     ) -> cloud_speech_v2.StreamingRecognitionConfig | cloud_speech_v1.StreamingRecognitionConfig:
         if self._config.version == 2:
-            # Build voice activity timeout if either timeout is specified
             voice_activity_timeout = None
             if is_given(self._config.speech_start_timeout) or is_given(
                 self._config.speech_end_timeout
@@ -686,8 +678,6 @@ class SpeechStream(stt.SpeechStream):
                 ),
                 streaming_features=cloud_speech_v2.StreamingRecognitionFeatures(
                     interim_results=self._config.interim_results,
-                    # Auto-enable voice activity events when voice_activity_timeout is specified,
-                    # as per Google API documentation requirements
                     enable_voice_activity_events=self._config.enable_voice_activity_events
                     or (voice_activity_timeout is not None),
                     voice_activity_timeout=voice_activity_timeout,
@@ -743,8 +733,6 @@ class SpeechStream(stt.SpeechStream):
     async def _run(self) -> None:
         audio_pushed = False
 
-        # google requires a async generator when calling streaming_recognize
-        # this function basically convert the queue into a async generator
         async def input_generator(
             client: SpeechAsyncClientV2 | SpeechAsyncClientV1, should_stop: asyncio.Event
         ) -> AsyncGenerator[
@@ -757,10 +745,6 @@ class SpeechStream(stt.SpeechStream):
                 yield self._build_init_request(client)
 
                 while True:
-                    # Race the next-frame await against should_stop so this generator
-                    # can exit even when no audio is flowing. Without this, on reconnect
-                    # the generator stays parked on _input_ch and pins the previous
-                    # gRPC streaming call, leaking it across iterations.
                     frame_task = asyncio.create_task(self._input_ch.recv())
                     done, _ = await asyncio.wait(
                         [frame_task, stop_task], return_when=asyncio.FIRST_COMPLETED
@@ -899,14 +883,10 @@ class SpeechStream(stt.SpeechStream):
                         self._reconnect_event.clear()
                     finally:
                         should_stop.set()
-                        # Cancel the streaming RPC so its underlying call object releases
-                        # its read/write tasks and request iterator. Without this the
-                        # call (and the input_generator that yielded into it) stays
-                        # pinned across reconnects and leaks ~0.4 MB per cycle.
+
                         with contextlib.suppress(Exception):
                             cast(StreamStreamCall, stream).cancel()
                         if not process_stream_task.done() and not wait_reconnect_task.done():
-                            # try to gracefully stop the process_stream_task
                             try:
                                 await asyncio.wait_for(process_stream_task, timeout=1.0)
                             except asyncio.TimeoutError:
@@ -928,8 +908,7 @@ class SpeechStream(stt.SpeechStream):
 
 
 def _duration_to_seconds(duration: Duration | timedelta) -> float:
-    # Proto Plus may auto-convert Duration to timedelta; handle both.
-    # https://proto-plus-python.readthedocs.io/en/latest/marshal.html
+
     if isinstance(duration, timedelta):
         return duration.total_seconds()
     return duration.seconds + duration.nanos / 1e9
@@ -958,13 +937,11 @@ def _recognize_response_to_speech_event(
 
     alternatives = []
 
-    # Google STT may return empty results when spoken_lang != stt_lang
     if resp.results:
         try:
             start_time = _get_start_time(resp.results[0].alternatives[0].words[0])
             end_time = _get_end_time(resp.results[-1].alternatives[0].words[-1])
         except IndexError:
-            # When enable_word_time_offsets=False, there are no "words" to access
             start_time = end_time = 0
 
         confidence /= len(resp.results)
@@ -1070,8 +1047,7 @@ def _get_audio_duration(
         - https://docs.cloud.google.com/python/docs/reference/speech/latest/google.cloud.speech_v1.types.StreamingRecognizeResponse
         - https://docs.cloud.google.com/speech-to-text/docs/reference/rest/v2/StreamingRecognitionResult
     """
-    # total_billed_time is only set "if this is the last response in the stream"
-    # use speech event time/offset before the last response is received
+
     if isinstance(resp, cloud_speech_v2.StreamingRecognizeResponse):
         if resp.metadata.total_billed_duration:
             return _duration_to_seconds(resp.metadata.total_billed_duration) - last_usage_event_time

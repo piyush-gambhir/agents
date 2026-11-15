@@ -81,8 +81,7 @@ def _resolve_config(config: ServerConfig | None) -> ServerConfig:
     cfg = lk_config()
     if cfg is not None:
         return cfg
-    # Fall back to the lk_server fixture defaults — only meaningful when
-    # the caller has the fixture active.
+
     return ServerConfig(url=LK_URL, api_key=LK_API_KEY, api_secret=LK_API_SECRET)
 
 

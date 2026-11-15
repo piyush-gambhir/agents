@@ -46,13 +46,11 @@ DUPLICATE_CONFIRM = """Same tool `{function_name}` is already running:
 Re-call with confirm duplicate True to run a duplicate if needed,
 or if you want to cancel the existing one, call `lk_agents_cancel_task` with call_id."""
 
-# used when the pending update is the most recent item in chat_ctx — the agent
-# can't have already talked about it.
+
 REPLY_INSTRUCTIONS_AT_TAIL = """New results arrived from background tool calls (call_ids: {call_ids}).
 Summarize the results naturally. Do NOT repeat information you have already told the user."""
 
-# used when newer items have been appended after the pending update — the agent
-# may have already verbalized the result in its most recent turn.
+
 REPLY_INSTRUCTIONS_MAYBE_COVERED = """New results arrived from background tool calls (call_ids: {call_ids}).
 You may have already mentioned them in your most recent replies.
 If you already told the user everything in these results, reply with an empty response (no text at all).
@@ -148,9 +146,6 @@ def _resolve_async_tool_options(
     return AsyncToolOptions(**{**_ASYNC_TOOL_OPTIONS_DEFAULTS, **config})
 
 
-# session-scoped view shared across executors, so cancel_task / get_running_tasks
-# see all tasks of their session but never a nested session's. weak-keyed so a
-# dropped session can't leak its tasks.
 _RunningTasks: weakref.WeakKeyDictionary[AgentSession, dict[str, _RunningTask]] = (
     weakref.WeakKeyDictionary()
 )
@@ -202,7 +197,7 @@ class _RunningTask:
 class _PendingUpdate:
     ctx: RunContext
     items: list[ChatItem]
-    target: Agent  # agent that received the eager chat_ctx insert
+    target: Agent
 
 
 class _ToolExecutor:
@@ -277,7 +272,6 @@ class _ToolExecutor:
         if call_id in self._running_tasks:
             raise ValueError(f"Task already running for call_id: {call_id}")
 
-        # the future is how RunContext.update() talks back to dispatch
         first_update_fut = asyncio.Future[Any]()
         run_ctx._attach_executor(self, first_update_fut)
 
@@ -301,7 +295,6 @@ class _ToolExecutor:
                 output = e
 
             if not first_update_fut.done():
-                # tool returned without ctx.update() — surface the result to dispatch
                 if isinstance(output, BaseException):
                     first_update_fut.set_exception(output)
                 else:
@@ -325,8 +318,6 @@ class _ToolExecutor:
             if output is None or isinstance(output, StopResponse):
                 return
 
-            # the first update has already been returned to dispatch, so an Agent
-            # return now has no surface to carry an agent_task back
             from .agent import Agent
 
             if isinstance(output, Agent):
@@ -337,7 +328,6 @@ class _ToolExecutor:
                 )
                 return
 
-            # final return goes through the coalescer as a synthetic output
             pair = run_ctx._make_update_pair(output, call_id_suffix="_final")
             run_ctx._updates.append(pair)
             await self._enqueue_reply(run_ctx, [pair[0], pair[1]])
@@ -362,7 +352,7 @@ class _ToolExecutor:
             self._running_tasks.pop(call_id, None)
             if (session_tasks := _RunningTasks.get(session)) is not None:
                 session_tasks.pop(call_id, None)
-            # detach so a stashed RunContext can't drive the executor post-completion
+
             run_ctx._detach_executor()
 
         exe_task.add_done_callback(_on_done)
@@ -415,7 +405,7 @@ class _ToolExecutor:
         await self.cancel_all(cancellable_only=True)
 
     async def _enqueue_reply(self, ctx: RunContext, items: list[ChatItem]) -> None:
-        # eager insert so a reply firing before delivery sees the items
+
         target = (
             self._owning_activity.agent
             if self._owning_activity is not None
@@ -432,7 +422,7 @@ class _ToolExecutor:
             self._reply_task = asyncio.create_task(
                 self._deliver_reply(ctx.session), name="tool_executor_deliver_reply"
             )
-            # let an active RunResult wait for the deferred reply to land
+
             run_state = ctx.session._global_run_state
             if run_state is not None:
                 run_state._watch_handle(self._reply_task)
@@ -453,8 +443,6 @@ class _ToolExecutor:
             self._pending_updates.clear()
             return
 
-        # no await after this line
-
         updates = self._pending_updates[:]
         self._pending_updates.clear()
 
@@ -465,7 +453,6 @@ class _ToolExecutor:
         if not pending_items:
             return
 
-        # only insert again if delivery target differs (session-scoped handoff)
         chat_ctx: NotGivenOr[ChatContext] = NOT_GIVEN
         items_to_insert = [
             item for u in updates for item in u.items if u.target is not target_agent
@@ -482,8 +469,6 @@ class _ToolExecutor:
             chat_ctx = target_agent.chat_ctx.copy()
             chat_ctx.insert(items_to_insert)
 
-        # if the update is still the tail, the agent hasn't spoken since — summarize
-        # directly; otherwise let the LLM decide whether it already covered this
         at_tail = (items := target_agent.chat_ctx.items) and items[-1].id == pending_items[-1].id
         template = (
             self._tool_options["reply_at_tail_template"]
@@ -516,7 +501,6 @@ class _ToolExecutor:
                     "async tool reply was done without outputs",
                     extra={"speech_id": speech.id, "interrupted": speech.interrupted},
                 )
-                # TODO(long): reschedule interrupted replies?
 
         speech.add_done_callback(_on_speech_done)
 
@@ -540,7 +524,6 @@ class _ToolExecutor:
                 return None
 
             if on_duplicate == "replace":
-                # replace must honor each in-flight task's allow_cancellation flag
                 non_cancellable = [
                     fnc_call
                     for fnc_call in running_fnc_calls

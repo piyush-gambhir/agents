@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -48,7 +48,7 @@ STTEncoding = Literal["pcm_s16le", "pcm_mulaw"]
 DEFAULT_BUFFER_SIZE_SECONDS = 0.064
 MAX_IMMEDIATE_RETRIES = 1
 
-# Define bytes per frame for different encoding types
+
 bytes_per_frame = {
     "pcm_s16le": 2,
     "pcm_mulaw": 1,
@@ -83,20 +83,16 @@ def _default_stt_endpoint(*, slng_base_url: str, model: str) -> str:
 
 @dataclass
 class STTOptions:
-    # Audio format options
     sample_rate: int = 16000
     buffer_size_seconds: float = DEFAULT_BUFFER_SIZE_SECONDS
     encoding: str = "pcm_s16le"
 
-    # Common SLNG streaming options (work across all models)
     enable_partial_transcripts: bool = True
 
-    # Common VAD options (work across all models)
     vad_threshold: float = 0.5
     vad_min_silence_duration_ms: int = 300
     vad_speech_pad_ms: int = 30
 
-    # Common diarization options (work across all models)
     enable_diarization: bool = False
     min_speakers: int | None = None
     max_speakers: int | None = None
@@ -117,7 +113,6 @@ class STT(stt.STT):
         sample_rate: int = 16000,
         encoding: NotGivenOr[STTEncoding] = NOT_GIVEN,
         buffer_size_seconds: float = DEFAULT_BUFFER_SIZE_SECONDS,
-        # Common SLNG options
         enable_partial_transcripts: bool = True,
         vad_threshold: float = 0.5,
         vad_min_silence_duration_ms: int = 300,
@@ -157,9 +152,6 @@ class STT(stt.STT):
         if not resolved_key:
             raise ValueError("api_key is required, or set SLNG_API_KEY environment variable")
 
-        # Detect if endpoint supports streaming (WebSocket endpoints do)
-        # - streaming=True: Supports real-time streaming (WebSocket only)
-        # - streaming=False: HTTP batch recognition only
         resolved_model_endpoint = model_endpoint or _default_stt_endpoint(
             slng_base_url=slng_base_url,
             model=model,
@@ -210,7 +202,6 @@ class STT(stt.STT):
         if is_given(encoding):
             self._opts.encoding = encoding
 
-        # Store any extra model-specific options
         self._model_options = model_options
 
         self._session = http_session
@@ -246,22 +237,18 @@ class STT(stt.STT):
 
         Converts audio buffer to base64 and sends to SLNG HTTP endpoint.
         """
-        # Use language from parameter or fall back to instance default
+
         lang = language if is_given(language) else self._opts.language
 
-        # Convert AudioBuffer to bytes
         audio_data = rtc.combine_audio_frames(buffer).data.tobytes()
 
-        # Encode as base64
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
 
-        # Prepare request payload
         payload = {
             "audio_b64": audio_b64,
             "language": lang,
         }
 
-        # Add any model-specific options
         if self._model_options:
             payload.update(self._model_options)
 
@@ -292,24 +279,20 @@ class STT(stt.STT):
 
                 data = await resp.json()
 
-                # Extract transcription from response
-                # Expected format: {"text": "...", "language": "en", "segments": [...]}
                 text = data.get("text", "")
                 detected_language = data.get("language", lang)
                 segments = data.get("segments", [])
 
-                # Calculate start and end times from segments
                 start_time = segments[0].get("start", 0.0) if segments else 0.0
                 end_time = segments[-1].get("end", 0.0) if segments else 0.0
 
-                # Build SpeechEvent
                 return stt.SpeechEvent(
                     type=stt.SpeechEventType.FINAL_TRANSCRIPT,
                     alternatives=[
                         stt.SpeechData(
                             language=detected_language,
                             text=text,
-                            confidence=1.0,  # SLNG doesn't provide confidence in HTTP mode
+                            confidence=1.0,
                             start_time=start_time,
                             end_time=end_time,
                         )
@@ -418,7 +401,6 @@ class SpeechStream(stt.SpeechStream):
         self._session = http_session
         self._speech_duration: float = 0
 
-        # keep a list of final transcripts to combine them inside the END_OF_SPEECH event
         self._final_events: list[SpeechEvent] = []
         self._reconnect_event = asyncio.Event()
 
@@ -608,8 +590,6 @@ class SpeechStream(stt.SpeechStream):
                     text = data.get("transcript", "")
                     is_final = msg_type == "final_transcript"
                     if not text:
-                        # Empty-text final still consumed audio at the gateway;
-                        # emit the usage metric so billed audio gets reported.
                         if is_final and self._speech_duration > 0:
                             self._event_ch.send_nowait(
                                 stt.SpeechEvent(
@@ -627,7 +607,6 @@ class SpeechStream(stt.SpeechStream):
                     language = data.get("language", self._opts.language)
                     words = data.get("words", [])
 
-                    # Emit START_OF_SPEECH on first transcript (interim or final)
                     if not speech_started:
                         speech_started = True
                         self._event_ch.send_nowait(
@@ -657,10 +636,6 @@ class SpeechStream(stt.SpeechStream):
                     )
                     self._event_ch.send_nowait(event)
 
-                    # Emit END_OF_SPEECH after each final transcript.
-                    # Note: the gateway may send multiple final_transcript messages
-                    # per utterance (e.g., sentence-by-sentence). Each final is
-                    # treated as a completed segment, so START/END bracket each one.
                     if is_final:
                         self._event_ch.send_nowait(
                             stt.SpeechEvent(type=stt.SpeechEventType.END_OF_SPEECH)
@@ -697,8 +672,7 @@ class SpeechStream(stt.SpeechStream):
                 ws = await self._connect_ws(model_endpoint=endpoint, model=model)
                 if did_failover:
                     logger.info("STT switched to fallback: model=%s", model)
-                    # Propagate successful failover to parent so new streams
-                    # start from the working endpoint.
+
                     self._stt_parent._set_active_endpoint_index(self._active_endpoint_index)
                     did_failover = False
 
@@ -751,7 +725,7 @@ class SpeechStream(stt.SpeechStream):
     async def _connect_ws(
         self, *, model_endpoint: str, model: str | None
     ) -> aiohttp.ClientWebSocketResponse:
-        # Match e2e test headers exactly - send both Authorization and X-API-Key
+
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "X-API-Key": self._api_key,
@@ -759,8 +733,6 @@ class SpeechStream(stt.SpeechStream):
         if self._region_override_header:
             headers["X-Region-Override"] = self._region_override_header
 
-        # Don't enable compression - e2e tests work without it and compress=15
-        # was causing handshake errors with Deepgram Nova endpoint
         try:
             ws = await asyncio.wait_for(
                 self._session.ws_connect(model_endpoint, headers=headers),

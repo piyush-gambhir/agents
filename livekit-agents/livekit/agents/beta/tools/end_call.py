@@ -69,8 +69,6 @@ class EndCallTool(Toolset):
                 not isinstance(llm_v, RealtimeModel)
                 or not llm_v.capabilities.auto_tool_reply_generation
             ):
-                # tool reply will reuse the same speech handle, so we can shutdown the session
-                # directly after this speech handle is done
                 ctx.session.shutdown()
             else:
                 self._shutdown_session_task = asyncio.create_task(
@@ -110,7 +108,6 @@ class EndCallTool(Toolset):
     def _on_session_close(self, ev: CloseEvent) -> None:
         """Close the job process when AgentSession is closed"""
         if self._shutdown_session_task:
-            # cleanup
             self._shutdown_session_task.cancel()
             self._shutdown_session_task = None
 
@@ -124,5 +121,4 @@ class EndCallTool(Toolset):
 
             job_ctx.add_shutdown_callback(_on_shutdown)
 
-        # shutdown the job process
         job_ctx.shutdown(reason=ev.reason.value)

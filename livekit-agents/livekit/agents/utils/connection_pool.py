@@ -39,17 +39,15 @@ class ConnectionPool(Generic[T]):
         self._mark_refreshed_on_get = mark_refreshed_on_get
         self._connect_cb = connect_cb
         self._close_cb = close_cb
-        self._connections: dict[T, float] = {}  # conn -> connected_at timestamp
+        self._connections: dict[T, float] = {}
         self._available: set[T] = set()
         self._connect_timeout = connect_timeout
         self._connect_lock = asyncio.Lock()
 
-        # store connections to be reaped (closed) later.
         self._to_close: set[T] = set()
 
         self._prewarm_task: weakref.ref[asyncio.Task[None]] | None = None
 
-        # Timing info from the last get() call
         self.last_acquire_time: float = 0.0
         self.last_connection_reused: bool = False
 
@@ -103,7 +101,6 @@ class ConnectionPool(Generic[T]):
             await self._drain_to_close()
             now = time.time()
 
-            # try to reuse an available connection that hasn't expired
             while self._available:
                 conn = self._available.pop()
                 if (
@@ -115,7 +112,7 @@ class ConnectionPool(Generic[T]):
                     self.last_acquire_time = 0.0
                     self.last_connection_reused = True
                     return conn
-                # connection expired; mark it for resetting.
+
                 self.remove(conn)
 
             t0 = time.perf_counter()

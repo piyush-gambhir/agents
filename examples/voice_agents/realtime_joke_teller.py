@@ -129,12 +129,11 @@ async def tell_joke(category: str = "Any") -> dict[str, Any]:
             Available categories are: Any, Misc, Programming, Dark, Pun, Spooky, Christmas
     """
     try:
-        # Normalize category: capitalize first letter, handle variations
         category_map = {
             "puns": "Pun",
             "pun": "Pun",
             "any": "Any",
-            "general": "Any",  # Map "general" to "Any"
+            "general": "Any",
             "misc": "Misc",
             "miscellaneous": "Misc",
             "programming": "Programming",
@@ -142,7 +141,7 @@ async def tell_joke(category: str = "Any") -> dict[str, Any]:
             "spooky": "Spooky",
             "christmas": "Christmas",
         }
-        # Default to "Any" if category not recognized
+
         normalized = category_map.get(category.lower(), "Any")
 
         j = await Jokes()
@@ -210,10 +209,8 @@ async def entrypoint(ctx: agents.JobContext):
             if shutdown_future in done:
                 break
 
-            # Get mode from environment variable (set by CLI flag)
             agent_mode = os.getenv("AGENT_MODE", "realtime").lower()
 
-            # Configure session based on mode
             if agent_mode == "pipeline":
                 print("🔧 Using PIPELINE mode: STT + LLM + TTS")
                 agent_name = "Nova"
@@ -274,23 +271,19 @@ async def entrypoint(ctx: agents.JobContext):
 if __name__ == "__main__":
     import sys
 
-    # Parse --mode flag before LiveKit CLI processes args
     mode = "realtime"
     if "--mode" in sys.argv:
         idx = sys.argv.index("--mode")
         if idx + 1 < len(sys.argv):
             mode = sys.argv[idx + 1]
-            # Remove --mode and its value from argv so LiveKit CLI doesn't see it
-            sys.argv.pop(idx)  # Remove --mode
-            sys.argv.pop(idx)  # Remove the value
 
-    # Validate mode
+            sys.argv.pop(idx)
+            sys.argv.pop(idx)
+
     if mode not in ["realtime", "pipeline"]:
         print(f"Error: Invalid mode '{mode}'. Must be 'realtime' or 'pipeline'")
         sys.exit(1)
 
-    # Set mode via environment variable
     os.environ["AGENT_MODE"] = mode
 
-    # Run the agent
     agents.cli.run_app(server)

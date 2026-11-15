@@ -128,7 +128,7 @@ class GetPhoneNumberTask(AgentTask[GetPhoneNumberResult]):
         if not self._confirmation_required(ctx):
             if not self.done():
                 self.complete(GetPhoneNumberResult(phone_number=self._current_phone_number))
-            return None  # no need to continue the conversation
+            return None
 
         confirm_tool = self._build_confirm_tool(phone_number=cleaned)
         current_tools = [t for t in self.tools if t.id != "confirm_phone_number"]

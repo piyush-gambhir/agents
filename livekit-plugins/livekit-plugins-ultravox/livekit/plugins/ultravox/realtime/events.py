@@ -37,9 +37,6 @@ class UltravoxEvent(BaseModel):
     type: str = Field(..., description="Event type identifier")
 
 
-# Client-to-Server Events
-
-
 class PingEvent(UltravoxEvent):
     """Client message to measure round-trip data message latency."""
 
@@ -90,9 +87,6 @@ class ClientToolResultEvent(UltravoxEvent):
     error_message: str | None = Field(
         None, alias="errorMessage", description="Error details if failed"
     )
-
-
-# Server-to-Client Events
 
 
 class CallStartedEvent(UltravoxEvent):
@@ -154,7 +148,6 @@ class PlaybackClearBufferEvent(UltravoxEvent):
     type: Literal["playback_clear_buffer"] = "playback_clear_buffer"
 
 
-# Union type for all possible events
 UltravoxEventType = (
     PingEvent
     | UserTextMessageEvent

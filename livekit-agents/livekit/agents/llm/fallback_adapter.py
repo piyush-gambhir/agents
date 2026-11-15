@@ -43,7 +43,6 @@ class FallbackAdapter(
         llm: list[LLM],
         *,
         attempt_timeout: float = 5.0,
-        # use fallback instead of retrying
         max_retry_per_llm: int = 0,
         retry_interval: float = 0.5,
         retry_on_chunk_sent: bool = False,
@@ -263,7 +262,7 @@ class FallbackLLMStream(LLMStream):
                         self._event_ch.send_nowait(result)
 
                     return
-                except Exception:  # exceptions already logged inside _try_generate
+                except Exception:
                     if llm_status.available:
                         llm_status.available = False
                         self._fallback_adapter.emit(

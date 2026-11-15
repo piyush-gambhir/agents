@@ -51,7 +51,7 @@ GEMINI_VOICES = Literal[
 
 DEFAULT_MODEL = "gemini-2.5-flash-preview-tts"
 DEFAULT_VOICE = "Kore"
-DEFAULT_SAMPLE_RATE = 24000  # not configurable
+DEFAULT_SAMPLE_RATE = 24000
 NUM_CHANNELS = 1
 
 DEFAULT_INSTRUCTIONS = "Say the text with a proper tone, don't omit or add any words"
@@ -123,7 +123,7 @@ class TTS(tts.TTS):
                 _, gcp_project = default_async(  # type: ignore
                     scopes=["https://www.googleapis.com/auth/cloud-platform"]
                 )
-            gemini_api_key = None  # VertexAI does not require an API key
+            gemini_api_key = None
         else:
             gcp_project = None
             gcp_location = None
@@ -227,7 +227,6 @@ class ChunkedStream(tts.ChunkedStream):
                     and inline_data.mime_type
                     and inline_data.mime_type.startswith("audio/")
                 ):
-                    # mime_type: audio/L16;codec=pcm;rate=24000
                     output_emitter.push(inline_data.data)
 
         except ClientError as e:

@@ -13,7 +13,7 @@ def test_default_model_and_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
     llm = LLM()
     assert llm.model == "sonar-pro"
     assert PERPLEXITY_BASE_URL == "https://api.perplexity.ai"
-    # AsyncClient stores the configured base URL on _base_url.
+
     assert str(llm._client.base_url).startswith("https://api.perplexity.ai")
 
 

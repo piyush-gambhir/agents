@@ -19,7 +19,6 @@ from ..utils.audio import AudioBuffer
 from ..vad import VAD
 from .stt import STT, RecognizeStream, SpeechEvent, SpeechEventType, STTCapabilities
 
-# don't retry when using the fallback adapter
 DEFAULT_FALLBACK_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -72,8 +71,6 @@ class FallbackAdapter(
                 StreamAdapter(stt=t, vad=vad) if not t.capabilities.streaming else t for t in stt
             ]
 
-        # Use the primary STT's aligned_transcript if all providers support it, since
-        # the SDK only checks truthiness, not the specific granularity.
         aligned_transcript: Literal["word", "chunk", False] = False
         if all(t.capabilities.aligned_transcript for t in stt):
             aligned_transcript = stt[0].capabilities.aligned_transcript
@@ -103,7 +100,7 @@ class FallbackAdapter(
 
         for stt_instance in self._stt_instances:
             stt_instance.on("metrics_collected", self._on_metrics_collected)
-        self._recognize_metrics_needed = False  # don't emit metrics via fallback adapter
+        self._recognize_metrics_needed = False
 
     @property
     def model(self) -> str:
@@ -232,7 +229,7 @@ class FallbackAdapter(
                         conn_options=conn_options,
                         recovering=False,
                     )
-                except Exception:  # exceptions already logged inside _try_recognize
+                except Exception:
                     if stt_status.available:
                         stt_status.available = False
                         self.emit(

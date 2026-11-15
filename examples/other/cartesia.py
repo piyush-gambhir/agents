@@ -101,8 +101,6 @@ def main() -> None:
                 api_key=api_key,
             ),
             turn_handling={
-                # ink-2 does a great job without VAD
-                # you may use ink-2 with VAD if desired
                 "turn_detection": "stt",
             },
         )

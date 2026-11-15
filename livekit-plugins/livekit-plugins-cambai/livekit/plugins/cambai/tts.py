@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -55,8 +55,8 @@ class TTS(tts.TTS):
         *,
         api_key: str | None = None,
         base_url: str = API_BASE_URL,
-        credentials_info: NotGivenOr[dict] = NOT_GIVEN,  # Future Vertex AI
-        credentials_file: NotGivenOr[str] = NOT_GIVEN,  # Future Vertex AI
+        credentials_info: NotGivenOr[dict] = NOT_GIVEN,
+        credentials_file: NotGivenOr[str] = NOT_GIVEN,
         voice_id: int = DEFAULT_VOICE_ID,
         language: str = DEFAULT_LANGUAGE,
         model: SpeechModel = DEFAULT_MODEL,
@@ -180,17 +180,15 @@ class ChunkedStream(tts.ChunkedStream):
             f"model={self._opts.speech_model}, text_length={len(self._input_text)}"
         )
 
-        # Determine MIME type based on output format
         if self._opts.output_format in ("pcm_s16le", "pcm_s32le"):
             mime_type = "audio/pcm"
         elif self._opts.output_format == "wav":
             mime_type = "audio/wav"
         elif self._opts.output_format == "flac":
             mime_type = "audio/flac"
-        else:  # adts
+        else:
             mime_type = "audio/aac"
 
-        # Build request payload
         payload: dict = {
             "text": self._input_text,
             "voice_id": self._opts.voice_id,

@@ -1,9 +1,5 @@
 from typing import Literal
 
-###############################################################################
-#                                    TTS                                      #
-###############################################################################
-
 TTSEncoding = Literal["pcm_s16le"]
 """
 .. deprecated::
@@ -17,10 +13,10 @@ TTSModels = Literal["sonic", "sonic-2", "sonic-lite", "sonic-preview", "sonic-tu
 TTSLanguages = Literal["en", "es", "fr", "de", "pt", "zh", "ja"]
 """See [the docs](https://docs.cartesia.ai/build-with-cartesia/tts-models/latest) for all options."""
 
-TTSDefaultVoiceId = "f786b574-daa5-4673-aa0c-cbe3e8534c02"  # Katie - Friendly Fixer
+TTSDefaultVoiceId = "f786b574-daa5-4673-aa0c-cbe3e8534c02"
 TTSVoiceSpeed = Literal["fastest", "fast", "normal", "slow", "slowest"]
 
-# up to date as of 2025-10-24, refer to https://docs.cartesia.ai/api-reference/tts/bytes#body-generation-config-emotion
+
 TTSVoiceEmotion = Literal[
     "Happy",
     "Excited",
@@ -87,10 +83,6 @@ TTSVoiceEmotion = Literal[
 def _is_sonic_3(model: str) -> bool:
     return model.startswith("sonic-3")
 
-
-###############################################################################
-#                                    STT                                      #
-###############################################################################
 
 STTEncoding = Literal["pcm_s16le"]
 """

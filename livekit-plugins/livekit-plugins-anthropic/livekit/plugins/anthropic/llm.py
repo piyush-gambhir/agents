@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -37,7 +37,6 @@ from livekit.agents.utils import is_given
 from .models import ChatModels
 from .utils import CACHE_CONTROL_EPHEMERAL
 
-# Claude 4.6+ no longer supports prefilling (trailing assistant messages).
 _NO_PREFILL_PATTERNS = ("claude-sonnet-4-6", "claude-opus-4-6")
 
 
@@ -210,7 +209,6 @@ class LLM(llm.LLM):
                         anthropic_tool_choice["disable_parallel_tool_use"] = not parallel_tool_calls
                     extra["tool_choice"] = anthropic_tool_choice
 
-        # Claude 4.6+ does not support prefilling (trailing assistant messages).
         inject_trailing = _model_disables_prefill(self._opts.model)
         anthropic_ctx, extra_data = chat_ctx.to_provider_format(
             format="anthropic", inject_trailing_user_message=inject_trailing
@@ -222,7 +220,6 @@ class LLM(llm.LLM):
                 for content in extra_data.system_messages
             ]
 
-        # add cache control
         if self._opts.caching == "ephemeral":
             if extra.get("system"):
                 extra["system"][-1]["cache_control"] = CACHE_CONTROL_EPHEMERAL
@@ -290,13 +287,12 @@ class LLMStream(llm.LLMStream):
         super().__init__(llm, chat_ctx=chat_ctx, tools=tools, conn_options=conn_options)
         self._create_anthropic_stream = create_anthropic_stream
 
-        # current function call that we're waiting for full completion (args are streamed)
         self._tool_call_id: str | None = None
         self._fnc_name: str | None = None
         self._fnc_raw_arguments: str | None = None
 
         self._request_id: str = ""
-        self._ignoring_cot = False  # ignore chain of thought
+        self._ignoring_cot = False
         self._input_tokens = 0
         self._cache_creation_tokens = 0
         self._cache_read_tokens = 0
@@ -312,7 +308,6 @@ class LLMStream(llm.LLMStream):
                         self._event_ch.send_nowait(chat_chunk)
                         retryable = False
 
-                # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#tracking-cache-performance
                 prompt_token = (
                     self._input_tokens + self._cache_creation_tokens + self._cache_read_tokens
                 )
@@ -363,7 +358,6 @@ class LLMStream(llm.LLMStream):
                 text = delta.text
 
                 if self._tools is not None:
-                    # anthropic may inject COC when using functions
                     if text.startswith("<thinking>"):
                         self._ignoring_cot = True
                     elif self._ignoring_cot and "</thinking>" in text:

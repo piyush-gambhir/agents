@@ -30,13 +30,13 @@ from .log_queue import LogQueueListener
 _mask_ctrl_c_refcount = 0
 _mask_ctrl_c_original: Callable[[int, FrameType | None], Any] | int | None = signal.SIG_DFL
 
-# how often the memory monitor samples the process RSS (seconds)
+
 _MEMORY_MONITOR_INTERVAL = 5.0
-# minimum delay between two "high memory usage" warnings for the same process, so a
-# process that sits above the threshold doesn't emit a warning on every sample
+
+
 _MEMORY_WARN_COOLDOWN = 120.0
-# re-emit the warning before the cooldown elapses if usage grew by at least this much
-# since the last warning (so a genuine leak still surfaces promptly)
+
+
 _MEMORY_WARN_RESET_DELTA_MB = 50.0
 
 
@@ -123,7 +123,6 @@ class SupervisedProc(ABC):
         self._pid: int | None = None
         self._spawn_time: float | None = None
 
-        # memory monitoring state (see _memory_monitor_task)
         self._memory_baseline_mb: float | None = None
         self._last_memory_warn_time: float = 0.0
         self._last_memory_warn_mb: float = 0.0
@@ -206,10 +205,6 @@ class SupervisedProc(ABC):
 
                 self._proc = self._create_process(mp_cch, mp_log_cch)
 
-                # Set SIG_IGN process-wide before forking so the child inherits it
-                # (SIG_IGN is preserved across exec per POSIX). This prevents
-                # KeyboardInterrupt during the child's bootstrap phase before
-                # it can install its own signal handlers.
                 with _mask_ctrl_c():
                     await self._loop.run_in_executor(None, self._proc.start)
             except Exception:
@@ -267,7 +262,6 @@ class SupervisedProc(ABC):
             ),
         )
 
-        # wait for the process to become ready
         try:
             logger.info("initializing process", extra=self.logging_extra())
             start_time = time.perf_counter()
@@ -298,7 +292,6 @@ class SupervisedProc(ABC):
             await self._send_kill_signal()
             raise
         except Exception as e:
-            # should be channel.ChannelClosed most of the time (or init_res error)
             self._initialize_fut.set_exception(e)
             raise
 
@@ -357,13 +350,11 @@ class SupervisedProc(ABC):
     async def _send_dump_signal(self) -> None:
         if not self.enabled_stack_trace_dump:
             return
-        # if the signal is already supported, don't send a message
+
         if hasattr(signal, "SIGUSR1"):
             return
 
         try:
-            # send a message to the process to trigger stack trace dump on Windows
-            # it might not work if the event loop is already blocked
             logger.info(
                 "sending DumpStackTraceRequest message to process", extra=self.logging_extra()
             )
@@ -408,11 +399,10 @@ class SupervisedProc(ABC):
         try:
             await self._initialize_fut
         except asyncio.TimeoutError:
-            pass  # this happens when the initialization takes longer than self._initialize_timeout
+            pass
         except Exception:
-            pass  # initialization failed
+            pass
 
-        # the process is killed if it doesn't respond to ping requests
         pong_timeout = aio.sleep(self._opts.ping_timeout)
 
         ipc_ch = aio.Chan[channel.Message]()
@@ -480,7 +470,6 @@ class SupervisedProc(ABC):
 
             ipc_ch.send_nowait(msg)
 
-        # resolve pending futures when the channel closes (process exited)
         if not self._shutdown_ack_fut.done():
             self._shutdown_ack_fut.set_result(None)
         if not self._shutting_down_fut.done():
@@ -532,7 +521,6 @@ class SupervisedProc(ABC):
             "memory_warn_mb": self._opts.memory_warn_mb,
             "memory_limit_mb": self._opts.memory_limit_mb,
             "uptime": round(self.uptime, 1),
-            # _running_job only exists on the job executor subclass, not the inference one
             "has_running_job": getattr(self, "_running_job", None) is not None,
         }
         if self._memory_baseline_mb is not None:
@@ -550,13 +538,10 @@ class SupervisedProc(ABC):
                     await asyncio.sleep(_MEMORY_MONITOR_INTERVAL)
                     continue
 
-                # get process memory info
                 process = psutil.Process(self._pid)
                 memory_info = process.memory_info()
-                memory_mb = memory_info.rss / (1024 * 1024)  # Convert to MB
+                memory_mb = memory_info.rss / (1024 * 1024)
 
-                # the first sample (taken shortly after initialization) is treated as the
-                # post-prewarm baseline, so later samples can report growth since startup
                 if self._memory_baseline_mb is None:
                     self._memory_baseline_mb = memory_mb
 
@@ -568,12 +553,7 @@ class SupervisedProc(ABC):
                     await self._send_dump_signal()
                     await self._send_kill_signal()
                 elif self._opts.memory_warn_mb > 0 and memory_mb > self._opts.memory_warn_mb:
-                    # rate-limit the warning: a process that lingers above the threshold
-                    # would otherwise emit a warning on every sample (every few seconds).
-                    # still re-emit early if usage jumped noticeably since the last warning.
                     if self._should_emit_memory_warning(memory_mb, now=time.monotonic()):
-                        # when no hard limit is configured the warning is purely advisory:
-                        # nothing is terminated, so say so to avoid alarming operators.
                         advisory = self._opts.memory_limit_mb <= 0
                         logger.warning(
                             f"{self.process_kind} process memory usage is above the"
@@ -595,7 +575,7 @@ class SupervisedProc(ABC):
                     extra=self.logging_extra(),
                     exc_info=e,
                 )
-                # don't bother rechecking if we cannot get process info
+
                 return
             except Exception:
                 if self._closing or self._kill_sent:

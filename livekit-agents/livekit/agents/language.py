@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -36,38 +36,28 @@ def _normalize_language(code: str) -> str:
     """
     lowered = code.strip().lower()
 
-    # Check language names first (e.g. "english" → "en")
     if lowered in LANGUAGE_NAMES_TO_CODE:
         return LANGUAGE_NAMES_TO_CODE[lowered]
 
-    # Check ISO 639-3 (e.g. "eng" → "en")
     if lowered in ISO_639_3_TO_1:
         mapped = ISO_639_3_TO_1[lowered]
         if mapped is not None:
             return mapped
-        # ISO 639-3 code with no ISO 639-1 equivalent — pass through as-is
+
         return lowered
 
-    # Handle BCP-47 with region (e.g. "en-US", "zh-Hans-CN", "cmn-Hans-CN")
-    # Separators can be "-" or "_"
-    # Note: ISO 639-3 language subtags (e.g. "cmn") are preserved in compound tags
-    # so the code round-trips correctly for APIs like Google STT that expect them.
-    # Use the .language property to get the ISO 639-1 base code.
     parts = lowered.replace("_", "-").split("-")
     if len(parts) >= 2:
         lang = parts[0]
-        # Normalize: language lowercase, region/script uppercase
+
         normalized_parts = [lang]
         for part in parts[1:]:
             if len(part) == 4:
-                # Script subtag (e.g. "Hans") — title case
                 normalized_parts.append(part.capitalize())
             else:
-                # Region subtag (e.g. "US") — uppercase
                 normalized_parts.append(part.upper())
         return "-".join(normalized_parts)
 
-    # Simple code (e.g. "en", "multi") — pass through lowercase
     return lowered
 
 

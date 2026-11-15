@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -59,7 +59,6 @@ class VADOptions(TypedDict, total=False):
     """Minimum silence duration in milliseconds. Default to 2500"""
 
 
-# https://elevenlabs.io/docs/overview/models#models-overview
 ElevenLabsSTTModels = Literal["scribe_v1", "scribe_v2", "scribe_v2_realtime"]
 
 
@@ -84,7 +83,7 @@ class STT(stt.STT):
         base_url: NotGivenOr[str] = NOT_GIVEN,
         language_code: NotGivenOr[str] = NOT_GIVEN,
         tag_audio_events: bool = True,
-        use_realtime: NotGivenOr[bool] = NOT_GIVEN,  # Deprecated
+        use_realtime: NotGivenOr[bool] = NOT_GIVEN,
         sample_rate: STTRealtimeSampleRates = 16000,
         server_vad: NotGivenOr[VADOptions] = NOT_GIVEN,
         include_timestamps: bool = False,
@@ -327,7 +326,7 @@ class SpeechStream(stt.SpeechStream):
         self._language = language
         self._session = http_session
         self._reconnect_event = asyncio.Event()
-        self._speaking = False  # Track if we're currently in a speech segment
+        self._speaking = False
         self._audio_duration_collector = PeriodicCollector(
             callback=self._on_audio_duration_report,
             duration=5.0,
@@ -357,7 +356,6 @@ class SpeechStream(stt.SpeechStream):
         async def keepalive_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             try:
                 while True:
-                    # scribe_v2_realtime model requires a keepalive message instead of a ping
                     await asyncio.sleep(10)
                     await ws.send_str(
                         json.dumps(
@@ -376,7 +374,6 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-            # Buffer audio into chunks (50ms chunks)
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -386,7 +383,6 @@ class SpeechStream(stt.SpeechStream):
 
             has_ended = False
             async for data in self._input_ch:
-                # Write audio bytes to buffer and get 50ms frames
                 frames: list[rtc.AudioFrame] = []
                 if isinstance(data, rtc.AudioFrame):
                     frames.extend(audio_bstream.write(data.data.tobytes()))
@@ -474,7 +470,7 @@ class SpeechStream(stt.SpeechStream):
                 finally:
                     await utils.aio.gracefully_cancel(*tasks, wait_reconnect_task)
                     tasks_group.cancel()
-                    tasks_group.exception()  # Retrieve exception to prevent it from being logged
+                    tasks_group.exception()
             finally:
                 if ws is not None:
                     await ws.close()
@@ -511,7 +507,6 @@ class SpeechStream(stt.SpeechStream):
 
         query_string = "&".join(params)
 
-        # Convert HTTPS URL to WSS
         base_url = self._opts.base_url.replace("https://", "wss://").replace("http://", "ws://")
         ws_url = f"{base_url}/speech-to-text/realtime?{query_string}"
 
@@ -539,7 +534,6 @@ class SpeechStream(stt.SpeechStream):
 
         normalized_language = LanguageCode(language_code) if language_code else LanguageCode("en")
 
-        # 11labs only sends word timestamps for final transcripts
         speech_data = stt.SpeechData(
             language=normalized_language,
             text=text,
@@ -561,58 +555,45 @@ class SpeechStream(stt.SpeechStream):
             logger.debug("Received message type partial_transcript: %s", data)
 
             if text:
-                # Send START_OF_SPEECH if we're not already speaking
                 if not self._speaking:
                     self._event_ch.send_nowait(
                         stt.SpeechEvent(type=SpeechEventType.START_OF_SPEECH)
                     )
                     self._speaking = True
 
-                # Send INTERIM_TRANSCRIPT
                 interim_event = stt.SpeechEvent(
                     type=SpeechEventType.INTERIM_TRANSCRIPT,
                     alternatives=[speech_data],
                 )
                 self._event_ch.send_nowait(interim_event)
 
-        # 11labs sends both when include_timestamps is True or when the model is scribe_v2_realtime :(
         elif (message_type == "committed_transcript" and not self._opts.include_timestamps) or (
             message_type == "committed_transcript_with_timestamps" and self._opts.include_timestamps
         ):
-            # Final committed transcripts - these are sent to the LLM/TTS layer in LiveKit agents
-            # and trigger agent responses (unlike partial transcripts which are UI-only)
             if text:
-                # Send START_OF_SPEECH if we're not already speaking
                 if not self._speaking:
                     self._event_ch.send_nowait(
                         stt.SpeechEvent(type=SpeechEventType.START_OF_SPEECH)
                     )
                     self._speaking = True
 
-                # Send FINAL_TRANSCRIPT but keep speaking=True
-                # Multiple commits can occur within the same speech segment
                 final_event = stt.SpeechEvent(
                     type=SpeechEventType.FINAL_TRANSCRIPT,
                     alternatives=[speech_data],
                 )
                 self._event_ch.send_nowait(final_event)
             else:
-                # Empty commit signals end of speech segment (similar to Cartesia's is_final flag)
-                # This groups multiple committed transcripts into one speech segment
                 if self._speaking:
                     self._event_ch.send_nowait(stt.SpeechEvent(type=SpeechEventType.END_OF_SPEECH))
                     self._speaking = False
 
         elif message_type == "committed_transcript":
-            # if timestamps are included, these will be ignored above since we are handling committed_transcript_with_timestamps
             pass
 
         elif message_type == "session_started":
-            # Session initialization message - informational only
             session_id = data.get("session_id", "unknown")
             logger.debug("Session started with ID: %s", session_id)
 
-        # Error handling for known ElevenLabs error types
         elif message_type in (
             "auth_error",
             "quota_exceeded",

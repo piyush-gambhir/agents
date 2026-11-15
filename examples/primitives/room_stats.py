@@ -23,7 +23,6 @@ async def entrypoint(ctx: JobContext):
 
     logger.info(f"connected to the room {ctx.room.name}")
 
-    # log the session stats every 5 minutes
     while True:
         rtc_stats = await ctx.room.get_session_stats()
 
@@ -34,11 +33,6 @@ async def entrypoint(ctx: JobContext):
 
         for source, stats in all_stats:
             stats_kind = stats.WhichOneof("stats")
-
-            # stats_kind can be one of the following:
-            # candidate_pair, certificate, codec, data_channel, inbound_rtp, local_candidate,
-            # media_playout, media_source, outbound_rtp, peer_connection, remote_candidate,
-            # remote_inbound_rtp, remote_outbound_rtp, stats, stream, track, transport
 
             logger.info(
                 f"RtcStats - {stats_kind} - {source}", extra={"stats": MessageToDict(stats)}

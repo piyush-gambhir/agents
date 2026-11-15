@@ -55,7 +55,7 @@ class Tagger:
         Args:
             reason: Optional reason for the success (stored separately from the tag).
         """
-        # Remove any existing outcome tag
+
         self._tags.pop("lk.fail", None)
         self._tags["lk.success"] = _TagEntry()
         self._outcome_reason = reason
@@ -66,7 +66,7 @@ class Tagger:
         Args:
             reason: Optional reason for the failure (stored separately from the tag).
         """
-        # Remove any existing outcome tag
+
         self._tags.pop("lk.success", None)
         self._tags["lk.fail"] = _TagEntry()
         self._outcome_reason = reason

@@ -215,7 +215,6 @@ class BrowserAgent:
                     args = _json.loads(tc.arguments or "{}")
                     action = args.pop("action", "screenshot")
 
-                    # Broadcast cursor position for frontend overlay
                     coord = args.get("coordinate")
                     if coord and len(coord) == 2:
                         await self._send_cursor_position(int(coord[0]), int(coord[1]), action)
@@ -224,7 +223,6 @@ class BrowserAgent:
 
                     screenshot_content = await self._computer_tool.execute(action, **args)
 
-                    # Wait for page to settle after clicks/typing
                     if action in (
                         "left_click",
                         "middle_click",

@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -77,7 +77,6 @@ class STTv2(stt.STT):
         http_session: aiohttp.ClientSession | None = None,
         base_url: str = "wss://api.deepgram.com/v2/listen",
         mip_opt_out: bool = False,
-        # deprecated
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         """Create a new instance of Deepgram STT.
@@ -207,7 +206,6 @@ class STTv2(stt.STT):
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         language_hint: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-        # deprecated
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         effective_eager = (
@@ -269,9 +267,7 @@ class STTv2(stt.STT):
 
 
 class SpeechStreamv2(stt.SpeechStream):
-    # _KEEPALIVE_MSG: str = json.dumps({"type": "KeepAlive"})
     _CLOSE_MSG: str = json.dumps({"type": "CloseStream"})
-    # _FINALIZE_MSG: str = json.dumps({"type": "Finalize"})
 
     def __init__(
         self,
@@ -310,7 +306,6 @@ class SpeechStreamv2(stt.SpeechStream):
         language_hint: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
         eager_eot_threshold: NotGivenOr[float] = NOT_GIVEN,
-        # deprecated
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(model):
@@ -344,22 +339,10 @@ class SpeechStreamv2(stt.SpeechStream):
     async def _run(self) -> None:
         closing_ws = False
 
-        # async def keepalive_task(ws: aiohttp.ClientWebSocketResponse) -> None:
-        #     # if we want to keep the connection alive even if no audio is sent,
-        #     # Deepgram expects a keepalive message.
-        #     # https://developers.deepgram.com/reference/listen-live#stream-keepalive
-        #     try:
-        #         while True:
-        #             await ws.send_str(SpeechStream._KEEPALIVE_MSG)
-        #             await asyncio.sleep(5)
-        #     except Exception:
-        #         return
-
         @utils.log_exceptions(logger=logger)
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-            # forward audio to deepgram in chunks of 50ms
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -384,7 +367,6 @@ class SpeechStreamv2(stt.SpeechStream):
                         self._audio_duration_collector.flush()
                         has_ended = False
 
-            # tell deepgram we are done sending audio/inputs
             closing_ws = True
             await ws.send_str(SpeechStreamv2._CLOSE_MSG)
 
@@ -398,12 +380,9 @@ class SpeechStreamv2(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    # close is expected, see SpeechStream.aclose
-                    # or when the agent session ends, the http session is closed
                     if closing_ws or self._session.closed:
                         return
 
-                    # this will trigger a reconnection, see the _run loop
                     raise APIStatusError(
                         message="deepgram connection closed unexpectedly",
                         status_code=ws.close_code or -1,
@@ -427,7 +406,6 @@ class SpeechStreamv2(stt.SpeechStream):
                 tasks = [
                     asyncio.create_task(send_task(ws)),
                     asyncio.create_task(recv_task(ws)),
-                    # asyncio.create_task(keepalive_task(ws)),
                 ]
                 tasks_group = asyncio.gather(*tasks)
                 wait_reconnect_task = asyncio.create_task(self._reconnect_event.wait())
@@ -437,7 +415,6 @@ class SpeechStreamv2(stt.SpeechStream):
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-                    # propagate exceptions from completed tasks
                     for task in done:
                         if task != wait_reconnect_task:
                             task.result()
@@ -449,7 +426,7 @@ class SpeechStreamv2(stt.SpeechStream):
                 finally:
                     await utils.aio.gracefully_cancel(*tasks, wait_reconnect_task)
                     tasks_group.cancel()
-                    tasks_group.exception()  # retrieve the exception
+                    tasks_group.exception()
             finally:
                 if ws is not None:
                     await ws.close()
@@ -545,16 +522,12 @@ class SpeechStreamv2(stt.SpeechStream):
                 self._send_transcript_event(stt.SpeechEventType.INTERIM_TRANSCRIPT, data)
 
             elif event_type == "EagerEndOfTurn":
-                # technically, a pause in speech is detected. for lifecycle purposes,
-                # we are assuming the user is still speaking and sending a preflight event to
-                # start preemptive synthesis.
                 if not self._speaking:
                     return
 
                 self._send_transcript_event(stt.SpeechEventType.PREFLIGHT_TRANSCRIPT, data)
 
             elif event_type == "TurnResumed":
-                # sending interim transcript will abort eager end of turn
                 self._send_transcript_event(stt.SpeechEventType.INTERIM_TRANSCRIPT, data)
 
             elif event_type == "EndOfTurn":

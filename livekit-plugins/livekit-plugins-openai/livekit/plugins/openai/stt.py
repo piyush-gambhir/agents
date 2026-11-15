@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -55,18 +55,15 @@ from .log import logger
 from .models import STTModels
 from .utils import AsyncAzureADTokenProvider
 
-# OpenAI Realtime API has a timeout of 15 mins, we'll attempt to restart the session
-# before that timeout is reached
 _max_session_duration = 10 * 60
-# emit interim transcriptions every 0.5 seconds
+
 _delta_transcript_interval = 0.5
 SAMPLE_RATE = 24000
 NUM_CHANNELS = 1
 
 
 def _is_whisper_realtime(model: str) -> bool:
-    # gpt-realtime-whisper rejects any turn_detection config; the client must
-    # commit the audio buffer manually (e.g. driven by an external VAD).
+
     return model.startswith("gpt-realtime-whisper")
 
 
@@ -371,8 +368,7 @@ class STT(stt.STT):
             },
             "transcription": transcription_config,
         }
-        # gpt-realtime-whisper rejects any turn_detection config — omit the key entirely.
-        # For other models, send the configured turn_detection (server-side VAD).
+
         if not _is_whisper_realtime(self._opts.model):
             input_config["turn_detection"] = self._opts.turn_detection
 
@@ -429,7 +425,6 @@ class STT(stt.STT):
 
             format = "json"
             if self._opts.model == "whisper-1":
-                # verbose_json returns language and other details, only supported for whisper-1
                 format = "verbose_json"
 
             resp = await self._client.audio.transcriptions.create(
@@ -500,7 +495,6 @@ class SpeechStream(stt.SpeechStream):
         ) -> None:
             nonlocal closing_ws
 
-            # forward audio to OAI in chunks of 50ms
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=SAMPLE_RATE,
                 num_channels=NUM_CHANNELS,
@@ -548,10 +542,9 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    if closing_ws:  # close is expected, see SpeechStream.aclose
+                    if closing_ws:
                         return
 
-                    # this will trigger a reconnection, see the _run loop
                     raise APIStatusError(
                         message="OpenAI Realtime STT connection closed unexpectedly",
                         status_code=ws.close_code or -1,
@@ -627,7 +620,6 @@ class SpeechStream(stt.SpeechStream):
                                 audio_duration = (end_ms - start_ms) / 1000.0
                             del item_audio_timing[item_id]
 
-                        # extract token usage if available
                         usage = data.get("usage", {})
                         input_tokens = usage.get("input_tokens", 0)
                         output_tokens = usage.get("output_tokens", 0)
@@ -644,7 +636,6 @@ class SpeechStream(stt.SpeechStream):
                             )
                         )
 
-                        # restart session if needed
                         if time.time() - connected_at > _max_session_duration:
                             logger.info("resetting Realtime STT session due to timeout")
                             self._pool.remove(ws)
@@ -664,7 +655,7 @@ class SpeechStream(stt.SpeechStream):
                     logger.exception("failed to process OpenAI message")
 
         while True:
-            closing_ws = False  # reset the flag
+            closing_ws = False
             async with self._pool.connection(timeout=self._conn_options.timeout) as ws:
                 self._report_connection_acquired(
                     self._pool.last_acquire_time, self._pool.last_connection_reused
@@ -684,7 +675,6 @@ class SpeechStream(stt.SpeechStream):
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-                    # propagate exceptions from completed tasks
                     for task in done:
                         if task != wait_reconnect_task:
                             task.result()
@@ -696,6 +686,6 @@ class SpeechStream(stt.SpeechStream):
                 finally:
                     await utils.aio.gracefully_cancel(*tasks, wait_reconnect_task)
                     tasks_group.cancel()
-                    tasks_group.exception()  # retrieve the exception
+                    tasks_group.exception()
                     if vad_stream is not None:
                         await vad_stream.aclose()

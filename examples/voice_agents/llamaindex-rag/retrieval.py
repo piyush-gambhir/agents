@@ -23,17 +23,15 @@ from livekit.plugins import deepgram, openai, silero
 
 load_dotenv()
 
-# check if storage already exists
+
 THIS_DIR = Path(__file__).parent
 PERSIST_DIR = THIS_DIR / "retrieval-engine-storage"
 if not PERSIST_DIR.exists():
-    # load the documents and create the index
     documents = SimpleDirectoryReader(THIS_DIR / "data").load_data()
     index = VectorStoreIndex.from_documents(documents)
-    # store it for later
+
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:
-    # load the existing index
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 
@@ -72,19 +70,13 @@ class RetrievalAgent(Agent):
             node_content = node.get_content(metadata_mode=MetadataMode.LLM)
             instructions += f"\n\n{node_content}"
 
-        # update the instructions for this turn, you may use some different methods
-        # to inject the context into the chat_ctx that fits the LLM you are using
         system_msg = chat_ctx.items[0]
         if isinstance(system_msg, llm.ChatMessage) and system_msg.role == "system":
-            # TODO(long): provide an api to update the instructions of chat_ctx
             system_msg.content.append(instructions)
         else:
             chat_ctx.items.insert(0, llm.ChatMessage(role="system", content=[instructions]))
         preview = instructions[:100].replace("\n", "\\n")
         print(f"update instructions: {preview}...")
-
-        # update the instructions for agent
-        # await self.update_instructions(instructions)
 
         return Agent.default.llm_node(self, chat_ctx, tools, model_settings)
 

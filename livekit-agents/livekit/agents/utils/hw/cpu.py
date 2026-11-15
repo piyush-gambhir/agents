@@ -40,8 +40,7 @@ class DefaultCPUMonitor(CPUMonitor):
 
 class CGroupV2CPUMonitor(CPUMonitor):
     def cpu_count(self) -> float:
-        # quota: The maximum CPU time in microseconds that the cgroup can use within a given period.
-        # period: The period of time in microseconds over which the quota applies.
+
         # If the quota is set to "max", it means the cgroup is allowed to use all available CPUs without restriction.  # noqa: E501
         # Otherwise, the quota is a number that represents the maximum CPU time in microseconds that the cgroup can use within a given period.  # noqa: E501
         env_cpus = _cpu_count_from_env()
@@ -58,7 +57,6 @@ class CGroupV2CPUMonitor(CPUMonitor):
         cpu_usage_end = self._read_cpu_usage()
         cpu_usage_diff = cpu_usage_end - cpu_usage_start
 
-        # microseconds to seconds
         cpu_usage_seconds = cpu_usage_diff / 1_000_000
 
         num_cpus = self.cpu_count()
@@ -87,15 +85,12 @@ class CGroupV2CPUMonitor(CPUMonitor):
 
 class CGroupV1CPUMonitor(CPUMonitor):
     def cpu_count(self) -> float:
-        # often, cgroups v1 quota isn't set correctly, so we need to rely on an env var to
-        # correctly determine the number of CPUs
+
         env_cpus = _cpu_count_from_env()
         if env_cpus is not None:
             return env_cpus
         quota, period = self._read_cfs_quota_and_period()
         if quota is None or quota < 0 or period is None or period <= 0:
-            # we do not want to use the node CPU count, as it could overstate the number
-            # available to the container
             return 2.0
         return max(1.0 * quota / period, 1.0)
 

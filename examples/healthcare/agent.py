@@ -38,10 +38,10 @@ logger = logging.getLogger("HealthcareAgent")
 
 load_dotenv()
 
-# to test out warm transfer, ensure the following variables/env vars are set
-SIP_TRUNK_ID = os.getenv("LIVEKIT_SIP_OUTBOUND_TRUNK")  # "ST_abcxyz"
-SUPERVISOR_PHONE_NUMBER = os.getenv("LIVEKIT_SUPERVISOR_PHONE_NUMBER")  # "+12003004000"
-SIP_NUMBER = os.getenv("LIVEKIT_SIP_NUMBER")  # "+15005006000" - caller ID shown to supervisor
+
+SIP_TRUNK_ID = os.getenv("LIVEKIT_SIP_OUTBOUND_TRUNK")
+SUPERVISOR_PHONE_NUMBER = os.getenv("LIVEKIT_SUPERVISOR_PHONE_NUMBER")
+SIP_NUMBER = os.getenv("LIVEKIT_SIP_NUMBER")
 
 VALID_INSURANCES = ["Anthem", "Aetna", "EmblemHealth", "HealthFirst"]
 
@@ -571,7 +571,6 @@ class HealthcareAgent(Agent):
         if event.task_id == "get_name_task":
             self._pending_name = event.result.first_name + " " + event.result.last_name
             if self.session.userdata.profile:
-                # in the case that the user creates a new profile or restarts, the recorded session profile is cleared
                 self.session.userdata.profile = {}
 
         if event.task_id == "get_dob_task":

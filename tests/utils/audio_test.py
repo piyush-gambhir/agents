@@ -29,8 +29,8 @@ __all__ = [
 
 
 _DEFAULT_SAMPLE_RATE = 48000
-_DEFAULT_FREQUENCY = 440.0  # A4 — easy to hear if you debug locally
-_FRAME_DURATION_MS = 20  # standard Opus framing
+_DEFAULT_FREQUENCY = 440.0
+_FRAME_DURATION_MS = 20
 
 
 def rms(samples: np.ndarray) -> float:
@@ -85,7 +85,7 @@ class SineToneSource:
         await self.source.aclose()
 
     async def _run(self) -> None:
-        # Prebuild one period worth of samples then loop the phase forward.
+
         omega = 2.0 * math.pi * self._frequency / self._sample_rate
         next_tick = asyncio.get_event_loop().time()
         while True:
@@ -109,7 +109,6 @@ class SineToneSource:
             if delay > 0:
                 await asyncio.sleep(delay)
             else:
-                # Behind schedule (e.g. just resumed from a pause); resync.
                 next_tick = asyncio.get_event_loop().time()
 
 

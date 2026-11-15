@@ -4,7 +4,7 @@ from ... import function_tool
 from ...job import get_job_context
 from ..workflows.utils import DtmfEvent, dtmf_event_to_code
 
-DEFAULT_DTMF_PUBLISH_DELAY = 0.3  # seconds to wait between sending DTMF events
+DEFAULT_DTMF_PUBLISH_DELAY = 0.3
 
 
 @function_tool

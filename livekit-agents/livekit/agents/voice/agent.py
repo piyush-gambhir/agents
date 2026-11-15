@@ -51,7 +51,6 @@ class Agent:
         tts: NotGivenOr[tts.TTS | TTSModels | str | None] = NOT_GIVEN,
         min_consecutive_speech_delay: NotGivenOr[float] = NOT_GIVEN,
         use_tts_aligned_transcript: NotGivenOr[bool] = NOT_GIVEN,
-        # deprecated
         turn_detection: NotGivenOr[TurnDetectionMode | None] = NOT_GIVEN,
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
         max_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
@@ -107,14 +106,13 @@ class Agent:
         self._min_endpointing_delay = endpointing.get("min_delay", NOT_GIVEN)
         self._max_endpointing_delay = endpointing.get("max_delay", NOT_GIVEN)
         self._turn_handling = turn_handling
-        # stored unresolved so the resolution chain can tell "set on agent" from "fall
-        # back to session"; async_options absent on a given tool_handling means NOT_GIVEN
+
         self._async_tool_options = (
             tool_handling.get("async_options", NOT_GIVEN) if is_given(tool_handling) else NOT_GIVEN
         )
 
         if isinstance(mcp_servers, list) and len(mcp_servers) == 0:
-            mcp_servers = None  # treat empty list as None (but keep NOT_GIVEN)
+            mcp_servers = None
 
         self._mcp_servers = mcp_servers
         if self._mcp_servers:
@@ -244,10 +242,6 @@ class Agent:
         await self._activity.update_chat_ctx(
             chat_ctx, exclude_invalid_function_calls=exclude_invalid_function_calls
         )
-
-    # -- Pipeline nodes --
-    # They can all be overriden by subclasses, by default they use the STT/LLM/TTS specified in the
-    # constructor of the VoiceAgent
 
     async def on_enter(self) -> None:
         """Called when the task is entered"""
@@ -733,7 +727,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
         llm: NotGivenOr[llm.LLM | llm.RealtimeModel | None] = NOT_GIVEN,
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         preserve_function_call_history: bool = False,
-        # deprecated
         turn_detection: NotGivenOr[TurnDetectionMode | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
@@ -766,7 +759,7 @@ class AgentTask(Agent, Generic[TaskResult_T]):
         self.__started = False
         self.__fut = asyncio.Future[TaskResult_T]()
         self.__inactive_ev = asyncio.Event()
-        self.__inactive_ev.set()  # set when the agent is not awaited or activity is closed
+        self.__inactive_ev.set()
         self._preserve_function_call_history = preserve_function_call_history
 
         self._old_agent: Agent | None = None
@@ -790,7 +783,7 @@ class AgentTask(Agent, Generic[TaskResult_T]):
         else:
             self.__fut.set_result(result)
 
-        self.__fut.exception()  # silence exc not retrieved warnings
+        self.__fut.exception()
 
         from .agent_activity import _SpeechHandleContextVar
 
@@ -798,9 +791,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
 
         if speech_handle:
             speech_handle._maybe_run_final_output = result
-
-        # if not self.__inline_mode:
-        #    session._close_soon(reason=CloseReason.TASK_COMPLETED, drain=True)
 
     async def __await_impl(self) -> TaskResult_T:
         if self.__started:
@@ -824,8 +814,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
             if self.__fut.done():
                 return
 
-            # if the asyncio.Task running the InlineTask completes before the InlineTask itself, log
-            # an error and attempt to recover by terminating the InlineTask.
             logger.error(
                 f"The asyncio.Task finished before {self.__class__.__name__} was completed."
             )
@@ -840,9 +828,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
 
         from .agent_activity import _AgentActivityContextVar, _SpeechHandleContextVar
 
-        # TODO(theomonnom): add a global lock for inline tasks
-        # This may currently break in the case we use parallel tool calls.
-
         speech_handle = _SpeechHandleContextVar.get(None)
         old_activity = _AgentActivityContextVar.get()
         old_agent = old_activity.agent
@@ -856,8 +841,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                     f"{self.__class__.__name__} cannot be awaited inside a function tool that is already interrupted"
                 )
 
-            # lock the speech handle to prevent interruptions until the task is complete
-            # there should be no await before this line to avoid race conditions
             old_allow_interruptions = speech_handle.allow_interruptions
             speech_handle.allow_interruptions = False
 
@@ -879,14 +862,10 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                 "using AgentTask inside a function tool may have unexpected behavior."
             )
 
-        # TODO(theomonnom): could the RunResult watcher & the blocked_tasks share the same logic?
         self.__inactive_ev.clear()
         suspended_handles: list[SpeechHandle | asyncio.Task[Any]] = []
         pending_on_enter_task: asyncio.Task[None] | None = None
         try:
-            # use wait_on_enter=False to avoid deadlock: on_enter may spawn nested
-            # AgentTasks that require user input, but session.run() can't return until
-            # all watched handles complete — creating a circular wait.
             await session._update_activity(
                 self, previous_activity="pause", blocked_tasks=blocked_tasks, wait_on_enter=False
             )
@@ -902,17 +881,11 @@ class AgentTask(Agent, Generic[TaskResult_T]):
 
             if self._activity and (on_enter_task := self._activity._on_enter_task):
                 if run_state and not run_state.done():
-                    # watch the on_enter task as a guard so RunResult won't complete
-                    # before on_enter has registered its own speech handles
                     run_state._watch_handle(on_enter_task)
                     pending_on_enter_task = on_enter_task
                 else:
-                    # no active run to guard — just wait for on_enter directly
                     await asyncio.shield(on_enter_task)
 
-            # now unwatch the parent speech handle and blocked tasks that belong to the
-            # old activity — they can't complete while this AgentTask is running, and
-            # keeping them watched would block RunResult from completing.
             if run_state and not run_state.done():
                 if speech_handle and run_state._unwatch_handle(speech_handle):
                     suspended_handles.append(speech_handle)
@@ -933,11 +906,8 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                 with contextlib.suppress(RuntimeError):
                     speech_handle.allow_interruptions = old_allow_interruptions
 
-            # run_state could have changed after self.__fut
             run_state = session._global_run_state
 
-            # re-watch the suspended handles so the resumed parent activity
-            # is tracked by the current RunResult again
             if run_state and not run_state.done():
                 for handle in suspended_handles:
                     run_state._watch_handle(handle)
@@ -960,7 +930,7 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                     exclude_function_call=not self._preserve_function_call_history,
                     exclude_instructions=True,
                 )
-                # set the chat_ctx directly, `session._update_activity` will sync it to the rt_session if needed
+
                 old_agent._chat_ctx.items[:] = merged_chat_ctx.items
 
                 await session._update_activity(

@@ -325,7 +325,6 @@ class SpeechStream(stt.RecognizeStream):
                 recv_task = asyncio.create_task(self._recv_messages(ws), name="gnani-stt-recv")
 
                 try:
-                    # Wait for send to finish; if recv errors first, propagate it.
                     done, _ = await asyncio.wait(
                         [send_task, recv_task],
                         return_when=asyncio.FIRST_COMPLETED,
@@ -334,9 +333,6 @@ class SpeechStream(stt.RecognizeStream):
                         task.result()
 
                     if send_task.done() and not recv_task.done():
-                        # All audio sent. The Gnani API has no application-level
-                        # end-of-stream message, so give the server a short
-                        # window to flush final transcripts before closing.
                         try:
                             await asyncio.wait_for(asyncio.shield(recv_task), timeout=1.0)
                         except asyncio.TimeoutError:

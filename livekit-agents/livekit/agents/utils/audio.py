@@ -13,7 +13,6 @@ from livekit import rtc
 from ..log import logger
 from .aio.utils import cancel_and_wait
 
-# deprecated aliases
 AudioBuffer = list[rtc.AudioFrame] | rtc.AudioFrame
 
 combine_frames = rtc.combine_audio_frames
@@ -111,7 +110,7 @@ class AudioByteStream:
         self._num_channels = num_channels
 
         if samples_per_channel is None:
-            samples_per_channel = sample_rate // 10  # 100ms by default
+            samples_per_channel = sample_rate // 10
 
         self._bytes_per_sample = num_channels * ctypes.sizeof(ctypes.c_int16)
         self._target_bytes_per_frame = samples_per_channel * self._bytes_per_sample
@@ -161,7 +160,6 @@ class AudioByteStream:
                 )
             )
 
-            # progressively double toward the target frame size
             if self._current_bytes_per_frame < self._target_bytes_per_frame:
                 self._current_bytes_per_frame = min(
                     self._current_bytes_per_frame * 2, self._target_bytes_per_frame
@@ -169,7 +167,7 @@ class AudioByteStream:
 
         return frames
 
-    write = push  # Alias for the push method.
+    write = push
 
     def flush(self) -> list[rtc.AudioFrame]:
         """
@@ -253,7 +251,6 @@ async def audio_frames_from_file(
         await cancel_and_wait(reader_task)
         await decoder.aclose()
 
-    # propagate file reader errors (e.g. FileNotFoundError for missing files)
     if reader_task.done() and not reader_task.cancelled():
         if exc := reader_task.exception():
             raise exc

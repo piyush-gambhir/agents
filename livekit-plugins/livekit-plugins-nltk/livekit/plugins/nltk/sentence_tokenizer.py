@@ -8,11 +8,6 @@ import nltk  # type: ignore
 from livekit import agents
 from livekit.agents import LanguageCode
 
-# nltk is using the punkt tokenizer
-# https://www.nltk.org/_modules/nltk/tokenize/punkt.html
-# this code is using a whitespace to concatenate small sentences together
-# (languages such as Chinese and Japanese are not yet supported)
-
 
 @dataclass
 class _TokenizerOptions:

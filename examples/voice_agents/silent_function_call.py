@@ -19,11 +19,6 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-# This example shows how to execute function tools without generating a reply.
-# A tool without a return value won't generate a reply automatically.
-# If multiple tools are called in parallel, it creates a reply if any of them has a output,
-# you can cancel the reply by calling `ev.cancel_tool_reply()` in the `function_tools_executed` event handler.
-
 
 class MyAgent(Agent):
     def __init__(self) -> None:
@@ -39,8 +34,6 @@ class MyAgent(Agent):
         """Called when user asks to turn on the light."""
         self.light_on = True
         logger.info("Light is now on")
-
-        # a tool without a return value won't generate a reply automatically
 
     @function_tool()
     async def turn_off_light(self):
@@ -67,7 +60,6 @@ async def entrypoint(ctx: JobContext):
     def on_function_tools_executed(ev: FunctionToolsExecutedEvent):
         tools = (fnc.name for fnc in ev.function_calls)
         if "turn_off_light" in tools:
-            # you can also prevent the tool reply after all tools executed
             ev.cancel_tool_reply()
 
     await session.start(agent=MyAgent(), room=ctx.room)

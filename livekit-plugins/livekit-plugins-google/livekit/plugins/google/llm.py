@@ -1,15 +1,15 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -181,7 +181,7 @@ class LLM(llm.LLM):
                 raise ValueError(
                     "Project is required for VertexAI via project kwarg or GOOGLE_CLOUD_PROJECT environment variable"  # noqa: E501
                 )
-            gemini_api_key = None  # VertexAI does not require an API key
+            gemini_api_key = None
 
         else:
             gcp_project = None
@@ -196,7 +196,6 @@ class LLM(llm.LLM):
                     "API key is required for Google API either via api_key or GOOGLE_API_KEY environment variable"  # noqa: E501
                 )
 
-        # Validate thinking_config
         if is_given(thinking_config):
             _thinking_budget = None
             _thinking_level = None
@@ -240,7 +239,7 @@ class LLM(llm.LLM):
             location=gcp_location,
             credentials=credentials,
         )
-        # Store thought_signatures for Gemini 2.5+ multi-turn function calling
+
         self._thought_signatures: dict[str, bytes] = {}
 
     @property
@@ -344,13 +343,11 @@ class LLM(llm.LLM):
         if is_given(self._opts.seed):
             extra["seed"] = self._opts.seed
 
-        # Handle thinking_config based on model version
         if is_given(self._opts.thinking_config):
             is_gemini_3 = _is_gemini_3_model(self._opts.model)
             is_gemini_3_flash = _is_gemini_3_flash_model(self._opts.model)
             thinking_cfg = self._opts.thinking_config
 
-            # Extract both parameters
             _budget = None
             _level: str | types.ThinkingLevel | None = None
             if isinstance(thinking_cfg, dict):
@@ -361,33 +358,28 @@ class LLM(llm.LLM):
                 _level = getattr(thinking_cfg, "thinking_level", None)
 
             if is_gemini_3:
-                # Gemini 3: only support thinking_level
                 if _budget is not None and _level is None:
                     logger.warning(
                         f"Model {self._opts.model} is Gemini 3 which does not support thinking_budget. "
                         "Please use thinking_level ('low' or 'high') instead. Ignoring thinking_budget."
                     )
                 if _level is None:
-                    # If no thinking_level is provided, use the fastest thinking level
                     if is_gemini_3_flash:
                         _level = "minimal"
                     else:
                         _level = "low"
-                # Use thinking_level only (pass as dict since SDK may not have this field yet)
+
                 extra["thinking_config"] = {"thinking_level": _level}
 
             else:
-                # Gemini 2.5 and earlier: only support thinking_budget
                 if _level is not None and _budget is None:
                     raise ValueError(
                         f"Model {self._opts.model} does not support thinking_level. "
                         "Please use thinking_budget (int) instead for Gemini 2.5 and earlier models."
                     )
                 if _budget is not None:
-                    # Use thinking_budget only
                     extra["thinking_config"] = types.ThinkingConfig(thinking_budget=_budget)
                 else:
-                    # Pass through original config if no specific handling needed
                     extra["thinking_config"] = self._opts.thinking_config
 
         if is_given(self._opts.automatic_function_calling_config):
@@ -440,7 +432,6 @@ class LLMStream(llm.LLMStream):
         request_id = utils.shortuuid()
 
         try:
-            # Pass thought_signatures for Gemini 2.5+ multi-turn function calling
             thought_sigs = (
                 self._llm._thought_signatures if _requires_thought_signatures(self._model) else None
             )
@@ -451,13 +442,7 @@ class LLMStream(llm.LLMStream):
             turns = [types.Content.model_validate(turn) for turn in turns_dict]
             tool_context = llm.ToolContext(self._tools)
             tools_config = create_tools_config(tool_context, _only_single_type=True)
-            # Gemini's API rejects `generateContent` requests that pass
-            # `cached_content` together with `system_instruction`, `tools`,
-            # or `tool_config` — those fields must live INSIDE the
-            # CachedContent resource, not on the request. The application
-            # bakes them into the cache via `client.caches.create(...)`;
-            # here we just suppress the duplicates on the outgoing request
-            # whenever a cache is attached.
+
             using_cache = "cached_content" in self._extra_kwargs
             if tools_config and not using_cache:
                 self._extra_kwargs["tools"] = tools_config
@@ -603,7 +588,6 @@ class LLMStream(llm.LLMStream):
                 call_id=part.function_call.id or utils.shortuuid("function_call_"),
             )
 
-            # Store thought_signature for Gemini 2.5+ multi-turn function calling
             if (
                 _requires_thought_signatures(self._model)
                 and hasattr(part, "thought_signature")

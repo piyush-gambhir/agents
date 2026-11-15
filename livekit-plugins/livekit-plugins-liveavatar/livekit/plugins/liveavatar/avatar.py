@@ -230,8 +230,8 @@ class AvatarSession(BaseAvatarSession):
             chunk_buf: list[bytes] = []
             chunk_duration = 0.0
             is_first_chunk = True
-            first_chunk_threshold = 0.6  # 600ms
-            subsequent_chunk_threshold = 1.0  # 1s
+            first_chunk_threshold = 0.6
+            subsequent_chunk_threshold = 1.0
 
             def _flush_chunk() -> None:
                 nonlocal chunk_buf, chunk_duration, is_first_chunk

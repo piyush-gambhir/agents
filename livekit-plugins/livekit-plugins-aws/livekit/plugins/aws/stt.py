@@ -1,12 +1,12 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -144,7 +144,6 @@ class STT(stt.STT):
                 "Set only one to True."
             )
 
-        # When auto language detection is enabled, language_code must not be set
         lang: LanguageCode | None = None
         if not identify_language and not identify_multiple_languages:
             lang = LanguageCode(language) if language else LanguageCode("en-US")
@@ -229,8 +228,7 @@ class SpeechStream(stt.SpeechStream):
         while True:
             config_kwargs: dict[str, Any] = {"region": self._opts.region}
             if self._credentials:
-                # Use a credentials resolver for explicit credentials
-                # for some reason, Config with direct values doesn't work
+
                 class StaticCredsResolver:
                     def __init__(self, creds: Credentials):
                         self._identity = AWSCredentialsIdentity(
@@ -274,7 +272,6 @@ class SpeechStream(stt.SpeechStream):
                 "language_model_name": self._opts.language_model_name,
             }
 
-            # Auto language detection is mutually exclusive with language_code
             if self._opts.identify_language:
                 live_config["identify_language"] = True
                 if is_given(self._opts.language_options):
@@ -315,7 +312,6 @@ class SpeechStream(stt.SpeechStream):
                     input=StartStreamTranscriptionInput(**filtered_config)
                 )
 
-                # Get the output stream
                 _, output_stream = await stream.await_output()
 
                 async def input_generator(
@@ -330,7 +326,6 @@ class SpeechStream(stt.SpeechStream):
                                     )
                                 )
                     finally:
-                        # Send empty frame to close (required by AWS Transcribe)
                         try:
                             await audio_stream.send(
                                 AudioStreamAudioEvent(value=AudioEvent(audio_chunk=b""))
@@ -354,7 +349,6 @@ class SpeechStream(stt.SpeechStream):
                             and "complete signal was sent without the preceding empty frame"
                             in e.message
                         ):
-                            # This can happen during cancellation if the empty frame wasn't sent in time
                             logger.warning(
                                 "AWS Transcribe stream closed with empty frame error (this is usually harmless)"
                             )
@@ -375,25 +369,19 @@ class SpeechStream(stt.SpeechStream):
                 await asyncio.shield(gather_future)
             except BadRequestException as e:
                 if e.message and e.message.startswith("Your request timed out"):
-                    # AWS times out after 15s of inactivity, this tends to happen
-                    # at the end of the session, when the input is gone, we'll ignore it and
-                    # just treat it as a silent retry
                     logger.info("restarting transcribe session")
                     continue
                 else:
                     raise e
             finally:
                 if tasks:
-                    # Close input stream first
                     await utils.aio.gracefully_cancel(tasks[0])
 
-                    # Wait for output stream to close cleanly
                     try:
                         await asyncio.wait_for(tasks[1], timeout=3.0)
                     except (asyncio.TimeoutError, asyncio.CancelledError):
                         await utils.aio.gracefully_cancel(tasks[1])
 
-                # Ensure gather future is retrieved to avoid "exception never retrieved"
                 with contextlib.suppress(Exception):
                     await gather_future
 
@@ -435,7 +423,6 @@ class SpeechStream(stt.SpeechStream):
 
         detected_lang = resp.language_code or self._opts.language or "en-US"
 
-        # Populate source_languages when language identification is active
         source_languages: list[LanguageCode] | None = None
         if (
             self._opts.identify_language or self._opts.identify_multiple_languages

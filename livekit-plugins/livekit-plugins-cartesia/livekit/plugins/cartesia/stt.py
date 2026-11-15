@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -54,7 +54,7 @@ def _is_whisper_model(model: STTModels | str) -> bool:
 
 
 def _base_url_to_ws_base_url(base_url: str) -> str:
-    # If base_url already has a protocol, replace it, otherwise add wss://
+
     if base_url.startswith(("http://", "https://")):
         return base_url.replace("http", "ws", 1)
     else:
@@ -164,7 +164,6 @@ class STT(stt.STT):
 
         language_code = None if language is None else LanguageCode(language)
 
-        # TODO: default all languages to ink-2 once they are supported
         if utils.is_given(model):
             resolved_model = model
         elif language_code is None or language_code.language == "en":
@@ -289,7 +288,7 @@ class STT(stt.STT):
         """
         streams = list(self._streams)
         self._streams.clear()
-        # return_exceptions=True so one stream failing to close doesn't abandon the rest
+
         await asyncio.gather(*(stream.aclose() for stream in streams), return_exceptions=True)
 
     def update_options(
@@ -317,7 +316,6 @@ class STT(stt.STT):
             self._warn_on_unexpected_args(language=self._language)
 
         for stream in self._streams:
-            # do not update model since this is likely user error
             stream.update_options(language=language)
 
     def _warn_on_unexpected_args(self, language: LanguageCode | None) -> None:

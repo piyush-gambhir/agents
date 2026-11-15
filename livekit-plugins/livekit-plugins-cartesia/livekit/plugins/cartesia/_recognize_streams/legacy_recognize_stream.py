@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -172,8 +172,7 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
             return
 
         closing_ws = False
-        # Reset per-connection state so a transport-error retry (a new _run
-        # invocation by the base class) starts fresh.
+
         self._speaking = False
         self._speech_duration = 0
         self._last_speech_end_time = 0
@@ -263,9 +262,6 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
                 wait_reconnect = asyncio.create_task(self._reconnect_event.wait())
                 tasks = [send, recv, keepalive, wait_reconnect]
 
-                # Only race send/recv against the reconnect signal. keepalive sleeps up to 30s
-                # between pings, so including it here would block teardown for up to 30s after
-                # send/recv have already finished.
                 send_recv_group = asyncio.gather(send, recv)
 
                 try:
@@ -285,7 +281,7 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
                 finally:
                     await utils.aio.gracefully_cancel(*tasks)
                     send_recv_group.cancel()
-                    send_recv_group.exception()  # retrieve the exception
+                    send_recv_group.exception()
             finally:
                 if ws is not None:
                     await ws.close()
@@ -348,7 +344,7 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
                 )
                 for word in words
             ]
-            # word timestamps are often within the audio window, so we track time separately
+
             if self._last_speech_end_time == 0.0:
                 self._last_speech_end_time = self.start_time_offset
             start_time = self._last_speech_end_time
@@ -359,9 +355,6 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
             if not text and not is_final:
                 return
 
-            # we don't have a super accurate way of detecting when speech started.
-            # this is typically the job of the VAD, but perfoming it here just in case something's
-            # relying on STT to perform this task.
             if not self._speaking:
                 self._speaking = True
                 start_event = stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
@@ -434,7 +427,7 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
             language: Used to change the language to match what the user is speaking.
             model: Deprecated. This is a no-op. Construct a new STT instance to change the model.
         """
-        # not changing the model and reconnecting since that is likely unexpected behavior
+
         if utils.is_given(model) and model != self._model:
             logger.warning(
                 "Cartesia STT update_options() ignores the model kwarg. Construct a new STT instance to change the model."

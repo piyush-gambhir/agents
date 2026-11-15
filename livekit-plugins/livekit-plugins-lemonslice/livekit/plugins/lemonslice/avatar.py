@@ -93,16 +93,10 @@ class AvatarSession(BaseAvatarSession):
             .with_identity(self._avatar_participant_identity)
             .with_name(self._avatar_participant_name)
             .with_grants(api.VideoGrants(room_join=True, room=room.name))
-            # allow the avatar agent to publish audio and video on behalf of your local agent
             .with_attributes({ATTRIBUTE_PUBLISH_ON_BEHALF: local_participant_identity})
             .to_jwt()
         )
 
-        # Rebind audio output BEFORE the slow upstream HTTP call so
-        # subsequent generations are routed to the (about-to-arrive)
-        # avatar identity immediately. wait_remote_track buffers
-        # frames until the video track shows up, so nothing is lost
-        # in the gap.
         agent_session.output.audio = DataStreamAudioOutput(
             room=room,
             destination_identity=self._avatar_participant_identity,

@@ -37,7 +37,6 @@ def create_tools_config(
     if function_tools:
         gemini_tools.append(types.Tool(function_declarations=function_tools))
 
-    # Some Google LLMs do not support multiple tool types (either function tools or builtin tools).
     if _only_single_type and gemini_tools:
         return gemini_tools
 
@@ -62,12 +61,8 @@ def get_tool_results_for_realtime(
                 response={"output": msg.output},
             )
             if is_given(tool_response_scheduling):
-                # vertexai currently doesn't support the scheduling parameter, gemini api defaults to idle
-                # it's the user's responsibility to avoid this parameter when using vertexai
                 res.scheduling = tool_response_scheduling
             if not vertexai:
-                # vertexai does not support id in FunctionResponse
-                # see: https://github.com/googleapis/python-genai/blob/85e00bc/google/genai/_live_converters.py#L1435
                 res.id = msg.call_id
             function_responses.append(res)
     return (
@@ -94,7 +89,6 @@ class _GeminiJsonSchema:
     https://github.com/pydantic/pydantic-ai/blob/085a9542a7360b7e388ce575323ce189b397d7ad/pydantic_ai_slim/pydantic_ai/models/gemini.py#L809
     """
 
-    # Type mapping from JSON Schema to Gemini Schema
     TYPE_MAPPING: dict[str, types.Type] = {
         "string": types.Type.STRING,
         "number": types.Type.NUMBER,
@@ -110,7 +104,7 @@ class _GeminiJsonSchema:
 
     def simplify(self) -> dict[str, Any] | None:
         self._simplify(self.schema, refs_stack=())
-        # If the schema is an OBJECT with no properties, return None.
+
         if self.schema.get("type") == types.Type.OBJECT and not self.schema.get("properties"):
             return None
         return self.schema
@@ -122,7 +116,6 @@ class _GeminiJsonSchema:
         schema.pop("$schema", None)
 
         if (const := schema.pop("const", None)) is not None:
-            # Gemini doesn't support const, but it does support enum with a single value
             schema["enum"] = [const]
 
         schema.pop("discriminator", None)
@@ -141,7 +134,6 @@ class _GeminiJsonSchema:
         if "enum" in schema and "type" not in schema:
             schema["type"] = self._infer_type(schema["enum"][0])
 
-        # Convert type value to Gemini format
         if "type" in schema and schema["type"] != "null":
             json_type = schema["type"]
             if json_type in self.TYPE_MAPPING:
@@ -151,10 +143,8 @@ class _GeminiJsonSchema:
             else:
                 raise ValueError(f"Unsupported type in JSON Schema: {json_type}")
 
-        # Map field names that differ between JSON Schema and Gemini
         self._map_field_names(schema)
 
-        # Handle anyOf - map to any_of
         if any_of := schema.pop("anyOf", None):
             if any_of:
                 mapped_any_of = []

@@ -37,7 +37,6 @@ class GetEmailTask(AgentTask[GetEmailResult]):
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
         require_confirmation: NotGivenOr[bool] = NOT_GIVEN,
-        # deprecated
         extra_instructions: str = "",
     ) -> None:
         if not is_given(instructions):
@@ -51,13 +50,12 @@ class GetEmailTask(AgentTask[GetEmailResult]):
                 extra=instructions.extra,
                 _modality_specific=Instructions(audio=AUDIO_SPECIFIC, text=TEXT_SPECIFIC),
                 _confirmation=Instructions(
-                    # confirmation is enabled by default for audio, disabled by default for text
                     audio=CONFIRMATION_INSTRUCTION if require_confirmation is not False else "",
                     text=CONFIRMATION_INSTRUCTION if require_confirmation is True else "",
                 ),
             )
 
-        assert is_given(instructions)  # for type checking
+        assert is_given(instructions)
         super().__init__(
             instructions=instructions,
             chat_ctx=chat_ctx,
@@ -94,7 +92,7 @@ class GetEmailTask(AgentTask[GetEmailResult]):
         if not self._confirmation_required(ctx):
             if not self.done():
                 self.complete(GetEmailResult(email_address=self._current_email))
-            return None  # no need to continue the conversation
+            return None
 
         confirm_tool = self._build_confirm_tool(email=email)
         current_tools = [t for t in self.tools if t.id != "confirm_email_address"]
@@ -143,7 +141,6 @@ EMAIL_REGEX = (
 )
 
 
-# instructions
 PERSONA = "You are only a single step in a broader system, responsible solely for capturing an email address."
 
 AUDIO_SPECIFIC = """\

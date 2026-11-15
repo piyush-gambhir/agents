@@ -24,8 +24,6 @@ logger = logging.getLogger("flush-llm-node")
 
 load_dotenv()
 
-## This example shows how to flush a fast response in `llm_node` to tts immediately.
-
 
 class FastResponseAgent(Agent):
     def __init__(self) -> None:
@@ -57,7 +55,7 @@ class FastResponseAgent(Agent):
             async with session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    # response from the function call is returned to the LLM
+
                     weather_data = {
                         "temperature": data["current"]["temperature_2m"],
                         "temperature_unit": "Celsius",
@@ -89,16 +87,13 @@ class FastResponseAgent(Agent):
 
             yield chunk
 
-        # example: fast response conditioned on the tool call name and the presence of a text message
         tool_names = [tool.name for tool in called_tools]
         if not has_text_message and "get_weather" in tool_names:
             logger.info("Fast response triggered")
             yield "One moment while I look that up. "
-            # flush the response to tts immediately
-            # NOTE: this will close the current tts_node and start a new one
+
             yield FlushSentinel()
 
-            # simulate additional processing before closing the llm_node
             await asyncio.sleep(3)
             yield "Okay I found what you were looking for... "
 

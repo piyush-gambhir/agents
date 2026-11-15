@@ -20,11 +20,6 @@ logger = logging.getLogger("background-audio")
 
 load_dotenv()
 
-## Example demonstrates how to play background audio / sound effects in an agent session.
-## It uses the BackgroundAudioPlayer class to manage audio playback to the room.
-## Background audio could make the agent feel more realistic, versus perfect silence
-## in the background.
-
 
 class FakeWebSearchAgent(Agent):
     def __init__(self):
@@ -41,7 +36,6 @@ class FakeWebSearchAgent(Agent):
             query: The search query to look up on the web.
         """
 
-        # simulate a long web search to demonstrate the background "thinking" audio
         logger.info("FakeWebSearchAgent thinking...")
         await asyncio.sleep(5)
         return "The request failed, give the users some information based on your knowledge"
@@ -56,9 +50,7 @@ async def entrypoint(ctx: JobContext):
     await session.start(FakeWebSearchAgent(), room=ctx.room)
 
     background_audio = BackgroundAudioPlayer(
-        # play office ambience sound looping in the background
         ambient_sound=AudioConfig(BuiltinAudioClip.OFFICE_AMBIENCE, volume=0.8),
-        # play keyboard typing sound when the agent is thinking
         thinking_sound=[
             AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.8),
             AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.7),
@@ -66,9 +58,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     await background_audio.start(room=ctx.room, agent_session=session)
-
-    # Play another audio file at any time using the play method:
-    # background_audio.play("filepath.ogg")
 
 
 if __name__ == "__main__":

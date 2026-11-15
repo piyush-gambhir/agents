@@ -1,5 +1,3 @@
-# from https://github.com/fastapi/fastapi-cli/blob/main/src/fastapi_cli/discover.py
-
 import importlib
 import sys
 from dataclasses import dataclass

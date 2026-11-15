@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   evals:
-    # don't run tests for PRs on forks
+
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     strategy:
       fail-fast: false
@@ -25,15 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{ matrix.example }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.12"
 
@@ -59,7 +59,7 @@ jobs:
           ELEVEN_API_KEY: ${{ secrets.ELEVEN_API_KEY }}
           CARTESIA_API_KEY: ${{ secrets.CARTESIA_API_KEY }}
           AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }} # nit: doesn't have to be secret
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

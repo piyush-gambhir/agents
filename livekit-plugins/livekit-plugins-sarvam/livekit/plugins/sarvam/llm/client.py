@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -35,9 +35,9 @@ USER_AGENT = f"Livekit/{livekit_version} Python/{platform.python_version()}"
 _SUPPORTED_MODELS = {
     "sarvam-m",
     "sarvam-30b",
-    "sarvam-30b-16k",  # deprecated by Sarvam, kept for backward compatibility
+    "sarvam-30b-16k",
     "sarvam-105b",
-    "sarvam-105b-32k",  # deprecated by Sarvam, kept for backward compatibility
+    "sarvam-105b-32k",
 }
 _ALLOWED_EXTRA_BODY_PARAMS = {
     "frequency_penalty",
@@ -83,7 +83,7 @@ class LLM(OpenAILLM):
         validated_model = _validate_model(model)
         sarvam_api_key = _get_api_key(api_key)
         merged_headers = dict(extra_headers) if is_given(extra_headers) else {}
-        # Sarvam chat-completions auth and telemetry headers are always enforced.
+
         merged_headers["api-subscription-key"] = sarvam_api_key
         merged_headers["User-Agent"] = USER_AGENT
 

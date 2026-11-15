@@ -79,7 +79,6 @@ class SpeakingRateStream:
 
         async for input_frame in self._input_ch:
             if not isinstance(input_frame, rtc.AudioFrame):
-                # estimate the speech rate for the last frame
                 available_samples = sum(frame.samples_per_channel for frame in inference_frames)
                 if available_samples > self._window_size_samples * 0.5:
                     frame = rtc.combine_audio_frames(inference_frames)
@@ -103,7 +102,6 @@ class SpeakingRateStream:
                 inference_frames = []
                 continue
 
-            # resample the input frame if necessary
             if not self._input_sample_rate:
                 self._input_sample_rate = input_frame.sample_rate
                 _inference_sample_rate = self._opts.sample_rate or self._input_sample_rate
@@ -157,7 +155,6 @@ class SpeakingRateStream:
                     dtype=np.float32,
                 )
 
-                # run the inference
                 sr = self._compute_speaking_rate(inference_f32_data, _inference_sample_rate)
                 self._event_ch.send_nowait(
                     SpeakingRateEvent(
@@ -167,11 +164,10 @@ class SpeakingRateStream:
                     )
                 )
 
-                # move the window forward by the hop size
                 pub_timestamp += self._opts.step_size
                 if len(inference_frame.data) - self._step_size_samples > 0:
                     remaining = bytes(inference_frame.data[self._step_size_samples :])
-                    remaining_samples = len(remaining) // 2  # int16 = 2 bytes
+                    remaining_samples = len(remaining) // 2
                     inference_frames = [
                         rtc.AudioFrame(
                             data=remaining,
@@ -190,12 +186,11 @@ class SpeakingRateStream:
         silence_threshold = self._opts._silence_threshold
 
         audio_sq = audio**2
-        # check if the audio is silent
+
         overall_rms = np.sqrt(np.mean(audio_sq))
         if overall_rms < silence_threshold:
             return 0.0
 
-        # or if the tail of the audio is silent
         tail_audio_sq = audio_sq[int(len(audio_sq) * 0.7) :]
         if len(tail_audio_sq) > 0 and np.sqrt(np.mean(tail_audio_sq)) < silence_threshold * 0.5:
             return 0.0
@@ -219,7 +214,6 @@ class SpeakingRateStream:
             frame = audio[start:end]
             windowed = frame * window
 
-            # perform fft and scale
             fft_result = np.fft.rfft(windowed)
             result[:, i] = fft_result * scale_factor
 
@@ -232,18 +226,16 @@ class SpeakingRateStream:
         Calculate speaking rate based on spectral flux.
         Higher spectral flux correlates with more rapid speech articulation.
         """
-        # Parameters
-        frame_length = int(sample_rate * 0.025)  # 25ms
-        hop_length = frame_length // 2  # 50% overlap
+
+        frame_length = int(sample_rate * 0.025)
+        hop_length = frame_length // 2
 
         Zxx = self._stft(audio, frame_length, hop_length)
 
-        # calculate spectral flux (sum of spectral magnitude changes between frames)
         spectral_magnitudes = np.abs(Zxx)
         spectral_flux_values = []
 
         for i in range(1, spectral_magnitudes.shape[1]):
-            # l1 norm of difference between consecutive spectral frames
             flux = np.sum(np.abs(spectral_magnitudes[:, i] - spectral_magnitudes[:, i - 1]))
             spectral_flux_values.append(flux)
 

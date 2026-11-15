@@ -115,7 +115,6 @@ class MultiSpeakerAdapterWrapper(RecognizeStream):
                 if updated_ev is not None:
                     self._event_ch.send_nowait(updated_ev)
                 elif ev.type == SpeechEventType.FINAL_TRANSCRIPT:
-                    # send an empty final transcript to clear the interim results
                     self._event_ch.send_nowait(
                         SpeechEvent(
                             type=SpeechEventType.FINAL_TRANSCRIPT,
@@ -153,7 +152,6 @@ class PrimarySpeakerDetectionOptions:
     rms_smoothing_factor: float = 0.5
     """Smoothing factor for RMS for a speaker, rms = rms * factor + new_rms * (1 - factor)"""
 
-    # switching primary speaker
     threshold_multiplier: float = 1.3
     """Candidate's RMS needs to be louder than current primary's RMS by this multiplier"""
     decay_to_equal_time: float = 60
@@ -223,7 +221,7 @@ class _PrimarySpeakerDetector:
                 num_channels=frame.num_channels,
                 samples_per_channel=sample_per_channel,
             )
-            self._frame_size = sample_per_channel / frame.sample_rate  # accurate frame size
+            self._frame_size = sample_per_channel / frame.sample_rate
 
         for f in self._bstream.push(frame.data):
             rms = self._compute_rms(f)
@@ -246,7 +244,6 @@ class _PrimarySpeakerDetector:
 
         sd.is_primary_speaker = sd.speaker_id == self._primary_speaker
 
-        # format the transcript
         if sd.is_primary_speaker:
             sd.text = self._primary_format.format(text=sd.text, speaker_id=sd.speaker_id)
         else:
@@ -291,7 +288,6 @@ class _PrimarySpeakerDetector:
         if rms is None:
             return
 
-        # update speaker data
         speaker_id = sd.speaker_id
         if data := self._speaker_data.get(speaker_id):
             data.last_activity_time = sd.end_time
@@ -308,10 +304,6 @@ class _PrimarySpeakerDetector:
         if self._primary_speaker == speaker_id:
             return
 
-        # compare the new speaker's RMS to the primary's RMS, switch primary if:
-        # 1. it's the first speaker
-        # 2. the new speaker's RMS is significantly louder than the primary's RMS
-
         if (
             self._primary_speaker is None
             or (primary := self._speaker_data.get(self._primary_speaker)) is None
@@ -322,7 +314,6 @@ class _PrimarySpeakerDetector:
 
         silence_duration = self._pushed_duration - primary.last_activity_time
 
-        # decay the threshold multiplier over time in case the primary speaker is silent for a long time
         if self._opt.threshold_multiplier > 1.0:
             decay_rate = (self._opt.threshold_multiplier - 1.0) / self._opt.decay_to_equal_time
         else:

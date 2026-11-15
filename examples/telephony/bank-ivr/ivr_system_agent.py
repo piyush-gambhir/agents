@@ -161,7 +161,7 @@ class RootBankIVRAgent(Agent):
                 num_digits=8,
                 confirmation=False,
             )
-            # customer_id = "10000001"
+
             await add_event_message(self, content=f"User entered customer ID: {customer_id}")
             pin = await collect_digits(
                 self,
@@ -169,7 +169,7 @@ class RootBankIVRAgent(Agent):
                 num_digits=4,
                 confirmation=False,
             )
-            # pin = "0000"
+
             await add_event_message(self, content=f"User entered PIN: {pin}")
 
             if self._service.authenticate(customer_id, pin):

@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -50,11 +50,6 @@ DEFAULT_SAMPLE_RATE = 16000
 DEFAULT_NUM_CHANNELS = 1
 DEFAULT_API_URL = "https://api.inworld.ai/"
 WS_ENDPOINT = "stt/v1/transcribe:streamBidirectional"
-
-# Inworld supports multiple STT models (e.g. inworld/inworld-stt-1,
-# assemblyai/universal-streaming-multilingual, soniox/stt-rt-v4, etc.).
-# No validation is done here — pass any model string through so new models work
-# without a plugin update.
 
 
 @dataclass
@@ -358,7 +353,7 @@ class SpeechStream(stt.SpeechStream):
                     break
 
         self._audio_duration_collector.flush()
-        # Input channel closed — tell the server to close the stream
+
         if self._ws:
             try:
                 await self._ws.send_str(json.dumps({"closeStream": {}}))
@@ -424,9 +419,6 @@ class SpeechStream(stt.SpeechStream):
         is_final = t.get("isFinal", False)
         voice_profile = t.get("voiceProfile")
 
-        # An empty-text final (VAD false positive, unrecognizable noise) must still
-        # reach the END_OF_SPEECH emission below — otherwise _speaking stays True
-        # and subsequent speechStarted events are ignored, wedging the stream.
         if not text and not is_final:
             return
 

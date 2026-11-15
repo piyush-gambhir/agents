@@ -1,7 +1,7 @@
 .PHONY: help install format format-check lint lint-fix check type-check test test-unit test-docker clean build \
         link-rtc link-rtc-local link-rtc-version unlink-rtc status doctor
 
-# Colors for output
+
 CYAN := \033[36m
 GREEN := \033[32m
 YELLOW := \033[33m
@@ -9,18 +9,18 @@ RED := \033[31m
 RESET := \033[0m
 BOLD := \033[1m
 
-# Paths (computed as absolute paths)
+
 MAKEFILE_DIR := $(shell pwd)
 AGENTS_PROJECT := $(MAKEFILE_DIR)/livekit-agents
 PYTHON_RTC := $(MAKEFILE_DIR)/../python-sdks/livekit-rtc
 RUST_SUBMODULE := $(MAKEFILE_DIR)/../python-sdks/livekit-rtc/rust-sdks
 PACKAGE_NAME := livekit
 
-# Platform and architecture auto-detection
+
 ARCH := $(shell uname -m)
 OS := $(shell uname -s | tr A-Z a-z)
 
-# Default target
+
 .DEFAULT_GOAL := help
 
 help: ## Show this help message
@@ -86,9 +86,9 @@ unit-tests: ## Run unit tests (modules marked with `pytestmark = pytest.mark.uni
 	@echo "$(BOLD)$(CYAN)Running unit tests...$(RESET)"
 	PYTHONPATH="$$PWD" uv run pytest --unit $(PYTEST_ARGS)
 
-# ============================================
-# Development Workflows
-# ============================================
+
+
+
 
 link-rtc: ## Link to local python-rtc (default FFI version)
 	@echo "$(BOLD)$(CYAN)🐍 Linking local python-rtc with default FFI version...$(RESET)"

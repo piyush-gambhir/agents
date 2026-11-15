@@ -142,7 +142,7 @@ class FakeChunkedStream(ChunkedStream):
                 input=self._input_text,
                 audio_duration=self._tts._fake_audio_duration or 0.0,
                 ttfb=0.0,
-                duration=0.0,  # duration from ttfb to end of generation
+                duration=0.0,
             )
 
         if resp.audio_duration > 0.0:

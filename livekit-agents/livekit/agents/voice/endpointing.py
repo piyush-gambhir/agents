@@ -4,7 +4,7 @@ from ..utils import is_given
 from ..utils.exp_filter import ExpFilter
 from .turn import EndpointingOptions
 
-_AGENT_SPEECH_LEADING_SILENCE_GRACE_PERIOD = 0.25  # seconds
+_AGENT_SPEECH_LEADING_SILENCE_GRACE_PERIOD = 0.25
 
 
 class BaseEndpointing:
@@ -142,9 +142,7 @@ class DynamicEndpointing(BaseEndpointing):
         self._overlapping = False
 
     def on_end_of_agent_speech(self, ended_at: float) -> None:
-        # NOTE: intentionally keep _agent_speech_started_at so that
-        # between_turn_delay can be computed in the normal end-of-speech path
-        # NOTE: we also guard against duplicate calls from pipeline reply and pipeline reply done
+
         if self._agent_speech_started_at is not None and (
             self._agent_speech_ended_at is None
             or self._agent_speech_ended_at < self._agent_speech_started_at
@@ -154,11 +152,8 @@ class DynamicEndpointing(BaseEndpointing):
 
     def on_start_of_speech(self, started_at: float, overlapping: bool = False) -> None:
         if self._overlapping:
-            # duplicate calls from _interrupt_by_audio_activity and on_start_of_speech
             return
 
-        # VAD interrupt by audio activity is triggered before end of speech is detected
-        # adjust the utterance ended time to be just before the agent speech started
         if (
             self._utterance_started_at is not None
             and self._utterance_ended_at is not None
@@ -178,10 +173,6 @@ class DynamicEndpointing(BaseEndpointing):
 
     def on_end_of_speech(self, ended_at: float, should_ignore: bool = False) -> None:
         if should_ignore and self._overlapping:
-            # If user speech started within _AGENT_SPEECH_LEADING_SILENCE_GRACE_PERIOD of agent speech,
-            # don't ignore — TTS leading silence can cause the agent speech timestamp
-            # to precede actual audible audio, making this look like a backchannel
-            # when it's really the user speaking before hearing the agent.
             if (
                 self._utterance_started_at is not None
                 and self._agent_speech_started_at is not None
@@ -195,7 +186,6 @@ class DynamicEndpointing(BaseEndpointing):
                     _AGENT_SPEECH_LEADING_SILENCE_GRACE_PERIOD,
                 )
             else:
-                # skip update because it might be a backchannel
                 self._overlapping = False
                 self._speaking = False
                 self._utterance_started_at = None
@@ -204,8 +194,7 @@ class DynamicEndpointing(BaseEndpointing):
 
         if self._overlapping or (
             self._agent_speech_started_at is not None and self._agent_speech_ended_at is None
-        ):  # this is an interruption (agent is still speaking)
-            # If this is an immediate interruption, update the min delay (case 2)
+        ):
             turn_delay, interruption_delay = self.immediate_interruption_delay
             if (
                 (0 < interruption_delay <= self.min_delay)
@@ -227,7 +216,7 @@ class DynamicEndpointing(BaseEndpointing):
                         "min_delay": self.min_delay,
                     },
                 )
-            # If this is not an immediate interruption, update the max delay (case 3)
+
             elif (pause := self.between_turn_delay) > 0:
                 prev_val = self.max_delay
                 self._turn_pause.apply(1.0, pause)
@@ -245,7 +234,7 @@ class DynamicEndpointing(BaseEndpointing):
                     },
                 )
 
-        else:  # this is a normal end of speech
+        else:
             if (pause := self.between_turn_delay) > 0:
                 prev_val = self.max_delay
                 self._turn_pause.apply(1.0, pause)

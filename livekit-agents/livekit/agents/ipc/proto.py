@@ -18,10 +18,10 @@ class InitializeRequest:
 
     asyncio_debug: bool = False
     ping_interval: float = 0
-    ping_timeout: float = 0  # if no response, process is considered dead
-    # if ping is higher than this, process is considered unresponsive
+    ping_timeout: float = 0
+
     high_ping_threshold: float = 0
-    http_proxy: str = ""  # empty = None
+    http_proxy: str = ""
 
     def write(self, b: io.BytesIO) -> None:
         channel.write_bool(b, self.asyncio_debug)
