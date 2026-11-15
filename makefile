@@ -23,7 +23,7 @@ OS := $(shell uname -s | tr A-Z a-z)
 
 .DEFAULT_GOAL := help
 
-help:
+help: ## Show this help message
 	@echo "$(BOLD)$(CYAN)Available targets:$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Development Workflows:$(RESET)"
@@ -35,17 +35,17 @@ help:
 	@echo "$(BOLD)Other:$(RESET)"
 	@grep -E '^(install|clean|build):.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
 
-install:
+install: ## Install all dependencies with dev extras
 	@echo "$(BOLD)$(CYAN)Installing dependencies...$(RESET)"
 	@uv sync --all-extras --dev
 	@echo "$(BOLD)$(GREEN)✓ Dependencies installed$(RESET)"
 
-format:
+format: ## Format code with ruff
 	@echo "$(BOLD)$(CYAN)Formatting code...$(RESET)"
 	@uv run ruff format .
 	@echo "$(BOLD)$(GREEN)✓ Code formatted$(RESET)"
 
-format-check:
+format-check: ## Check code formatting without making changes
 	@echo "$(BOLD)$(CYAN)Checking code formatting...$(RESET)"
 	@if uv run ruff format --check .; then \
 		echo "$(BOLD)$(GREEN)✓ Code formatting is correct$(RESET)"; \
@@ -54,7 +54,7 @@ format-check:
 		exit 1; \
 	fi
 
-lint:
+lint: ## Run ruff linter
 	@echo "$(BOLD)$(CYAN)Running linter...$(RESET)"
 	@if uv run ruff check .; then \
 		echo "$(BOLD)$(GREEN)✓ No linting issues found$(RESET)"; \
@@ -63,7 +63,7 @@ lint:
 		exit 1; \
 	fi
 
-lint-fix:
+lint-fix: ## Run ruff linter and fix issues automatically
 	@echo "$(BOLD)$(CYAN)Running linter with auto-fix...$(RESET)"
 	@uv run ruff check --fix .
 	@echo "$(BOLD)$(GREEN)✓ Linting complete$(RESET)"
@@ -77,12 +77,12 @@ type-check: ## Run mypy type checker
 		exit 1; \
 	fi
 
-check: format-check lint type-check
+check: format-check lint type-check ## Run all checks (format, lint, type-check)
 	@echo "$(BOLD)$(GREEN)✓ All checks passed!$(RESET)"
 
-fix: format lint-fix
+fix: format lint-fix ## Run format and lint checks and fix issues automatically (format, lint)
 
-unit-tests:
+unit-tests: ## Run unit tests (modules marked with `pytestmark = pytest.mark.unit`)
 	@echo "$(BOLD)$(CYAN)Running unit tests...$(RESET)"
 	PYTHONPATH="$$PWD" uv run pytest --unit $(PYTEST_ARGS)
 
@@ -90,7 +90,7 @@ unit-tests:
 
 
 
-link-rtc:
+link-rtc: ## Link to local python-rtc (default FFI version)
 	@echo "$(BOLD)$(CYAN)🐍 Linking local python-rtc with default FFI version...$(RESET)"
 	@set -e; \
 	DETECTED_ARCH="$(ARCH)"; \
@@ -111,7 +111,7 @@ link-rtc:
 	cd $(AGENTS_PROJECT) && uv add --editable "../../python-sdks/livekit-rtc" && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Linked to local python-rtc (with default FFI version)$(RESET)"
 
-link-rtc-local:
+link-rtc-local: ## Build and link local rust SDK from source
 	@echo "$(BOLD)$(CYAN)🦀 Building and linking local rust SDK...$(RESET)"
 	@set -e; \
 	echo "$(CYAN)🦀 Building livekit-ffi...$(RESET)"; \
@@ -134,7 +134,7 @@ link-rtc-local:
 	echo "$(BOLD)$(YELLOW)📋 To use the local rust lib in your terminal, run:$(RESET)"; \
 	echo "$(BOLD)   export LIVEKIT_LIB_PATH=$$RUST_LIB_PATH$(RESET)"
 
-link-rtc-version:
+link-rtc-version: ## Install specific livekit version from PyPI (e.g., make link-rtc-version VERSION=0.18.0)
 ifndef VERSION
 	@echo "$(BOLD)$(RED)Error: VERSION not specified. Use: make link-rtc-version VERSION=0.18.0$(RESET)"
 	@exit 1
@@ -154,7 +154,7 @@ endif
 	uv add "$(PACKAGE_NAME)==$(VERSION)" && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Linked to livekit $(VERSION)$(RESET)"
 
-unlink-rtc:
+unlink-rtc: ## Unlink local and restore PyPI version
 	@echo "$(BOLD)$(CYAN)🔓 Unlinking local python-rtc...$(RESET)"
 	@set -e; \
 	if grep -q "^livekit = { path = " pyproject.toml 2>/dev/null; then \
@@ -170,7 +170,7 @@ unlink-rtc:
 	uv add --upgrade-package $(PACKAGE_NAME) $(PACKAGE_NAME) && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Restored PyPI version$(RESET)"
 
-status:
+status: ## Show current linking status
 	@echo "$(BOLD)$(CYAN)📍 Current status:$(RESET)"
 	@echo ""
 	@set -e; \
@@ -212,7 +212,7 @@ status:
 		echo "   FFI: BUNDLED (PyPI package)"; \
 	fi
 
-doctor:
+doctor: ## Check development environment health
 	@echo "$(BOLD)$(CYAN)🏥 Running diagnostics...$(RESET)"
 	@echo ""
 	@ISSUES=0; \
