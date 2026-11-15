@@ -1,7 +1,7 @@
 .PHONY: help install format format-check lint lint-fix check type-check test test-unit test-docker clean build \
         link-rtc link-rtc-local link-rtc-version unlink-rtc status doctor
 
-# Colors for output
+
 CYAN := \033[36m
 GREEN := \033[32m
 YELLOW := \033[33m
@@ -9,21 +9,21 @@ RED := \033[31m
 RESET := \033[0m
 BOLD := \033[1m
 
-# Paths (computed as absolute paths)
+
 MAKEFILE_DIR := $(shell pwd)
 AGENTS_PROJECT := $(MAKEFILE_DIR)/livekit-agents
 PYTHON_RTC := $(MAKEFILE_DIR)/../python-sdks/livekit-rtc
 RUST_SUBMODULE := $(MAKEFILE_DIR)/../python-sdks/livekit-rtc/rust-sdks
 PACKAGE_NAME := livekit
 
-# Platform and architecture auto-detection
+
 ARCH := $(shell uname -m)
 OS := $(shell uname -s | tr A-Z a-z)
 
-# Default target
+
 .DEFAULT_GOAL := help
 
-help: ## Show this help message
+help:
 	@echo "$(BOLD)$(CYAN)Available targets:$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Development Workflows:$(RESET)"
@@ -35,17 +35,17 @@ help: ## Show this help message
 	@echo "$(BOLD)Other:$(RESET)"
 	@grep -E '^(install|clean|build):.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
 
-install: ## Install all dependencies with dev extras
+install:
 	@echo "$(BOLD)$(CYAN)Installing dependencies...$(RESET)"
 	@uv sync --all-extras --dev
 	@echo "$(BOLD)$(GREEN)✓ Dependencies installed$(RESET)"
 
-format: ## Format code with ruff
+format:
 	@echo "$(BOLD)$(CYAN)Formatting code...$(RESET)"
 	@uv run ruff format .
 	@echo "$(BOLD)$(GREEN)✓ Code formatted$(RESET)"
 
-format-check: ## Check code formatting without making changes
+format-check:
 	@echo "$(BOLD)$(CYAN)Checking code formatting...$(RESET)"
 	@if uv run ruff format --check .; then \
 		echo "$(BOLD)$(GREEN)✓ Code formatting is correct$(RESET)"; \
@@ -54,7 +54,7 @@ format-check: ## Check code formatting without making changes
 		exit 1; \
 	fi
 
-lint: ## Run ruff linter
+lint:
 	@echo "$(BOLD)$(CYAN)Running linter...$(RESET)"
 	@if uv run ruff check .; then \
 		echo "$(BOLD)$(GREEN)✓ No linting issues found$(RESET)"; \
@@ -63,7 +63,7 @@ lint: ## Run ruff linter
 		exit 1; \
 	fi
 
-lint-fix: ## Run ruff linter and fix issues automatically
+lint-fix:
 	@echo "$(BOLD)$(CYAN)Running linter with auto-fix...$(RESET)"
 	@uv run ruff check --fix .
 	@echo "$(BOLD)$(GREEN)✓ Linting complete$(RESET)"
@@ -77,20 +77,20 @@ type-check: ## Run mypy type checker
 		exit 1; \
 	fi
 
-check: format-check lint type-check ## Run all checks (format, lint, type-check)
+check: format-check lint type-check
 	@echo "$(BOLD)$(GREEN)✓ All checks passed!$(RESET)"
 
-fix: format lint-fix ## Run format and lint checks and fix issues automatically (format, lint)
+fix: format lint-fix
 
-unit-tests: ## Run unit tests (modules marked with `pytestmark = pytest.mark.unit`)
+unit-tests:
 	@echo "$(BOLD)$(CYAN)Running unit tests...$(RESET)"
 	PYTHONPATH="$$PWD" uv run pytest --unit $(PYTEST_ARGS)
 
-# ============================================
-# Development Workflows
-# ============================================
 
-link-rtc: ## Link to local python-rtc (default FFI version)
+
+
+
+link-rtc:
 	@echo "$(BOLD)$(CYAN)🐍 Linking local python-rtc with default FFI version...$(RESET)"
 	@set -e; \
 	DETECTED_ARCH="$(ARCH)"; \
@@ -111,7 +111,7 @@ link-rtc: ## Link to local python-rtc (default FFI version)
 	cd $(AGENTS_PROJECT) && uv add --editable "../../python-sdks/livekit-rtc" && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Linked to local python-rtc (with default FFI version)$(RESET)"
 
-link-rtc-local: ## Build and link local rust SDK from source
+link-rtc-local:
 	@echo "$(BOLD)$(CYAN)🦀 Building and linking local rust SDK...$(RESET)"
 	@set -e; \
 	echo "$(CYAN)🦀 Building livekit-ffi...$(RESET)"; \
@@ -134,7 +134,7 @@ link-rtc-local: ## Build and link local rust SDK from source
 	echo "$(BOLD)$(YELLOW)📋 To use the local rust lib in your terminal, run:$(RESET)"; \
 	echo "$(BOLD)   export LIVEKIT_LIB_PATH=$$RUST_LIB_PATH$(RESET)"
 
-link-rtc-version: ## Install specific livekit version from PyPI (e.g., make link-rtc-version VERSION=0.18.0)
+link-rtc-version:
 ifndef VERSION
 	@echo "$(BOLD)$(RED)Error: VERSION not specified. Use: make link-rtc-version VERSION=0.18.0$(RESET)"
 	@exit 1
@@ -154,7 +154,7 @@ endif
 	uv add "$(PACKAGE_NAME)==$(VERSION)" && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Linked to livekit $(VERSION)$(RESET)"
 
-unlink-rtc: ## Unlink local and restore PyPI version
+unlink-rtc:
 	@echo "$(BOLD)$(CYAN)🔓 Unlinking local python-rtc...$(RESET)"
 	@set -e; \
 	if grep -q "^livekit = { path = " pyproject.toml 2>/dev/null; then \
@@ -170,7 +170,7 @@ unlink-rtc: ## Unlink local and restore PyPI version
 	uv add --upgrade-package $(PACKAGE_NAME) $(PACKAGE_NAME) && uv sync; \
 	echo "$(BOLD)$(GREEN)✅ Restored PyPI version$(RESET)"
 
-status: ## Show current linking status
+status:
 	@echo "$(BOLD)$(CYAN)📍 Current status:$(RESET)"
 	@echo ""
 	@set -e; \
@@ -212,7 +212,7 @@ status: ## Show current linking status
 		echo "   FFI: BUNDLED (PyPI package)"; \
 	fi
 
-doctor: ## Check development environment health
+doctor:
 	@echo "$(BOLD)$(CYAN)🏥 Running diagnostics...$(RESET)"
 	@echo ""
 	@ISSUES=0; \
