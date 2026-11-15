@@ -93,7 +93,6 @@ class ToolProxyToolset(ToolSearchToolset):
     async def setup(self, *, reload: bool = False) -> Self:
         await super().setup(reload=reload)
 
-
         self._tool_ctx = ToolContext(self._tools)
         return self
 
@@ -147,7 +146,6 @@ def _build_tool_schema(tool: FunctionTool | RawFunctionTool) -> dict[str, Any]:
             "description": tool.info.description or "",
             "parameters": model.model_json_schema(),
         }
-
 
     raw = tool.info.raw_schema
     return {

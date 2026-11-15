@@ -8,13 +8,11 @@ __all__ = ["readchar", "readkey", "key"]
 
 
 class _BaseKey:
-
     LF: ClassVar[str] = "\x0a"
     CR: ClassVar[str] = "\x0d"
     SPACE: ClassVar[str] = "\x20"
     ESC: ClassVar[str] = "\x1b"
     TAB: ClassVar[str] = "\x09"
-
 
     CTRL_A: ClassVar[str] = "\x01"
     CTRL_B: ClassVar[str] = "\x02"
@@ -51,15 +49,12 @@ class _PosixKey(_BaseKey):
     module.  All attributes from :class:`_BaseKey` are inherited.
     """
 
-
     BACKSPACE: ClassVar[str] = "\x7f"
-
 
     UP: ClassVar[str] = "\x1b\x5b\x41"
     DOWN: ClassVar[str] = "\x1b\x5b\x42"
     LEFT: ClassVar[str] = "\x1b\x5b\x44"
     RIGHT: ClassVar[str] = "\x1b\x5b\x43"
-
 
     INSERT: ClassVar[str] = "\x1b\x5b\x32\x7e"
     SUPR: ClassVar[str] = "\x1b\x5b\x33\x7e"
@@ -67,7 +62,6 @@ class _PosixKey(_BaseKey):
     END: ClassVar[str] = "\x1b\x5b\x46"
     PAGE_UP: ClassVar[str] = "\x1b\x5b\x35\x7e"
     PAGE_DOWN: ClassVar[str] = "\x1b\x5b\x36\x7e"
-
 
     F1: ClassVar[str] = "\x1b\x4f\x50"
     F2: ClassVar[str] = "\x1b\x4f\x51"
@@ -82,16 +76,12 @@ class _PosixKey(_BaseKey):
     F11: ClassVar[str] = "\x1b\x5b\x32\x33\x7e"
     F12: ClassVar[str] = "\x1b\x5b\x32\x34\x7e"
 
-
     SHIFT_TAB: ClassVar[str] = "\x1b\x5b\x5a"
     CTRL_ALT_SUPR: ClassVar[str] = "\x1b\x5b\x33\x5e"
 
-
     ALT_A: ClassVar[str] = "\x1b\x61"
 
-
     CTRL_ALT_A: ClassVar[str] = "\x1b\x01"
-
 
     ENTER: ClassVar[str] = _BaseKey.LF
     DELETE: ClassVar[str] = SUPR
@@ -104,15 +94,12 @@ class _WinKey(_BaseKey):
     module.  All attributes from :class:`_BaseKey` are inherited.
     """
 
-
     BACKSPACE: ClassVar[str] = "\x08"
-
 
     UP: ClassVar[str] = "\x00\x48"
     DOWN: ClassVar[str] = "\x00\x50"
     LEFT: ClassVar[str] = "\x00\x4b"
     RIGHT: ClassVar[str] = "\x00\x4d"
-
 
     INSERT: ClassVar[str] = "\x00\x52"
     SUPR: ClassVar[str] = "\x00\x53"
@@ -120,7 +107,6 @@ class _WinKey(_BaseKey):
     END: ClassVar[str] = "\x00\x4f"
     PAGE_UP: ClassVar[str] = "\x00\x49"
     PAGE_DOWN: ClassVar[str] = "\x00\x51"
-
 
     F1: ClassVar[str] = "\x00\x3b"
     F2: ClassVar[str] = "\x00\x3c"
@@ -136,17 +122,11 @@ class _WinKey(_BaseKey):
     F11: ClassVar[str] = "\x00\x85"
     F12: ClassVar[str] = "\x00\x86"
 
-
     ESC_2: ClassVar[str] = "\x00\x01"
     ENTER_2: ClassVar[str] = "\x00\x1c"
 
-
     ENTER: ClassVar[str] = _BaseKey.CR
     DELETE: ClassVar[str] = SUPR
-
-
-
-
 
 
 INTERRUPT_KEYS: list[str] = [_BaseKey.CTRL_C]
@@ -200,25 +180,20 @@ def _posix_readkey() -> str:
     if c1 in INTERRUPT_KEYS:
         raise KeyboardInterrupt
 
-
     if c1 != "\x1b":
         return c1
-
 
     c2 = _posix_readchar()
     if c2 not in "\x4f\x5b":
         return c1 + c2
 
-
     c3 = _posix_readchar()
     if c3 not in "\x31\x32\x33\x35\x36":
         return c1 + c2 + c3
 
-
     c4 = _posix_readchar()
     if c4 not in "\x30\x31\x33\x34\x35\x37\x38\x39":
         return c1 + c2 + c3 + c4
-
 
     c5 = _posix_readchar()
     return c1 + c2 + c3 + c4 + c5
@@ -252,8 +227,6 @@ def _win_readkey() -> str:
 
     if ch in "\x00\xe0":
         ch = "\x00" + _win_readchar()
-
-
 
     if "\ud800" <= ch <= "\udfff":
         ch += _win_readchar()

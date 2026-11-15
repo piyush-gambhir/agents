@@ -15,20 +15,15 @@ class TestGeminiModelDetection:
     @pytest.mark.parametrize(
         "model,expected",
         [
-
             ("gemini-3-pro-preview", True),
             ("gemini-3-flash-preview", True),
             ("gemini-3-flash", True),
             ("gemini-3-pro", True),
             ("GEMINI-3-FLASH", True),
-
             ("gemini-2.5-flash", False),
             ("gemini-2.5-pro-preview-05-06", False),
-
             ("gemini-2.0-flash-001", False),
-
             ("gemini-1.5-pro", False),
-
             ("gpt-4", False),
             ("claude-3", False),
         ],
@@ -39,14 +34,11 @@ class TestGeminiModelDetection:
     @pytest.mark.parametrize(
         "model,expected",
         [
-
             ("gemini-3-flash-preview", True),
             ("gemini-3-flash", True),
             ("GEMINI-3-FLASH", True),
-
             ("gemini-3-pro-preview", False),
             ("gemini-3-pro", False),
-
             ("gemini-2.5-flash", False),
             ("gemini-2.0-flash-001", False),
         ],
@@ -57,25 +49,20 @@ class TestGeminiModelDetection:
     @pytest.mark.parametrize(
         "model,expected",
         [
-
             ("gemini-3-pro-preview", True),
             ("gemini-3-flash-preview", True),
             ("gemini-3-flash", True),
             ("gemini-3-pro", True),
             ("GEMINI-3-FLASH", True),
-
             ("gemini-2.5-flash", True),
             ("gemini-2.5-pro-preview-05-06", True),
             ("gemini-2.5-flash-preview-04-17", True),
             ("gemini-2.5-flash-preview-05-20", True),
             ("GEMINI-2.5-FLASH", True),
-
             ("gemini-2.0-flash-001", False),
             ("gemini-2.0-flash-lite-preview-02-05", False),
             ("gemini-2.0-pro-exp-02-05", False),
-
             ("gemini-1.5-pro", False),
-
             ("gpt-4", False),
             ("claude-3", False),
         ],

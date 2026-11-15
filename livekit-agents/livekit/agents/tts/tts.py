@@ -304,7 +304,6 @@ class ChunkedStream(ABC):
                 current_span.set_attribute(trace_types.ATTR_TTS_INPUT_TEXT, self._input_text)
                 return
             except APIError as e:
-
                 if isinstance(e, APIStatusError) and e.status_code == 499:
                     return
 
@@ -439,10 +438,8 @@ class SynthesizeStream(ABC):
         self._started_time: float = 0
         self._pushed_text: str = ""
 
-
         self._input_buffer: list[str | SynthesizeStream._FlushSentinel] = []
         self._input_ended = False
-
 
         self._mtc_pending_texts: list[str] = []
         self._mtc_text = ""
@@ -498,7 +495,6 @@ class SynthesizeStream(ABC):
                 current_span.set_attribute(trace_types.ATTR_TTS_INPUT_TEXT, self._pushed_text)
                 return
             except APIError as e:
-
                 if isinstance(e, APIStatusError) and e.status_code == 499:
                     return
 
@@ -534,13 +530,11 @@ class SynthesizeStream(ABC):
 
                 await asyncio.sleep(retry_interval)
 
-
                 self._input_ch = aio.Chan[str | SynthesizeStream._FlushSentinel]()
                 for event in self._input_buffer:
                     self._input_ch.send_nowait(event)
                 if self._input_ended:
                     self._input_ch.close()
-
 
                 self._current_attempt_has_error = False
             finally:
@@ -938,15 +932,9 @@ class AudioEmitter:
                 logger.debug("flush audio emitter due to slow audio generation")
 
             if flush_if_delayed and sent_duration > 0.15:
-
-
-
                 delay = sent_duration - (event_loop.time() - sent_start) - 0.02
                 if delay > 0:
                     flush_timer = event_loop.call_later(delay, _flush)
-
-
-
 
         _TAIL_SAMPLES = self._sample_rate * 10 // 1000
 
@@ -1000,9 +988,7 @@ class AudioEmitter:
             assert segment_ctx is not None
 
             if is_final:
-
                 if last_frame is not None and frame is not None:
-
                     combined = rtc.combine_audio_frames([last_frame, frame])
                     _do_send(combined, is_final=True)
                     last_frame = None
@@ -1012,8 +998,6 @@ class AudioEmitter:
                 elif frame is not None:
                     _do_send(frame, is_final=True)
                 elif segment_ctx.audio_duration > 0:
-
-
                     marker = rtc.AudioFrame(
                         data=b"\0\0" * (self._sample_rate // 100 * self._num_channels),
                         sample_rate=self._sample_rate,
@@ -1036,10 +1020,7 @@ class AudioEmitter:
             if frame is None:
                 return
 
-
-
             if last_frame is not None:
-
                 combined = rtc.combine_audio_frames([last_frame, frame])
             else:
                 combined = frame
@@ -1192,16 +1173,6 @@ class AudioEmitter:
                         audio_decoder.push(data)
                     elif decode_atask:
                         if isinstance(data, AudioEmitter._FlushSegment):
-
-
-
-
-
-
-
-
-
-
                             _flush_frame()
 
                         elif isinstance(data, AudioEmitter._EndSegment) and segment_ctx:

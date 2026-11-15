@@ -326,7 +326,6 @@ class SpeechStream(stt.RecognizeStream):
                         stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
                     )
             elif ev.type == vad.VADEventType.END_OF_SPEECH:
-
                 await connection.flush_audio()
                 if self._speaking:
                     self._speaking = False

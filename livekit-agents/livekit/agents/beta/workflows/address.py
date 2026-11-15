@@ -36,7 +36,6 @@ class GetAddressTask(AgentTask[GetAddressResult]):
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
         require_confirmation: NotGivenOr[bool] = NOT_GIVEN,
-
         extra_instructions: str = "",
     ) -> None:
         if not is_given(instructions):
@@ -50,7 +49,6 @@ class GetAddressTask(AgentTask[GetAddressResult]):
                 extra=instructions.extra,
                 _modality_specific=Instructions(audio=AUDIO_SPECIFIC, text=TEXT_SPECIFIC),
                 _confirmation=Instructions(
-
                     audio=CONFIRMATION_INSTRUCTION if require_confirmation is not False else "",
                     text=CONFIRMATION_INSTRUCTION if require_confirmation is True else "",
                 ),
@@ -113,7 +111,6 @@ class GetAddressTask(AgentTask[GetAddressResult]):
 
     def _build_confirm_tool(self, *, address: str) -> llm.FunctionTool:
 
-
         @function_tool()
         async def confirm_address() -> None:
             """Call after the user confirms the address is correct."""
@@ -142,7 +139,6 @@ class GetAddressTask(AgentTask[GetAddressResult]):
         if is_given(self._require_confirmation):
             return self._require_confirmation
         return ctx.speech_handle.input_details.modality == "audio"
-
 
 
 PERSONA = (

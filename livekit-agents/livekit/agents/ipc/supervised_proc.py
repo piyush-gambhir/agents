@@ -123,7 +123,6 @@ class SupervisedProc(ABC):
         self._pid: int | None = None
         self._spawn_time: float | None = None
 
-
         self._memory_baseline_mb: float | None = None
         self._last_memory_warn_time: float = 0.0
         self._last_memory_warn_mb: float = 0.0
@@ -206,10 +205,6 @@ class SupervisedProc(ABC):
 
                 self._proc = self._create_process(mp_cch, mp_log_cch)
 
-
-
-
-
                 with _mask_ctrl_c():
                     await self._loop.run_in_executor(None, self._proc.start)
             except Exception:
@@ -267,7 +262,6 @@ class SupervisedProc(ABC):
             ),
         )
 
-
         try:
             logger.info("initializing process", extra=self.logging_extra())
             start_time = time.perf_counter()
@@ -298,7 +292,6 @@ class SupervisedProc(ABC):
             await self._send_kill_signal()
             raise
         except Exception as e:
-
             self._initialize_fut.set_exception(e)
             raise
 
@@ -362,8 +355,6 @@ class SupervisedProc(ABC):
             return
 
         try:
-
-
             logger.info(
                 "sending DumpStackTraceRequest message to process", extra=self.logging_extra()
             )
@@ -411,7 +402,6 @@ class SupervisedProc(ABC):
             pass
         except Exception:
             pass
-
 
         pong_timeout = aio.sleep(self._opts.ping_timeout)
 
@@ -480,7 +470,6 @@ class SupervisedProc(ABC):
 
             ipc_ch.send_nowait(msg)
 
-
         if not self._shutdown_ack_fut.done():
             self._shutdown_ack_fut.set_result(None)
         if not self._shutting_down_fut.done():
@@ -532,7 +521,6 @@ class SupervisedProc(ABC):
             "memory_warn_mb": self._opts.memory_warn_mb,
             "memory_limit_mb": self._opts.memory_limit_mb,
             "uptime": round(self.uptime, 1),
-
             "has_running_job": getattr(self, "_running_job", None) is not None,
         }
         if self._memory_baseline_mb is not None:
@@ -550,12 +538,9 @@ class SupervisedProc(ABC):
                     await asyncio.sleep(_MEMORY_MONITOR_INTERVAL)
                     continue
 
-
                 process = psutil.Process(self._pid)
                 memory_info = process.memory_info()
                 memory_mb = memory_info.rss / (1024 * 1024)
-
-
 
                 if self._memory_baseline_mb is None:
                     self._memory_baseline_mb = memory_mb
@@ -568,12 +553,7 @@ class SupervisedProc(ABC):
                     await self._send_dump_signal()
                     await self._send_kill_signal()
                 elif self._opts.memory_warn_mb > 0 and memory_mb > self._opts.memory_warn_mb:
-
-
-
                     if self._should_emit_memory_warning(memory_mb, now=time.monotonic()):
-
-
                         advisory = self._opts.memory_limit_mb <= 0
                         logger.warning(
                             f"{self.process_kind} process memory usage is above the"

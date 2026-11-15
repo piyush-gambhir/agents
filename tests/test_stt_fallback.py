@@ -77,7 +77,6 @@ async def test_stt_fallback() -> None:
 
     await fallback_adapter.aclose()
 
-
     fake1 = FakeSTT(fake_exception=APIConnectionError("fake1 failed"))
     fake2 = FakeSTT(fake_transcript="hello world")
 
@@ -219,7 +218,6 @@ async def test_stt_stream_recovery_failure_doesnt_block_main() -> None:
     )
 
     async with fallback.stream() as stream:
-
 
         async def _push_delayed() -> None:
             await asyncio.sleep(0.2)

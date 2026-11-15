@@ -25,8 +25,6 @@ logger = logging.getLogger("flush-llm-node")
 load_dotenv()
 
 
-
-
 class FastResponseAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -89,15 +87,12 @@ class FastResponseAgent(Agent):
 
             yield chunk
 
-
         tool_names = [tool.name for tool in called_tools]
         if not has_text_message and "get_weather" in tool_names:
             logger.info("Fast response triggered")
             yield "One moment while I look that up. "
 
-
             yield FlushSentinel()
-
 
             await asyncio.sleep(3)
             yield "Okay I found what you were looking for... "

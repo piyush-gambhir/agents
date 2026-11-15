@@ -183,7 +183,6 @@ class TestSampleRates:
         n = sr * 50 // 1000
         buf = AudioArrayBuffer(buffer_size=sr, sample_rate=sr)
 
-
         for _ in range(30):
             buf.push_frame(_frame(list(range(n)), sr=sr))
         assert len(buf.read()) == sr

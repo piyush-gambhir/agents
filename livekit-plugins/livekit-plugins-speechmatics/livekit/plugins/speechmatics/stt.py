@@ -79,31 +79,21 @@ class TurnDetectionMode(str, Enum):
 class STTOptions:
     """Configuration parameters for Speechmatics STT service."""
 
-
     language: LanguageCode = LanguageCode("en")
     output_locale: str | None = None
     domain: str | None = None
 
-
     turn_detection_mode: TurnDetectionMode = TurnDetectionMode.EXTERNAL
-
 
     speaker_active_format: str | None = None
     speaker_passive_format: str | None = None
-
 
     focus_speakers: list[str] = dataclasses.field(default_factory=list)
     ignore_speakers: list[str] = dataclasses.field(default_factory=list)
     focus_mode: SpeakerFocusMode = SpeakerFocusMode.RETAIN
     known_speakers: list[SpeakerIdentifier] = dataclasses.field(default_factory=list)
 
-
     additional_vocab: list[AdditionalVocabEntry] = dataclasses.field(default_factory=list)
-
-
-
-
-
 
     operating_point: OperatingPoint | None = None
     max_delay: float | None = None
@@ -111,7 +101,6 @@ class STTOptions:
     end_of_utterance_max_delay: float | None = None
     punctuation_overrides: dict | None = None
     include_partials: bool | None = None
-
 
     enable_diarization: bool | None = None
     speaker_sensitivity: float | None = None
@@ -263,16 +252,12 @@ class STT(stt.STT):
                 recognised deprecated name.
         """
 
-
         if is_given(vad) and vad is not None and turn_detection_mode != TurnDetectionMode.EXTERNAL:
             logger.info(
                 "External `vad` provided; overriding turn_detection_mode "
                 f"{turn_detection_mode.value!r} -> 'external'"
             )
             turn_detection_mode = TurnDetectionMode.EXTERNAL
-
-
-
 
         if turn_detection_mode == TurnDetectionMode.EXTERNAL and not is_given(vad):
             try:
@@ -285,9 +270,7 @@ class STT(stt.STT):
                 ) from e
             vad = SileroVAD.load()
 
-
         self._vad = vad if is_given(vad) else None
-
 
         super().__init__(
             capabilities=stt.STTCapabilities(
@@ -299,10 +282,8 @@ class STT(stt.STT):
             ),
         )
 
-
         def _set(value: Any) -> Any:
             return value if is_given(value) else None
-
 
         self._stt_options = STTOptions(
             language=LanguageCode(language),
@@ -328,17 +309,13 @@ class STT(stt.STT):
             prefer_current_speaker=_set(prefer_current_speaker),
         )
 
-
         _check_deprecated_args(kwargs, self._stt_options)
-
 
         errors = self._validate_stt_options()
         if errors:
             raise ValueError("Invalid STT options: " + ", ".join(errors))
 
-
         self._api_key: str = api_key if is_given(api_key) else os.getenv("SPEECHMATICS_API_KEY", "")
-
 
         self._base_url: str = (
             base_url
@@ -346,19 +323,15 @@ class STT(stt.STT):
             else os.getenv("SPEECHMATICS_RT_URL", "wss://eu2.rt.speechmatics.com/v2")
         )
 
-
         if not self._api_key:
             raise ValueError("Missing Speechmatics API key")
         if not self._base_url:
             raise ValueError("Missing Speechmatics base URL")
 
-
         self._sample_rate = sample_rate
         self._audio_encoding = audio_encoding
 
-
         self._streams: list[SpeechStream] = []
-
 
         if self._stt_options.turn_detection_mode == TurnDetectionMode.EXTERNAL:
             logger.info("STT under external turn detection control")
@@ -389,7 +362,6 @@ class STT(stt.STT):
     ) -> stt.RecognizeStream:
         """Create a new SpeechStream."""
 
-
         stream = SpeechStream(
             stt=self,
             conn_options=conn_options,
@@ -398,9 +370,7 @@ class STT(stt.STT):
             vad_instance=self._vad,
         )
 
-
         self._streams.append(stream)
-
 
         return stream
 
@@ -409,12 +379,10 @@ class STT(stt.STT):
         errors: list[str] = []
         opts = self._stt_options
 
-
         if opts.end_of_utterance_silence_trigger is not None and not (
             0 < opts.end_of_utterance_silence_trigger < 2
         ):
             errors.append("end_of_utterance_silence_trigger must be between 0 and 2")
-
 
         if (
             opts.end_of_utterance_max_delay is not None
@@ -425,14 +393,11 @@ class STT(stt.STT):
                 "end_of_utterance_max_delay must be greater than end_of_utterance_silence_trigger"
             )
 
-
         if opts.max_speakers is not None and not (1 < opts.max_speakers <= 100):
             errors.append("max_speakers must be between 2 and 100")
 
-
         if opts.max_delay is not None and not (0.7 <= opts.max_delay <= 4.0):
             errors.append("max_delay must be between 0.7 and 4.0")
-
 
         if opts.speaker_sensitivity is not None and not (0.0 < opts.speaker_sensitivity < 1.0):
             errors.append("speaker_sensitivity must be between 0.0 and 1.0")
@@ -442,21 +407,16 @@ class STT(stt.STT):
     def _prepare_config(self, language: NotGivenOr[str] = NOT_GIVEN) -> VoiceAgentConfig:
         """Prepare VoiceAgentConfig from STTOptions."""
 
-
         opts = self._stt_options
 
-
         config = VoiceAgentConfigPreset.load(opts.turn_detection_mode.value)
-
 
         config.sample_rate = self._sample_rate
         config.audio_encoding = self._audio_encoding
 
-
         config.language = LanguageCode(language) if is_given(language) else opts.language
         config.domain = opts.domain
         config.output_locale = opts.output_locale
-
 
         config.speaker_config = SpeakerFocusConfig(
             focus_speakers=opts.focus_speakers,
@@ -465,9 +425,7 @@ class STT(stt.STT):
         )
         config.known_speakers = opts.known_speakers
 
-
         config.additional_vocab = opts.additional_vocab
-
 
         advanced_params = [
             "enable_diarization",
@@ -482,12 +440,10 @@ class STT(stt.STT):
             "speaker_sensitivity",
         ]
 
-
         for param in advanced_params:
             value = getattr(opts, param)
             if value is not None:
                 setattr(config, param, value)
-
 
         return config
 
@@ -511,10 +467,8 @@ class STT(stt.STT):
         """
 
         for stream in self._streams:
-
             if not stream._config.enable_diarization:
                 raise ValueError("Diarization is not enabled")
-
 
             if is_given(focus_speakers):
                 self._stt_options.focus_speakers = focus_speakers
@@ -525,7 +479,6 @@ class STT(stt.STT):
             if is_given(focus_mode):
                 self._stt_options.focus_mode = focus_mode
                 stream._config.speaker_config.focus_mode = focus_mode
-
 
             if stream._client and stream._client._is_connected:
                 stream._client.update_diarization_config(stream._config.speaker_config)
@@ -539,12 +492,9 @@ class STT(stt.STT):
         segments.
         """
 
-
         for stream in self._streams:
-
             if not stream._client or not stream._client._is_connected:
                 continue
-
 
             if stream._config.vad_config is None or not stream._config.vad_config.enabled:
                 stream._client.finalize()
@@ -562,29 +512,22 @@ class STT(stt.STT):
             list[SpeakerIdentifier]: List of speakers in the session.
         """
 
-
         results: list[list[SpeakerIdentifier]] = []
 
-
         for idx, stream in enumerate(self._streams):
-
             if stream._client is None or not stream._client._is_connected:
                 logger.warning(f"Not connected in stream {idx}")
                 results.append([])
                 continue
-
 
             if not stream._config.enable_diarization:
                 logger.warning(f"Diarization is not enabled in stream {idx}")
                 results.append([])
                 continue
 
-
             stream._speaker_result_event.clear()
 
-
             await stream._client.send_message({"message": ClientMessageType.GET_SPEAKERS.value})
-
 
             try:
                 await asyncio.wait_for(
@@ -596,9 +539,7 @@ class STT(stt.STT):
                 results.append([])
                 continue
 
-
             results.append(stream._speaker_result or [])
-
 
         if len(results) == 1:
             return results[0]
@@ -632,7 +573,6 @@ class SpeechStream(stt.RecognizeStream):
 
         self._tasks: list[asyncio.Task] = []
 
-
         self._speaker_result_event: asyncio.Event = asyncio.Event()
         self._speaker_result: list[SpeakerIdentifier] | None = None
 
@@ -640,10 +580,8 @@ class SpeechStream(stt.RecognizeStream):
         """Run the STT stream."""
         logger.debug("Connecting to Speechmatics STT service")
 
-
         if not self._config:
             raise ValueError("Config is required")
-
 
         self._client = VoiceAgentClient(
             api_key=self._stt._api_key,
@@ -652,10 +590,8 @@ class SpeechStream(stt.RecognizeStream):
             config=self._config,
         )
 
-
         def add_message(message: dict[str, Any]) -> None:
             self._msg_queue.put_nowait(message)
-
 
         messages: list[AgentServerMessageType] = [
             AgentServerMessageType.RECOGNITION_STARTED,
@@ -668,55 +604,39 @@ class SpeechStream(stt.RecognizeStream):
             AgentServerMessageType.END_OF_TURN,
         ]
 
-
         if self._config.enable_diarization:
             messages.append(AgentServerMessageType.SPEAKERS_RESULT)
-
-
-
-
-
-
 
         for event in messages:
             self._client.on(event, add_message)  # type: ignore[arg-type]
 
-
         await self._client.connect()
         logger.debug("Connected to Speechmatics STT service")
-
 
         if self._vad is not None:
             self._vad_stream = self._vad.stream()
 
-
         audio_task = asyncio.create_task(self._process_audio())
         message_task = asyncio.create_task(self._process_messages())
 
-
         self._tasks = [audio_task, message_task]
-
 
         vad_task: asyncio.Task | None = None
         if self._vad_stream is not None:
             vad_task = asyncio.create_task(self._process_vad(self._vad_stream))
             self._tasks.append(vad_task)
 
-
         try:
             done, pending = await asyncio.wait(self._tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
                 task.result()
 
-
         finally:
-
             audio_task.cancel()
             try:
                 await audio_task
             except asyncio.CancelledError:
                 pass
-
 
             if self._vad_stream is not None:
                 await self._vad_stream.aclose()
@@ -725,9 +645,7 @@ class SpeechStream(stt.RecognizeStream):
             if vad_task is not None:
                 await utils.aio.cancel_and_wait(vad_task)
 
-
             await self._client.disconnect()
-
 
             message_task.cancel()
             try:
@@ -735,36 +653,29 @@ class SpeechStream(stt.RecognizeStream):
             except asyncio.CancelledError:
                 pass
 
-
             if self in self._stt._streams:
                 self._stt._streams.remove(self)
 
     async def _process_audio(self) -> None:
         """Process audio from the input channel."""
         try:
-
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._stt._sample_rate,
                 num_channels=1,
             )
 
-
             async for data in self._input_ch:
-
                 if isinstance(data, self._FlushSentinel):
                     frames = audio_bstream.flush()
                 else:
-
                     if self._vad_stream is not None:
                         self._vad_stream.push_frame(data)
                     frames = audio_bstream.write(data.data.tobytes())
-
 
                 if self._client:
                     for frame in frames:
                         self._speech_duration += frame.duration
                         await self._client.send_audio(frame.data.tobytes())
-
 
             if self._vad_stream is not None:
                 self._vad_stream.end_input()
@@ -794,13 +705,10 @@ class SpeechStream(stt.RecognizeStream):
     def _handle_message(self, message: dict[str, Any]) -> None:
         """Handle a message from the STT client."""
 
-
         event = message.get("message", None)
-
 
         if event is None:
             return
-
 
         elif event in [
             AgentServerMessageType.RECOGNITION_STARTED,
@@ -812,7 +720,6 @@ class SpeechStream(stt.RecognizeStream):
         elif event == AgentServerMessageType.ERROR:
             logger.error(f"{event} -> {message}")
 
-
         elif event == AgentServerMessageType.ADD_PARTIAL_SEGMENT:
             self._handle_partial_segment(message)
         elif event == AgentServerMessageType.ADD_SEGMENT:
@@ -822,10 +729,8 @@ class SpeechStream(stt.RecognizeStream):
         elif event == AgentServerMessageType.END_OF_TURN:
             self._handle_end_of_turn(message)
 
-
         elif event == AgentServerMessageType.SPEAKERS_RESULT:
             self._handle_speakers_result(message)
-
 
         else:
             logger.debug(f"{event} -> {message}")
@@ -870,13 +775,10 @@ class SpeechStream(stt.RecognizeStream):
     def _send_frames(self, segments: list[dict[str, Any]], is_final: bool) -> None:
         """Send frames to the pipeline."""
 
-
         if not segments:
             return
 
-
         opts = self._stt._stt_options
-
 
         event_type = (
             stt.SpeechEventType.FINAL_TRANSCRIPT
@@ -884,9 +786,7 @@ class SpeechStream(stt.RecognizeStream):
             else stt.SpeechEventType.INTERIM_TRANSCRIPT
         )
 
-
         for segment in segments:
-
             is_active = segment.get("is_active", True)
             format_str = (
                 opts.speaker_active_format if is_active else opts.speaker_passive_format
@@ -895,7 +795,6 @@ class SpeechStream(stt.RecognizeStream):
                 speaker_id=segment.get("speaker_id", "UU"),
                 text=segment.get("text", ""),
             )
-
 
             speech_data = stt.SpeechData(
                 language=LanguageCode(segment.get("language", opts.language)),
@@ -906,19 +805,16 @@ class SpeechStream(stt.RecognizeStream):
                 end_time=segment.get("metadata", {}).get("end_time", 0) + self.start_time_offset,
             )
 
-
             event = stt.SpeechEvent(
                 type=event_type,
                 alternatives=[speech_data],
             )
-
 
             self._event_ch.send_nowait(event)
 
     async def aclose(self) -> None:
         """Close the STT stream."""
         await super().aclose()
-
 
         if self._tasks:
             for task in self._tasks:
@@ -928,16 +824,13 @@ class SpeechStream(stt.RecognizeStream):
                 except asyncio.CancelledError:
                     pass
 
-
         if self._vad_stream is not None:
             await self._vad_stream.aclose()
             self._vad_stream = None
 
-
         if self._client and self._client._is_connected:
             await self._client.disconnect()
         self._client = None
-
 
         if self in self._stt._streams:
             self._stt._streams.remove(self)
@@ -945,7 +838,6 @@ class SpeechStream(stt.RecognizeStream):
 
 def _check_deprecated_args(kwargs: dict[str, Any], opts: STTOptions) -> None:
     """Warn about deprecated kwargs and migrate values where possible."""
-
 
     for name in (
         "end_of_utterance_mode",
@@ -957,7 +849,6 @@ def _check_deprecated_args(kwargs: dict[str, Any], opts: STTOptions) -> None:
         if name in kwargs:
             logger.warning(f"`{name}` is deprecated and no longer used")
 
-
     if "enable_partials" in kwargs:
         if opts.include_partials is None:
             logger.warning("`enable_partials` is deprecated, migrated to `include_partials`")
@@ -966,7 +857,6 @@ def _check_deprecated_args(kwargs: dict[str, Any], opts: STTOptions) -> None:
             logger.warning(
                 "Both `enable_partials` and `include_partials` provided; using `include_partials`"
             )
-
 
     if "diarization_sensitivity" in kwargs and isinstance(
         kwargs["diarization_sensitivity"], (int, float)

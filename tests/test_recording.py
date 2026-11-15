@@ -30,9 +30,6 @@ from .fake_vad import FakeVAD
 pytestmark = pytest.mark.unit
 
 
-
-
-
 _AGENT_SESSION_MOD = "livekit.agents.voice.agent_session"
 _TRACES_MOD = "livekit.agents.telemetry.traces"
 
@@ -184,11 +181,6 @@ def _get_multipart_part_names(mp_writer: aiohttp.MultipartWriter) -> list[str]:
     return names
 
 
-
-
-
-
-
 @pytest.mark.parametrize(
     "record, expected",
     [
@@ -218,11 +210,6 @@ async def test_record_not_given_without_job_ctx() -> None:
     await _cleanup(session)
 
 
-
-
-
-
-
 async def test_init_recording_called_with_options() -> None:
     """init_recording should be called with the correct RecordingOptions."""
     session = _create_simple_session()
@@ -231,7 +218,6 @@ async def test_init_recording_called_with_options() -> None:
 
     with _patch_job_ctx(mock_ctx, patch_recorder=True):
         await session.start(SimpleAgent(), record=custom)
-
 
     mock_ctx.init_recording.assert_called_once()
     assert mock_ctx.init_recording.call_args[0][0] == {
@@ -280,11 +266,6 @@ async def test_init_recording_called_when_job_recording_disabled() -> None:
     mock_ctx.init_recording.assert_called_once()
     assert session._recording_options == _RECORDING_ALL_OFF
     await _cleanup(session)
-
-
-
-
-
 
 
 async def test_upload_returns_early_when_none() -> None:
@@ -394,11 +375,6 @@ def test_setup_cloud_tracer_logger_provider_always_created() -> None:
     mock_blrp.assert_not_called()
 
 
-
-
-
-
-
 async def test_recorder_io_created_when_audio_true() -> None:
     """RecorderIO should be created when recording_options.audio=True and job context exists."""
     session = _create_simple_session()
@@ -420,11 +396,6 @@ async def test_recorder_io_not_created_when_audio_false() -> None:
 
     assert session._recorder_io is None
     await _cleanup(session)
-
-
-
-
-
 
 
 def _ramp_frame(num_samples: int, num_channels: int, sample_rate: int = 24000) -> rtc.AudioFrame:
@@ -451,10 +422,8 @@ def test_split_frame_is_consistent_and_lossless(num_channels: int, fraction: flo
     frame = _ramp_frame(n, num_channels)
     left, right = _split_frame(frame, frame.duration * fraction)
 
-
     assert len(left.data) == left.samples_per_channel * left.num_channels
     assert len(right.data) == right.samples_per_channel * right.num_channels
-
 
     assert left.samples_per_channel + right.samples_per_channel == n
     recon = np.concatenate(

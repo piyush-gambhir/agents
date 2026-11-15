@@ -51,14 +51,12 @@ class TravelToolset(AsyncToolset):
             "This will take a couple of minutes."
         )
 
-
         async with ctx.with_filler("Still searching, hang on a sec.", delay=5):
             await asyncio.sleep(20)
             airlines = random.sample(["United", "Delta", "American", "JetBlue"], k=3)
             cheapest = airlines[0]
             price = random.randint(180, 650)
         logger.info("Found airlines and prices, booking the flight...")
-
 
         followups = [
             "Almost there, just confirming.",

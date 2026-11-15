@@ -83,7 +83,6 @@ class _GoogleBearerAuth(httpx.Auth):
         if self._token_provider is not None:
             return self._token_provider()
         if self._credentials is not None:
-
             if not self._credentials.valid:
                 assert self._refresh_request is not None
                 self._credentials.refresh(self._refresh_request)  # type: ignore[no-untyped-call]
@@ -204,7 +203,6 @@ class AIPlatformLLM(llm.LLM):
             resolved_credentials = credentials
             resolved_token = access_token if is_given(access_token) else None
             if token_provider is None and resolved_credentials is None and resolved_token is None:
-
                 resolved_credentials, _ = google.auth.default(
                     scopes=["https://www.googleapis.com/auth/cloud-platform"]
                 )

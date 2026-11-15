@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 from livekit.agents import Agent, AgentServer, AgentSession, JobContext, cli
 from livekit.plugins import openai, simli
 
-
-
 logger = logging.getLogger("simli-avatar-example")
 logger.setLevel(logging.INFO)
 
@@ -33,7 +31,6 @@ async def entrypoint(ctx: JobContext):
         ),
     )
     await simli_avatar.start(session, room=ctx.room)
-
 
     await session.start(
         agent=Agent(instructions="Talk to me!"),

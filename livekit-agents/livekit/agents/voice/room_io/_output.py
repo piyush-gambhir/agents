@@ -112,7 +112,6 @@ class _ParticipantAudioOutput(io.AudioOutput):
             return
 
         if self._flush_task and not self._flush_task.done():
-
             logger.error("flush called while playback is in progress")
             self._flush_task.cancel()
 
@@ -128,7 +127,6 @@ class _ParticipantAudioOutput(io.AudioOutput):
     def pause(self) -> None:
         super().pause()
         self._playback_enabled.clear()
-
 
     def resume(self) -> None:
         super().resume()
@@ -178,12 +176,9 @@ class _ParticipantAudioOutput(io.AudioOutput):
                 self._audio_source.clear_queue()
                 await self._playback_enabled.wait()
 
-
-
             if self._interrupted_event.is_set() or self._pushed_duration == 0:
                 if self._interrupted_event.is_set() and self._flush_task:
                     await self._flush_task
-
 
                 continue
 
@@ -205,7 +200,6 @@ class _ParticipantLegacyTranscriptionOutput:
         self._track_id: str | None = None
         self._participant_identity: str | None = None
 
-
         self._represented_by: str | None = None
 
         self._room.on("track_published", self._on_track_published)
@@ -226,7 +220,6 @@ class _ParticipantLegacyTranscriptionOutput:
         self._represented_by = self._participant_identity
         if self._participant_identity is None:
             return
-
 
         if self._participant_identity == self._room.local_participant.identity:
             for local_track in self._room.local_participant.track_publications.values():
@@ -390,7 +383,6 @@ class _ParticipantStreamTranscriptionOutput:
         try:
             self._track_id = find_micro_track_id(self._room, self._participant_identity)
         except ValueError:
-
             self._track_id = None
 
         self.flush()
@@ -528,7 +520,6 @@ class _ParticipantStreamTranscriptionOutput:
             return
 
         self._track_id = track.sid
-
 
 
 class _ParticipantTranscriptionOutput(io.TextOutput):

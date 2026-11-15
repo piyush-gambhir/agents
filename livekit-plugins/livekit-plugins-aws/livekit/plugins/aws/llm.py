@@ -145,10 +145,6 @@ class LLM(llm.LLM):
             if not tools:
                 return None
 
-
-
-
-
             if is_given(effective_tool_choice) and effective_tool_choice == "none":
                 return None
 
@@ -241,8 +237,6 @@ class LLMStream(llm.LLMStream):
                     raise APIStatusError(
                         f"aws bedrock llm: error generating content: {response}",
                         status_code=response["ResponseMetadata"]["HTTPStatusCode"],
-
-
                         retryable=False,
                         request_id=request_id,
                     )

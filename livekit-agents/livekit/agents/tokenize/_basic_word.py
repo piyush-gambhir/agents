@@ -21,8 +21,6 @@ def split_words(
     """
     words: list[tuple[str, int, int]] = []
 
-
-
     char_based_codes = (
         re.compile(
             r"[\u4e00-\u9fff\u3040-\u30ff\u3400-\u4dbf"
@@ -52,7 +50,6 @@ def split_words(
             if retain_format and not text[word_start:pos].strip():
                 continue
 
-
             _add_current_word(word_start, pos)
             word_start = pos if retain_format else pos + 1
 
@@ -60,10 +57,8 @@ def split_words(
             if word_start < pos:
                 _add_current_word(word_start, pos)
 
-
             _add_current_word(pos, pos + 1)
             word_start = pos + 1
-
 
     _add_current_word(word_start, len(text))
 

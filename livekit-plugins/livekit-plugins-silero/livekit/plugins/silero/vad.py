@@ -69,7 +69,6 @@ class VAD(agents.vad.VAD):
         force_cpu: bool = True,
         onnx_file_path: NotGivenOr[Path | str] = NOT_GIVEN,
         deactivation_threshold: NotGivenOr[float] = NOT_GIVEN,
-
         padding_duration: NotGivenOr[float] = NOT_GIVEN,
     ) -> VAD:
         """
@@ -292,7 +291,6 @@ class VADStream(agents.vad.VADStream):
         inference_f32_data = np.empty(self._model.window_size_samples, dtype=np.float32)
         speech_buffer_index: int = 0
 
-
         pub_speaking = False
         pub_speech_duration = 0.0
         pub_silence_duration = 0.0
@@ -305,7 +303,6 @@ class VADStream(agents.vad.VADStream):
         input_frames: list[rtc.AudioFrame] = []
         inference_frames: list[rtc.AudioFrame] = []
         resampler: rtc.AudioResampler | None = None
-
 
         input_copy_remaining_fract = 0.0
 
@@ -360,7 +357,6 @@ class VADStream(agents.vad.VADStream):
             if not self._input_sample_rate:
                 self._input_sample_rate = input_frame.sample_rate
 
-
                 self._prefix_padding_samples = int(
                     self._opts.prefix_padding_duration * self._input_sample_rate
                 )
@@ -372,8 +368,6 @@ class VADStream(agents.vad.VADStream):
                 )
 
                 if self._input_sample_rate != self._opts.sample_rate:
-
-
                     resampler = rtc.AudioResampler(
                         input_rate=self._input_sample_rate,
                         output_rate=self._opts.sample_rate,
@@ -388,8 +382,6 @@ class VADStream(agents.vad.VADStream):
 
             input_frames.append(input_frame)
             if resampler is not None:
-
-
                 inference_frames.extend(resampler.push(input_frame))
             else:
                 inference_frames.append(input_frame)
@@ -406,14 +398,12 @@ class VADStream(agents.vad.VADStream):
                 input_frame = utils.combine_frames(input_frames)
                 inference_frame = utils.combine_frames(inference_frames)
 
-
                 np.divide(
                     inference_frame.data[: self._model.window_size_samples],
                     np.iinfo(np.int16).max,
                     out=inference_f32_data,
                     dtype=np.float32,
                 )
-
 
                 p = await self._loop.run_in_executor(None, self._model, inference_f32_data)
                 p = self._exp_filter.apply(exp=1.0, sample=p)
@@ -430,7 +420,6 @@ class VADStream(agents.vad.VADStream):
                 to_copy_int = int(to_copy)
                 input_copy_remaining_fract = to_copy - to_copy_int
 
-
                 available_space = len(self._speech_buffer) - speech_buffer_index
                 to_copy_buffer = min(to_copy_int, available_space)
                 if to_copy_buffer > 0:
@@ -439,7 +428,6 @@ class VADStream(agents.vad.VADStream):
                     ] = input_frame.data[:to_copy_buffer]
                     speech_buffer_index += to_copy_buffer
                 elif not self._speech_buffer_max_reached:
-
                     self._speech_buffer_max_reached = True
                     logger.warning(
                         "max_buffered_speech reached, ignoring further data for the current speech input"  # noqa: E501
@@ -567,10 +555,8 @@ class VADStream(agents.vad.VADStream):
 
                         _reset_write_cursor()
 
-
                 input_frames = []
                 inference_frames = []
-
 
                 if len(input_frame.data) - to_copy_int > 0:
                     data = input_frame.data[to_copy_int:].tobytes()

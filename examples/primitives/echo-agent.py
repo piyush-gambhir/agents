@@ -17,10 +17,6 @@ load_dotenv()
 logger = logging.getLogger("echo-agent")
 
 
-
-
-
-
 server = AgentServer()
 
 
@@ -28,7 +24,6 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
-
 
     participant: rtc.Participant = await ctx.wait_for_participant()
     stream = rtc.AudioStream.from_participant(
@@ -65,7 +60,6 @@ async def entrypoint(ctx: JobContext):
             try:
                 queue.put_nowait(audio_event.frame)
             except asyncio.QueueFull:
-
                 queue.get_nowait()
                 queue.put_nowait(audio_event.frame)
 

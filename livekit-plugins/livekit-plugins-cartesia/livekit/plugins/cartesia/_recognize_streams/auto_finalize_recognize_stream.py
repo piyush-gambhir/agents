@@ -303,12 +303,6 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
                 else:
                     self._process_stream_event(data)
 
-
-
-
-
-
-
         self._speaking = False
         self._current_transcript = ""
         self._speech_duration = 0.0
@@ -323,17 +317,10 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             keepalive = asyncio.create_task(keepalive_task(ws))
             tasks = [send, recv, keepalive]
             try:
-
-
-
-
                 await asyncio.gather(send, recv)
             finally:
                 await utils.aio.gracefully_cancel(*tasks)
                 self._send_recognition_usage_event()
-
-
-
 
                 if self._speaking:
                     if not self._event_ch.closed:
@@ -434,7 +421,6 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             if not transcript:
                 return
 
-
             if self._current_transcript == transcript:
                 return
             self._current_transcript = transcript
@@ -452,8 +438,6 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             return
 
         if data["type"] == "turn.resume":
-
-
             if not self._speaking or not self._current_transcript:
                 return
             self._send_transcript_event(
@@ -500,7 +484,6 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
         """
         if utils.is_given(language):
             self._language = LanguageCode(language)
-
 
         logger.warning(
             f"Cartesia STT model={self._model} does not currently support update_options()."

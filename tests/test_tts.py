@@ -69,7 +69,6 @@ async def assert_valid_synthesized_audio(
 
     frame = rtc.combine_audio_frames(frames)
 
-
     try:
         probe_opts = {
             "probe_size": "32",
@@ -270,7 +269,6 @@ async def _do_synthesis(tts_v: tts.TTS, segment: str, *, conn_options: APIConnec
         "expected all audio events to be non-final"
     )
 
-
     #     f"expected all frames to have a duration between 50ms and 250ms, got {[e.frame.duration for e in audio_events[:-1]]}"  # noqa: E501
 
     assert 0 < audio_events[-2].frame.duration < 0.25, (
@@ -340,7 +338,6 @@ async def test_tts_synthesize_timeout(tts_factory, toxiproxy: Toxiproxy):
     p.add_toxic(type="timeout", attributes={"timeout": 0})
 
     try:
-
         start_time = time.time()
         try:
             with pytest.raises(APITimeoutError):
@@ -360,7 +357,6 @@ async def test_tts_synthesize_timeout(tts_factory, toxiproxy: Toxiproxy):
         assert 1.5 <= elapsed_time <= 3.5, (
             f"expected timeout around 2 seconds, got {elapsed_time:.2f}s"
         )
-
 
         error_events = EventCollector(tts_v, "error")
         metrics_collected_events = EventCollector(tts_v, "metrics_collected")
@@ -501,7 +497,6 @@ async def _do_stream(tts_v: tts.TTS, segments: list[str], *, conn_options: APICo
 
         assert push_text_task.done(), "expected push_text_task to be done"
 
-
         if not segments:
             return
 
@@ -527,16 +522,6 @@ async def _do_stream(tts_v: tts.TTS, segments: list[str], *, conn_options: APICo
         ):
             *non_final, final = segment_events
 
-
-
-
-
-
-
-
-
-
-
             assert final.is_final, "last frame of a segment must be final"
             assert all(not e.is_final for e in non_final), (
                 "only the last frame within a segment may be final"
@@ -545,10 +530,6 @@ async def _do_stream(tts_v: tts.TTS, segments: list[str], *, conn_options: APICo
             assert 0 < final.frame.duration < 0.25, "expected final frame to be non-empty (<250 ms)"
 
             if isinstance(tts_v, tts.StreamAdapter):
-
-
-
-
                 assert all(0.00 < e.frame.duration < 0.25 for e in non_final), (
                     "expected non-final frames to be 0-250 ms"
                 )
@@ -580,7 +561,6 @@ async def test_tts_stream(tts_factory, toxiproxy: Toxiproxy, logger: logging.Log
 
     metrics_collected_events = EventCollector(tts_v, "metrics_collected")
     try:
-
         await asyncio.wait_for(
             _do_stream(
                 tts_v,
@@ -589,9 +569,6 @@ async def test_tts_stream(tts_factory, toxiproxy: Toxiproxy, logger: logging.Log
             ),
             timeout=30,
         )
-
-
-
 
         if isinstance(tts_v, tts.StreamAdapter):
             assert metrics_collected_events.count >= 1, (
@@ -606,23 +583,6 @@ async def test_tts_stream(tts_factory, toxiproxy: Toxiproxy, logger: logging.Log
             logger.info(f"metrics: {event[0][0]}")
 
         metrics_collected_events.clear()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     except asyncio.TimeoutError:
         pytest.fail("test timed out after 30 seconds")
@@ -640,7 +600,6 @@ async def test_tts_stream_empty(tts_factory, toxiproxy: Toxiproxy):
     proxy_name = f"{tts_v.label}-proxy"
     toxiproxy.create(proxy_upstream, proxy_name, listen=PROXY_LISTEN, enabled=True)
     try:
-
         await asyncio.wait_for(
             _do_stream(
                 tts_v,
@@ -667,7 +626,6 @@ async def test_tts_stream_timeout(tts_factory, toxiproxy: Toxiproxy):
     p.add_toxic(type="timeout", attributes={"timeout": 0})
 
     try:
-
         start_time = time.time()
         try:
             with pytest.raises(APITimeoutError):
@@ -688,7 +646,6 @@ async def test_tts_stream_timeout(tts_factory, toxiproxy: Toxiproxy):
             f"expected timeout around 2 seconds, got {elapsed_time:.2f}s"
         )
 
-
         error_events = EventCollector(tts_v, "error")
         metrics_collected_events = EventCollector(tts_v, "metrics_collected")
         start_time = time.time()
@@ -703,7 +660,6 @@ async def test_tts_stream_timeout(tts_factory, toxiproxy: Toxiproxy):
         elapsed_time = end_time - start_time
 
         if isinstance(tts_v, tts.StreamAdapter):
-
             assert error_events.count == 1, f"expected 1 errors, got {error_events.count}"
         else:
             assert error_events.count == 4, f"expected 4 errors, got {error_events.count}"
@@ -722,10 +678,7 @@ async def test_tts_stream_timeout(tts_factory, toxiproxy: Toxiproxy):
 async def test_tts_audio_emitter(monkeypatch):
     monkeypatch.setattr(tts.tts, "lk_dump_tts", False)
 
-
-
     pcm_chunk = b"\xff\xff" * 100
-
 
     rx_stream = aio.Chan[tts.SynthesizedAudio]()
     emitter_stream = tts.AudioEmitter(label="test", dst_ch=rx_stream)
@@ -738,19 +691,16 @@ async def test_tts_audio_emitter(monkeypatch):
         stream=True,
     )
 
-
     emitter_stream.start_segment(segment_id="seg1")
     emitter_stream.push(pcm_chunk)
     emitter_stream.flush()
     emitter_stream.push(pcm_chunk)
     emitter_stream.end_segment()
 
-
     emitter_stream.start_segment(segment_id="seg2")
     emitter_stream.push(pcm_chunk)
     emitter_stream.push(pcm_chunk)
     emitter_stream.end_segment()
-
 
     emitter_stream.end_input()
     await emitter_stream.join()
@@ -759,7 +709,6 @@ async def test_tts_audio_emitter(monkeypatch):
     msgs = [msg async for msg in rx_stream]
     assert len(msgs) >= 4
 
-
     seg1_msgs = [m for m in msgs if m.segment_id == "seg1"]
     seg2_msgs = [m for m in msgs if m.segment_id == "seg2"]
     assert seg1_msgs[-1].is_final is True
@@ -767,10 +716,8 @@ async def test_tts_audio_emitter(monkeypatch):
     assert seg2_msgs[-1].is_final is True
     assert all(not m.is_final for m in seg2_msgs[:-1])
 
-
     assert pytest.approx(emitter_stream.pushed_duration(0), abs=0.02) == 0.2
     assert pytest.approx(emitter_stream.pushed_duration(1), abs=0.02) == 0.2
-
 
     rx_multi = aio.Chan[tts.SynthesizedAudio]()
     emitter_multi = tts.AudioEmitter(label="multi", dst_ch=rx_multi)
@@ -798,12 +745,10 @@ async def test_tts_audio_emitter(monkeypatch):
     msgs2 = [msg async for msg in rx_multi]
     assert len(msgs2) >= 3
 
-
     assert msgs2[-1].is_final is True
     assert all(not m.is_final for m in msgs2[:-1])
     total_dur = sum(m.frame.duration for m in msgs2)
     assert pytest.approx(total_dur, abs=0.02) == 0.3
-
 
     rx_nostream = aio.Chan[tts.SynthesizedAudio]()
     emitter_nostream = tts.AudioEmitter(label="nos", dst_ch=rx_nostream)
@@ -819,7 +764,6 @@ async def test_tts_audio_emitter(monkeypatch):
     emitter_nostream.push(pcm_chunk)
     emitter_nostream.end_input()
 
-
     await emitter_nostream.join()
     rx_nostream.close()
 
@@ -829,7 +773,6 @@ async def test_tts_audio_emitter(monkeypatch):
     assert all(not m.is_final for m in msgs3[:-1])
     total_dur = sum(m.frame.duration for m in msgs3)
     assert pytest.approx(total_dur, abs=0.02) == 0.2
-
 
     rx_noflush = aio.Chan[tts.SynthesizedAudio]()
     emitter_noflush = tts.AudioEmitter(label="noflush", dst_ch=rx_noflush)
@@ -854,7 +797,6 @@ async def test_tts_audio_emitter(monkeypatch):
     assert msgs4[-1].is_final is True
     total_dur = sum(m.frame.duration for m in msgs4)
     assert pytest.approx(total_dur, abs=0.02) == 0.1
-
 
     rx_noflush = aio.Chan[tts.SynthesizedAudio]()
     emitter_noflush = tts.AudioEmitter(label="fakeaudio", dst_ch=rx_noflush)
@@ -881,7 +823,6 @@ async def test_tts_audio_emitter(monkeypatch):
     assert all(not m.is_final for m in msgs5[:-1])
 
     assert msgs5[-1].frame.samples_per_channel == 10
-
 
     rx_empty = aio.Chan[tts.SynthesizedAudio]()
     emitter_empty = tts.AudioEmitter(label="empty", dst_ch=rx_empty)
@@ -910,8 +851,6 @@ async def test_tts_audio_emitter(monkeypatch):
 async def test_tts_audio_emitter_wav(monkeypatch):
     monkeypatch.setattr(tts.tts, "lk_dump_tts", False)
 
-
-
     pcm_chunk = b"\x7f\x7f" * 100
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
@@ -920,7 +859,6 @@ async def test_tts_audio_emitter_wav(monkeypatch):
         wf.setframerate(1000)
         wf.writeframes(pcm_chunk * 3)
     wav_bytes = buf.getvalue()
-
 
     rx = aio.Chan[tts.SynthesizedAudio]()
     emitter = tts.AudioEmitter(label="wav-multi", dst_ch=rx)
@@ -933,16 +871,13 @@ async def test_tts_audio_emitter_wav(monkeypatch):
         stream=True,
     )
 
-
     emitter.start_segment(segment_id="w1")
     emitter.push(wav_bytes)
     emitter.end_segment()
 
-
     emitter.start_segment(segment_id="w2")
     emitter.push(wav_bytes)
     emitter.end_segment()
-
 
     emitter.end_input()
     await emitter.join()
@@ -951,7 +886,6 @@ async def test_tts_audio_emitter_wav(monkeypatch):
 
     assert len(msgs) >= 6
 
-
     w1_msgs = [m for m in msgs if m.segment_id == "w1"]
     w2_msgs = [m for m in msgs if m.segment_id == "w2"]
     assert w1_msgs[-1].is_final is True
@@ -959,10 +893,8 @@ async def test_tts_audio_emitter_wav(monkeypatch):
     assert w2_msgs[-1].is_final is True
     assert all(not m.is_final for m in w2_msgs[:-1])
 
-
     assert pytest.approx(emitter.pushed_duration(0), rel=1e-3) == 0.3
     assert pytest.approx(emitter.pushed_duration(1), rel=1e-3) == 0.3
-
 
     rx2 = aio.Chan[tts.SynthesizedAudio]()
     emitter2 = tts.AudioEmitter(label="wav-nos", dst_ch=rx2)
@@ -975,7 +907,6 @@ async def test_tts_audio_emitter_wav(monkeypatch):
         stream=False,
     )
 
-
     emitter2.push(wav_bytes)
     emitter2.end_input()
 
@@ -987,9 +918,7 @@ async def test_tts_audio_emitter_wav(monkeypatch):
     assert msgs2[-1].is_final is True
     assert all(not m.is_final for m in msgs2[:-1])
 
-
     assert pytest.approx(emitter2.pushed_duration(0), rel=1e-3) == 0.3
-
 
     rx3 = aio.Chan[tts.SynthesizedAudio]()
     emitter3 = tts.AudioEmitter(label="silence-test", dst_ch=rx3)
@@ -1001,7 +930,6 @@ async def test_tts_audio_emitter_wav(monkeypatch):
         frame_size_ms=100,
         stream=True,
     )
-
 
     emitter3.start_segment(segment_id="s1")
     emitter3.push(b"\xff\xff" * 100)

@@ -21,10 +21,8 @@ class TestDebounce:
         debouncer = Debounced(test_func, 0.1)
         task = debouncer.schedule()
 
-
         assert len(result) == 0
         assert debouncer.is_running()
-
 
         value = await task
         assert value == "success"
@@ -43,19 +41,16 @@ class TestDebounce:
 
         debouncer = Debounced(test_func, 0.1)
 
-
         task1 = debouncer.schedule()
         await asyncio.sleep(0.05)
         task2 = debouncer.schedule()
         await asyncio.sleep(0.05)
         task3 = debouncer.schedule()
 
-
         await asyncio.gather(task1, task2, task3, return_exceptions=True)
 
         assert task1.cancelled()
         assert task2.cancelled()
-
 
         result = await task3
         assert result == 1
@@ -107,13 +102,10 @@ class TestDebounce:
 
         debouncer = Debounced(test_func, 0.02)
 
-
         assert not debouncer.is_running()
-
 
         task = debouncer.schedule()
         assert debouncer.is_running()
-
 
         await task
         assert not debouncer.is_running()
@@ -184,9 +176,7 @@ class TestDebounceDecorator:
             execution_count += 1
             return f"executed_{execution_count}"
 
-
         assert isinstance(decorated_func, Debounced)
-
 
         task = decorated_func.schedule()
         result = await task
@@ -204,13 +194,11 @@ class TestDebounceDecorator:
             execution_count += 1
             return execution_count
 
-
         task1 = decorated_func.schedule()
         await asyncio.sleep(0.05)
         task2 = decorated_func.schedule()
         await asyncio.sleep(0.05)
         task3 = decorated_func.schedule()
-
 
         result = await task3
 
@@ -227,7 +215,6 @@ class TestDebounceDecorator:
         async def decorated_func() -> str:
             results.append("executed")
             return "success"
-
 
         task = decorated_func()
         result = await task
@@ -246,7 +233,6 @@ class TestDebounceDecorator:
         async def slow_func() -> str:
             return "slow"
 
-
         fast_task = fast_func.schedule()
         slow_task = slow_func.schedule()
 
@@ -262,7 +248,6 @@ class TestDebounceDecorator:
         async def original_func() -> str:
             """Original docstring."""
             return "original_result"
-
 
         task = original_func.schedule()
         result = await task

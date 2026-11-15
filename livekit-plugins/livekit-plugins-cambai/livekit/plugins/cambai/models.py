@@ -17,7 +17,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-
 SpeechModel = Literal[
     "mars-flash",
     "mars-pro",
@@ -51,7 +50,6 @@ class _TTSOptions:
     output_format: str
     user_instructions: str | None
     enhance_named_entities: bool
-
 
 
 DEFAULT_VOICE_ID = 147320

@@ -39,9 +39,7 @@ def to_chat_ctx(
         elif msg.type == "function_call":
             role = "model"
         elif msg.type == "function_call_output":
-
             role = "tool"
-
 
         if role != current_role:
             if current_role is not None and parts:
@@ -84,12 +82,9 @@ def to_chat_ctx(
     if current_role is not None and parts:
         turns.append({"role": current_role, "parts": parts})
 
-
     for turn in turns:
         if turn["role"] == "tool":
             turn["role"] = "user"
-
-
 
     if inject_dummy_user_message and current_role not in ("user", "tool"):
         turns.append({"role": "user", "parts": [{"text": "."}]})
@@ -134,8 +129,6 @@ def to_fnc_ctx(
             if use_parameters_json_schema:
                 schema["parameters_json_schema"] = info.raw_schema.get("parameters", {})
             else:
-
-
                 from livekit.plugins.google.utils import _GeminiJsonSchema
 
                 schema["parameters"] = (

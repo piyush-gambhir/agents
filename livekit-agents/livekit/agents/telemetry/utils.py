@@ -45,9 +45,6 @@ def record_realtime_metrics(span: trace.Span, ev: RealtimeModelMetrics) -> None:
     if ev.ttft != -1:
         completion_start_time = ev.timestamp + ev.ttft
 
-
-
-
         completion_start_time_utc = datetime.fromtimestamp(
             completion_start_time, tz=timezone.utc
         ).isoformat()
@@ -56,7 +53,6 @@ def record_realtime_metrics(span: trace.Span, ev: RealtimeModelMetrics) -> None:
         span.set_attributes(attrs)
     else:
         from .traces import tracer
-
 
         with trace.use_span(span):
             with tracer.start_span("realtime_metrics") as child:

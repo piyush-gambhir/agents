@@ -72,7 +72,6 @@ class LLMAdapter(llm.LLM, Generic[ContextT]):
         chat_ctx: ChatContext,
         tools: list[llm.Tool] | None = None,
         conn_options: APIConnectOptions = DEFAULT_API_CONNECT_OPTIONS,
-
         parallel_tool_calls: NotGivenOr[bool] = NOT_GIVEN,
         tool_choice: NotGivenOr[ToolChoice] = NOT_GIVEN,
         extra_kwargs: NotGivenOr[dict[str, Any]] = NOT_GIVEN,
@@ -120,8 +119,6 @@ class LangGraphStream(llm.LLMStream, Generic[ContextT]):
         state = self._chat_ctx_to_state()
         is_multi_mode = isinstance(self._stream_mode, list)
 
-
-
         try:
             aiter = self._graph.astream(
                 state,
@@ -138,18 +135,15 @@ class LangGraphStream(llm.LLMStream, Generic[ContextT]):
             )
 
         async for item in aiter:
-
             if is_multi_mode and isinstance(item, tuple) and len(item) == 2:
                 mode, data = item
                 if isinstance(mode, str):
                     if mode == "custom":
-
                         chat_chunk = _to_chat_chunk(data)
                         if chat_chunk:
                             self._event_ch.send_nowait(chat_chunk)
                         continue
                     elif mode == "messages":
-
                         token_like = _extract_message_chunk(data)
                         if token_like is None:
                             continue
@@ -158,14 +152,11 @@ class LangGraphStream(llm.LLMStream, Generic[ContextT]):
                             self._event_ch.send_nowait(chat_chunk)
                         continue
 
-
             if self._stream_mode == "custom":
-
                 chat_chunk = _to_chat_chunk(item)
                 if chat_chunk:
                     self._event_ch.send_nowait(chat_chunk)
             elif self._stream_mode == "messages":
-
                 token_like = _extract_message_chunk(item)
                 if token_like is None:
                     continue
@@ -208,19 +199,15 @@ def _extract_message_chunk(item: Any) -> BaseMessageChunk | str | None:
     if not isinstance(item, tuple):
         return None
 
-
-
     if len(item) == 2 and not isinstance(item[1], tuple):
         token, _meta = item
         return token  # type: ignore
-
 
     if len(item) == 2 and isinstance(item[1], tuple):
         inner = item[1]
         if len(inner) == 2:
             token, _meta = inner
             return token  # type: ignore
-
 
     if len(item) == 3 and isinstance(item[2], tuple):
         inner = item[2]

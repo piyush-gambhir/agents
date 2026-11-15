@@ -19,7 +19,6 @@ class _TurnDetector(Protocol):
     def provider(self) -> str:
         return "unknown"
 
-
     async def unlikely_threshold(self, language: LanguageCode | None) -> float | None: ...
     async def supports_language(self, language: LanguageCode | None) -> bool: ...
 
@@ -266,7 +265,6 @@ def _migrate_turn_handling(
 
     result: TurnHandlingOptions = {}
 
-
     endpointing_opts: EndpointingOptions = {}
     if is_given(min_endpointing_delay):
         endpointing_opts["min_delay"] = min_endpointing_delay
@@ -274,7 +272,6 @@ def _migrate_turn_handling(
         endpointing_opts["max_delay"] = max_endpointing_delay
     if endpointing_opts:
         result["endpointing"] = endpointing_opts
-
 
     interruption: InterruptionOptions = {}
     if allow_interruptions is False:

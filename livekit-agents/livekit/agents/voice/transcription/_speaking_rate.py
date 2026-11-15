@@ -79,7 +79,6 @@ class SpeakingRateStream:
 
         async for input_frame in self._input_ch:
             if not isinstance(input_frame, rtc.AudioFrame):
-
                 available_samples = sum(frame.samples_per_channel for frame in inference_frames)
                 if available_samples > self._window_size_samples * 0.5:
                     frame = rtc.combine_audio_frames(inference_frames)
@@ -102,7 +101,6 @@ class SpeakingRateStream:
                     )
                 inference_frames = []
                 continue
-
 
             if not self._input_sample_rate:
                 self._input_sample_rate = input_frame.sample_rate
@@ -157,7 +155,6 @@ class SpeakingRateStream:
                     dtype=np.float32,
                 )
 
-
                 sr = self._compute_speaking_rate(inference_f32_data, _inference_sample_rate)
                 self._event_ch.send_nowait(
                     SpeakingRateEvent(
@@ -166,7 +163,6 @@ class SpeakingRateStream:
                         speaking_rate=sr,
                     )
                 )
-
 
                 pub_timestamp += self._opts.step_size
                 if len(inference_frame.data) - self._step_size_samples > 0:
@@ -195,7 +191,6 @@ class SpeakingRateStream:
         if overall_rms < silence_threshold:
             return 0.0
 
-
         tail_audio_sq = audio_sq[int(len(audio_sq) * 0.7) :]
         if len(tail_audio_sq) > 0 and np.sqrt(np.mean(tail_audio_sq)) < silence_threshold * 0.5:
             return 0.0
@@ -219,7 +214,6 @@ class SpeakingRateStream:
             frame = audio[start:end]
             windowed = frame * window
 
-
             fft_result = np.fft.rfft(windowed)
             result[:, i] = fft_result * scale_factor
 
@@ -238,12 +232,10 @@ class SpeakingRateStream:
 
         Zxx = self._stft(audio, frame_length, hop_length)
 
-
         spectral_magnitudes = np.abs(Zxx)
         spectral_flux_values = []
 
         for i in range(1, spectral_magnitudes.shape[1]):
-
             flux = np.sum(np.abs(spectral_magnitudes[:, i] - spectral_magnitudes[:, i - 1]))
             spectral_flux_values.append(flux)
 

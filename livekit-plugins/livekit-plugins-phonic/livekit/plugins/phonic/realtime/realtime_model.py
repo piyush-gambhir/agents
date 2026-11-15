@@ -378,8 +378,6 @@ class RealtimeSession(llm.RealtimeSession):
         self._tools = llm.ToolContext(tools)
         self._tool_definitions = []
         for tool_schema in self._tools.parse_function_tools("openai", strict=True):
-
-
             self._tool_definitions.append(
                 {
                     "type": "custom_websocket",
@@ -480,8 +478,6 @@ class RealtimeSession(llm.RealtimeSession):
         self._close_current_generation(interrupted=False)
 
         if self._pending_generate_reply_fut and not self._pending_generate_reply_fut.done():
-
-
             old_fut = self._pending_generate_reply_fut
             self._pending_generate_reply_fut = None
             old_fut.cancel()
@@ -501,7 +497,6 @@ class RealtimeSession(llm.RealtimeSession):
             if is_current:
                 self._pending_generate_reply_fut = None
             if f.cancelled() and is_current:
-
                 if not send_task.done():
                     send_task.cancel()
 
@@ -571,7 +566,6 @@ class RealtimeSession(llm.RealtimeSession):
             self._socket_ctx = self._client.conversations.connect()
             self._socket = await self._socket_ctx.__aenter__()
             self._report_connection_acquired(time.perf_counter() - t0)
-
 
             await self._instructions_ready.wait()
             await self._tools_ready.wait()
@@ -771,7 +765,6 @@ class RealtimeSession(llm.RealtimeSession):
 
     def _handle_audio_chunk(self, message: AudioChunkResponsePayload) -> None:
 
-
         if self._current_generation is None and message.text:
             logger.debug("Starting new generation due to text in audio chunk")
             self._start_new_assistant_turn()
@@ -839,8 +832,6 @@ class RealtimeSession(llm.RealtimeSession):
                 arguments=json.dumps(parameters),
             )
         )
-
-
 
         self._close_current_generation(interrupted=False)
 

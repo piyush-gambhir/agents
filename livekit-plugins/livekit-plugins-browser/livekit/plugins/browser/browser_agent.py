@@ -215,7 +215,6 @@ class BrowserAgent:
                     args = _json.loads(tc.arguments or "{}")
                     action = args.pop("action", "screenshot")
 
-
                     coord = args.get("coordinate")
                     if coord and len(coord) == 2:
                         await self._send_cursor_position(int(coord[0]), int(coord[1]), action)
@@ -223,7 +222,6 @@ class BrowserAgent:
                     await self._send_status("acting")
 
                     screenshot_content = await self._computer_tool.execute(action, **args)
-
 
                     if action in (
                         "left_click",

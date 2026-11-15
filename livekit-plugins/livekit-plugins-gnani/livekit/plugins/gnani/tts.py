@@ -190,11 +190,6 @@ class TTS(tts.TTS):
         pass
 
 
-
-
-
-
-
 def _build_payload(opts: GnaniTTSOptions, text: str) -> dict:
     return {
         "text": text,
@@ -228,11 +223,6 @@ def _strip_wav_header(data: bytes) -> bytes:
     if len(data) > _WAV_HEADER_SIZE and data[:4] == b"RIFF" and data[8:12] == b"WAVE":
         return data[_WAV_HEADER_SIZE:]
     return data
-
-
-
-
-
 
 
 class RESTChunkedStream(tts.ChunkedStream):
@@ -280,11 +270,6 @@ class RESTChunkedStream(tts.ChunkedStream):
             raise
         except Exception as e:
             raise APIConnectionError(f"Gnani TTS REST error: {e}") from e
-
-
-
-
-
 
 
 class SSEChunkedStream(tts.ChunkedStream):
@@ -385,11 +370,6 @@ class SSEChunkedStream(tts.ChunkedStream):
             raise APIConnectionError(f"Gnani TTS SSE error: {e}") from e
 
 
-
-
-
-
-
 class WebSocketChunkedStream(tts.ChunkedStream):
     """WebSocket-based chunked TTS — wss://api.vachana.ai/api/v1/tts.
 
@@ -477,11 +457,6 @@ class WebSocketChunkedStream(tts.ChunkedStream):
             raise
         except Exception as e:
             raise APIConnectionError(f"Gnani TTS WebSocket error: {e}") from e
-
-
-
-
-
 
 
 class SynthesizeStream(tts.SynthesizeStream):

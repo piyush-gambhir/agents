@@ -54,11 +54,8 @@ def build_native_keycode_map() -> dict[int, int]:
 NATIVE_KEY_CODES = build_native_keycode_map()
 
 KEY_NAME_TO_VK: dict[str, int] = {
-
     **{chr(c): c - 32 for c in range(ord("a"), ord("z") + 1)},
-
     **{str(d): 0x30 + d for d in range(10)},
-
     "return": 13,
     "enter": 13,
     "tab": 9,
@@ -68,7 +65,6 @@ KEY_NAME_TO_VK: dict[str, int] = {
     "delete": 46,
     "space": 32,
     " ": 32,
-
     "arrowup": 38,
     "up": 38,
     "arrowdown": 40,
@@ -77,14 +73,12 @@ KEY_NAME_TO_VK: dict[str, int] = {
     "left": 37,
     "arrowright": 39,
     "right": 39,
-
     "home": 36,
     "end": 35,
     "pageup": 33,
     "page_up": 33,
     "pagedown": 34,
     "page_down": 34,
-
     "f1": 0x70,
     "f2": 0x71,
     "f3": 0x72,
@@ -97,7 +91,6 @@ KEY_NAME_TO_VK: dict[str, int] = {
     "f10": 0x79,
     "f11": 0x7A,
     "f12": 0x7B,
-
     "shift": 16,
     "control": 17,
     "ctrl": 17,
@@ -106,7 +99,6 @@ KEY_NAME_TO_VK: dict[str, int] = {
     "super": 91,
     "command": 91,
     "cmd": 91,
-
     ";": 186,
     "=": 187,
     ",": 188,
@@ -119,7 +111,6 @@ KEY_NAME_TO_VK: dict[str, int] = {
     "]": 221,
     "'": 222,
 }
-
 
 
 SHIFTED_CHAR_TO_VK: dict[str, int] = {

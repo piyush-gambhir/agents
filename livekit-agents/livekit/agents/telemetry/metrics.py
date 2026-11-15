@@ -13,7 +13,6 @@ PROC_INITIALIZE_TIME = prometheus_client.Histogram(
 )
 
 
-
 RUNNING_JOB_GAUGE = prometheus_client.Gauge(
     "lk_agents_active_job_count",
     "Active jobs",
@@ -36,14 +35,12 @@ CPU_LOAD_GAUGE = prometheus_client.Gauge(
 )
 
 
-
 def _update_child_proc_count() -> None:
     """Update child process count metric. Must be called periodically in the main process."""
     try:
         count = len(psutil.Process(os.getpid()).children(recursive=True))
         CHILD_PROC_GAUGE.labels(nodename=utils.nodename()).set(count)
     except Exception:
-
         pass
 
 

@@ -38,44 +38,31 @@ TTSModel = Literal[
 ]
 
 
-
-
 TTSVoice = Literal[
-
     "socialmedia_female_2_v1",
     "socialmedia_female_1_v1",
-
     "voice_agent_Female_Phone_4",
     "voice_agent_Male_Phone_1",
     "voice_agent_Male_Phone_2",
-
     "English_StressedLady",
     "English_SentimentalLady",
     "English_radiant_girl",
-
     "English_WiseScholar",
     "English_Persuasive_Man",
     "English_Explanatory_Man",
     "English_Insightful_Speaker",
-
     "japanese_male_social_media_1_v2",
     "japanese_female_social_media_1_v2",
-
     "French_CasualMan",
     "French_Female Journalist",
-
     "Spanish_Narrator",
     "Spanish_WiseScholar",
     "Spanish_ThoughtfulMan",
-
     "Arabic_CalmWoman",
     "Arabic_FriendlyGuy",
-
     "Portuguese_ThoughtfulLady",
-
     "German_PlayfulMan",
     "German_SweetLady",
-
     "moss_audio_7c7e7ae2-7356-11f0-9540-7ef9b4b62566",
     "moss_audio_b118f320-78c0-11f0-bbeb-26e8167c4779",
     "moss_audio_84f32de9-2363-11f0-b7ab-d255fae1f27b",
@@ -84,7 +71,6 @@ TTSVoice = Literal[
 
 DEFAULT_MODEL = "speech-02-turbo"
 DEFAULT_VOICE_ID = "socialmedia_female_2_v1"
-
 
 
 TTSEmotion = Literal[
@@ -139,9 +125,7 @@ TTSAudioFormat = Literal["pcm", "mp3", "flac", "wav"]
 TTSSampleRate = Literal[8000, 16000, 22050, 24000, 32000, 44100]
 TTSBitRate = Literal[32000, 64000, 128000, 256000]
 
-DEFAULT_BASE_URL = (
-    "https://api-uw.minimax.io"
-)
+DEFAULT_BASE_URL = "https://api-uw.minimax.io"
 
 
 @dataclass
@@ -243,7 +227,6 @@ class TTS(tts.TTS):
             raise ValueError(f"intensity must be between -100 and 100, but got {intensity}")
         if timbre is not None and not (-100 <= timbre <= 100):
             raise ValueError(f"timbre must be between -100 and 100, but got {timbre}")
-
 
         if emotion == "fluent" and not model.startswith("speech-2.6"):
             raise ValueError(
@@ -360,7 +343,6 @@ class TTS(tts.TTS):
         session = self._ensure_session()
         ws = await asyncio.wait_for(session.ws_connect(url, headers=headers), timeout)
 
-
         logger.debug(f"MiniMax WebSocket connected to {url}")
 
         return ws
@@ -467,8 +449,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     continue
 
                 data: dict[str, Any] = json.loads(msg.data)
-
-
 
                 msg_trace_id = data.get("trace_id") or data.get("base_resp", {}).get("trace_id")
                 if msg_trace_id and msg_trace_id != current_trace_id:
@@ -601,12 +581,9 @@ class ChunkedStream(tts.ChunkedStream):
                 },
                 json=msg,
                 timeout=aiohttp.ClientTimeout(total=30, sock_connect=self._conn_options.timeout),
-
                 read_bufsize=10 * 1024 * 1024,
             ) as resp:
                 resp.raise_for_status()
-
-
 
                 trace_id = resp.headers.get("Trace-Id") or resp.headers.get("X-Trace-Id")
                 minimax_request_id = resp.headers.get("Minimax-Request-Id")
@@ -637,7 +614,6 @@ class ChunkedStream(tts.ChunkedStream):
                         continue
 
                     data = json.loads(line[5:])
-
 
                     body_trace_id = data.get("trace_id")
                     if body_trace_id and body_trace_id != trace_id:

@@ -148,7 +148,6 @@ class PageActions:
                     vk = KEY_NAME_TO_VK.get(ch, 0)
 
                 if not vk:
-
                     await self._page.send_key_event(CHAR, 0, 0, 0, char_code)
                     await asyncio.sleep(0.01)
                     continue
@@ -243,13 +242,11 @@ async def _send_key_combo(page: BrowserPage, text: str) -> None:
         else:
             main_keys.append(k)
 
-
     for k in keys:
         if k in MODIFIER_MAP:
             vk = KEY_NAME_TO_VK.get(k, 0)
             nkc = NATIVE_KEY_CODES.get(vk, 0)
             await page.send_key_event(RAWKEYDOWN, modifiers, vk, nkc, 0)
-
 
     for k in main_keys:
         vk = KEY_NAME_TO_VK.get(k, 0)
@@ -261,7 +258,6 @@ async def _send_key_combo(page: BrowserPage, text: str) -> None:
             char_code = ord(k)
             await page.send_key_event(CHAR, modifiers, char_code, nkc, char_code)
         await page.send_key_event(KEYUP, modifiers, vk, 0, 0)
-
 
     for k in reversed(keys):
         if k in MODIFIER_MAP:

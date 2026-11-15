@@ -71,7 +71,6 @@ class StreamPacerWrapper(SentenceStream):
         self._sent_stream.end_input()
         self._input_ended = True
         if self._audio_emitter._dst_ch.closed:
-
             self._closing = True
             self._wakeup_event.set()
 
@@ -98,7 +97,6 @@ class StreamPacerWrapper(SentenceStream):
         audio_start_time = 0.0
         first_sentence = True
 
-
         prev_audio_duration = 0.0
         prev_check_time = 0.0
         generation_started = False
@@ -118,7 +116,6 @@ class StreamPacerWrapper(SentenceStream):
             curr_time = time.time()
             if audio_duration > 0.0 and audio_start_time == 0.0:
                 audio_start_time = curr_time
-
 
             if curr_time - prev_check_time >= 0.1:
                 if prev_audio_duration < audio_duration:
@@ -153,7 +150,6 @@ class StreamPacerWrapper(SentenceStream):
                     generation_started = False
                     generation_stopped = False
                     first_sentence = False
-
 
             if generation_started and not generation_stopped:
                 wait_time = 0.2

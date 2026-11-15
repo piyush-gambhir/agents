@@ -20,13 +20,7 @@ async def entrypoint(ctx: JobContext):
 
     async def participant_task_1(ctx: JobContext, p: rtc.RemoteParticipant):
 
-
-
-
         logger.info(f"participant task 1 starting for {p.identity}")
-
-
-
 
         await asyncio.sleep(60)
         logger.info(f"participant task done for {p.identity}")
@@ -35,7 +29,6 @@ async def entrypoint(ctx: JobContext):
 
         logger.info(f"participant task 2 starting for {p.identity}")
         await asyncio.sleep(10)
-
 
     ctx.add_participant_entrypoint(entrypoint_fnc=participant_task_1)
     ctx.add_participant_entrypoint(entrypoint_fnc=participant_task_2)

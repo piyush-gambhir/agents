@@ -26,7 +26,6 @@ class TestAudioRecognitionAclose:
         with patch.object(AudioRecognition, "__init__", lambda self, *args, **kwargs: None):
             audio_recognition = AudioRecognition.__new__(AudioRecognition)
 
-
         audio_recognition._session = MagicMock()
         audio_recognition._hooks = MagicMock()
         audio_recognition._closing = asyncio.Event()
@@ -60,10 +59,8 @@ class TestAudioRecognitionAclose:
         async def long_running_task():
             await asyncio.sleep(10)
 
-
         commit_user_turn_atask = asyncio.create_task(long_running_task())
         end_of_turn_task = asyncio.create_task(long_running_task())
-
 
         commit_user_turn_atask.cancel()
         await asyncio.sleep(0)
@@ -74,10 +71,8 @@ class TestAudioRecognitionAclose:
             """Mimics the OLD aclose() without try-except protection."""
             nonlocal second_task_awaited
 
-
             if commit_user_turn_atask is not None:
                 await commit_user_turn_atask
-
 
             if end_of_turn_task is not None:
                 second_task_awaited = True
@@ -87,14 +82,11 @@ class TestAudioRecognitionAclose:
                 except asyncio.CancelledError:
                     pass
 
-
         with pytest.raises(asyncio.CancelledError):
             await old_aclose_pattern()
 
-
         assert not second_task_awaited, "Second task cleanup was never reached"
         assert not end_of_turn_task.done(), "Second task is still running (orphaned)"
-
 
         end_of_turn_task.cancel()
         try:
@@ -125,7 +117,6 @@ class TestAudioRecognitionAclose:
         async def long_running_task():
             await asyncio.sleep(10)
 
-
         commit_task = asyncio.create_task(long_running_task())
         commit_task.cancel()
 
@@ -137,9 +128,7 @@ class TestAudioRecognitionAclose:
         audio_recognition._commit_user_turn_atask = commit_task
         audio_recognition._end_of_turn_task = end_of_turn_task
 
-
         await audio_recognition.aclose()
-
 
         assert audio_recognition._closing.is_set()
 

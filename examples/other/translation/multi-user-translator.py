@@ -376,7 +376,6 @@ class RoomTranslator:
             if track.kind == rtc.TrackKind.KIND_AUDIO:
                 self._remove_track(track)
 
-
         self._update_languages()
 
         existing_track_ids = [input_track.track.sid for input_track in self.input_tracks]
@@ -435,7 +434,6 @@ async def entrypoint(ctx: JobContext):
     """Main entrypoint for the translation agent service."""
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-
     await ctx.room.local_participant.set_attributes(
         {
             "lk.agent.state": "listening",
@@ -445,8 +443,6 @@ async def entrypoint(ctx: JobContext):
 
     room_translator = RoomTranslator(
         ctx.room,
-
-
     )
     room_translator.start()
 

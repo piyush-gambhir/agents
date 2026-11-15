@@ -25,10 +25,6 @@ logger = logging.getLogger("structured-output")
 load_dotenv()
 
 
-
-
-
-
 class ResponseEmotion(TypedDict):
     voice_instructions: Annotated[
         str,
@@ -99,8 +95,6 @@ class MyAgent(Agent):
         def output_processed(resp: ResponseEmotion):
             nonlocal instruction_updated
             if resp.get("voice_instructions") and resp.get("response") and not instruction_updated:
-
-
                 instruction_updated = True
                 logger.info(
                     f"Applying TTS instructions before generating response audio: "
@@ -109,8 +103,6 @@ class MyAgent(Agent):
 
                 tts = cast(openai.TTS, self.tts)
                 tts.update_options(instructions=resp["voice_instructions"])
-
-
 
         return Agent.default.tts_node(
             self, process_structured_output(text, callback=output_processed), model_settings

@@ -42,11 +42,9 @@ def _to_deepgram_url(opts: dict, base_url: str, *, websocket: bool) -> str:
 
     opts = opts.copy()
     if opts.get("keywords"):
-
         opts["keywords"] = [
             f"{keyword}:{intensifier}" for (keyword, intensifier) in opts["keywords"]
         ]
-
 
     opts = {k: str(v).lower() if isinstance(v, bool) else v for k, v in opts.items()}
 

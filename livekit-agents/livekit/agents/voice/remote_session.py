@@ -556,8 +556,6 @@ class SessionHost:
             )
         )
 
-
-
     def _on_session_usage_updated(self, event: SessionUsageUpdatedEvent) -> None:
         self._send_event(
             agent_pb.AgentSessionEvent(

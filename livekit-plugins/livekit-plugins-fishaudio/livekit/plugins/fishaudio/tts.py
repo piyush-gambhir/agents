@@ -32,7 +32,6 @@ NUM_CHANNELS = 1
 USER_AGENT = f"livekit-plugins-fishaudio/{__version__}"
 
 
-
 _DEFAULT_SAMPLE_RATE: dict[OutputFormat, int] = {
     "opus": 48000,
     "pcm": 24000,
@@ -137,8 +136,6 @@ class TTS(tts.TTS):
 
         self._session = http_session
 
-
-
         self._sentence_tokenizer = (
             tokenizer
             if is_given(tokenizer)
@@ -215,9 +212,6 @@ class TTS(tts.TTS):
 
 def _build_tts_request(opts: _TTSOptions, *, text: str = "") -> dict[str, Any]:
 
-
-
-
     return {
         "text": text,
         "chunk_length": opts.chunk_length,
@@ -226,8 +220,6 @@ def _build_tts_request(opts: _TTSOptions, *, text: str = "") -> dict[str, Any]:
         "mp3_bitrate": 64,
         "opus_bitrate": 64000,
         "references": [],
-
-
         "reference_id": opts.voice_id if is_given(opts.voice_id) else None,
         "normalize": True,
         "latency": opts.latency_mode,
@@ -340,10 +332,6 @@ class SynthesizeStream(tts.SynthesizeStream):
         output_emitter: tts.AudioEmitter,
     ) -> None:
 
-
-
-
-
         sent_stream = self._tts._sentence_tokenizer.stream()
 
         async def input_task() -> None:
@@ -378,8 +366,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             await ws.send_bytes(msgpack.packb({"event": "stop"}, use_bin_type=True))
 
         async def recv_task() -> None:
-
-
 
             while True:
                 msg = await ws.receive()

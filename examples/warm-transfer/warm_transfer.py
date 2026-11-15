@@ -63,13 +63,6 @@ class SupportAgent(Agent):
                 sip_trunk_id=SIP_TRUNK_ID,
                 sip_number=SIP_NUMBER,
                 chat_ctx=self.chat_ctx,
-
-
-
-
-
-
-
                 extra_instructions=SUMMARY_INSTRUCTIONS,
             )
         except ToolError as e:
@@ -110,7 +103,6 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
-
                 noise_cancellation=noise_cancellation.BVCTelephony(),
             ),
             delete_room_on_close=False,
@@ -158,6 +150,4 @@ Brief summary in 100-200 characters from a first-person perspective"""
 
 
 if __name__ == "__main__":
-
-
     cli.run_app(server)

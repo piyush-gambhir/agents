@@ -84,7 +84,6 @@ class FakeLLMStream(LLMStream):
 
         index_text = self._get_index_text()
         if index_text not in self._llm.fake_response_map:
-
             return
 
         resp = self._llm.fake_response_map[index_text]
@@ -120,14 +119,12 @@ class FakeLLMStream(LLMStream):
 
         item = items[-1]
 
-
         if (
             item.type == "message"
             and item.role in ("user", "system")
             and (text := item.text_content)
         ):
             return text
-
 
         if item.type == "function_call_output":
             return item.output

@@ -15,7 +15,6 @@ from ..job import JobAcceptArguments, RunningJobInfo
 class CliArgs:
     log_level: str
 
-
     url: str | None
     api_key: str | None = field(repr=False, default=None)
     api_secret: str | None = field(repr=False, default=None)
@@ -23,13 +22,7 @@ class CliArgs:
     devmode: bool = False
     reload: bool = False
 
-
-
-
-
     reload_count: int = 0
-
-
 
     mp_cch: socket.socket | None = None
 

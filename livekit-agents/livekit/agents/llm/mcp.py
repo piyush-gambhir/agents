@@ -267,7 +267,6 @@ class MCPServerHTTP(MCPServer):
         self._sse_read_timeout = sse_read_timeout
         self._allowed_tools = set(allowed_tools) if allowed_tools else None
 
-
         if transport_type is not None:
             if transport_type not in ("sse", "streamable_http"):
                 raise ValueError(
@@ -275,7 +274,6 @@ class MCPServerHTTP(MCPServer):
                 )
             self._use_streamable_http = transport_type == "streamable_http"
         else:
-
             self._use_streamable_http = self._should_use_streamable_http(url)
 
         self._http_client: httpx.AsyncClient | None = None
@@ -359,10 +357,8 @@ class MCPServerHTTP(MCPServer):
         """
         all_tools = await super().list_tools()
 
-
         if self._allowed_tools is None:
             return all_tools
-
 
         return self._filter_tools(all_tools)
 
@@ -375,13 +371,11 @@ class MCPServerHTTP(MCPServer):
 
         filtered_tools: list[MCPTool] = []
         for tool in tools:
-
             if is_function_tool(tool):
                 tool_name = get_function_info(tool).name
             elif is_raw_function_tool(tool):
                 tool_name = get_raw_function_info(tool).name
             else:
-
                 continue
 
             if tool_name in self._allowed_tools:

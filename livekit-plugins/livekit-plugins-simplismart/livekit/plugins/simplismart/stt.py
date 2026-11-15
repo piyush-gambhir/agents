@@ -286,9 +286,7 @@ class STT(stt.STT):
         """Create a streaming transcription session."""
         opts_language = LanguageCode(language) if is_given(language) else self._opts.language
 
-
         stream_opts = SimplismartSTTOptions(language=opts_language)
-
 
         stream_session = aiohttp.ClientSession()
 
@@ -358,11 +356,8 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-
-
                     if self._session.closed:
                         return
-
 
                     self._reconnect_event.set()
                     return
@@ -393,7 +388,6 @@ class SpeechStream(stt.SpeechStream):
                         (tasks_group, wait_reconnect_task),
                         return_when=asyncio.FIRST_COMPLETED,
                     )
-
 
                     for task in done:
                         if task != wait_reconnect_task:
@@ -453,7 +447,6 @@ class SpeechStream(stt.SpeechStream):
         request_id = self._request_id
 
         try:
-
             metrics: dict[str, float] = {}
             request_data = {
                 "original_id": request_id,
@@ -468,12 +461,10 @@ class SpeechStream(stt.SpeechStream):
             )
             self._event_ch.send_nowait(usage_event)
 
-
             speech_data = stt.SpeechData(
                 language=LanguageCode(self._opts.language or "en"),
                 text=transcript_text,
             )
-
 
             speech_event = stt.SpeechEvent(
                 type=stt.SpeechEventType.FINAL_TRANSCRIPT,

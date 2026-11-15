@@ -30,7 +30,6 @@ Plugin.register_plugin(EOUPlugin(_EUORunnerEn))
 Plugin.register_plugin(EOUPlugin(_EUORunnerMultilingual))
 
 
-
 _module = dir()
 NOT_IN_ALL = [m for m in _module if m not in __all__]
 

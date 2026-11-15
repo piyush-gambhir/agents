@@ -72,7 +72,6 @@ class TestLanguageNormalization:
 
     def test_bcp47_iso639_3_subtag_preserved(self):
 
-
         assert LanguageCode("cmn-Hans-CN") == "cmn-Hans-CN"
         assert LanguageCode("cmn-Hant-TW") == "cmn-Hant-TW"
         assert LanguageCode("cmn-cn") == "cmn-CN"

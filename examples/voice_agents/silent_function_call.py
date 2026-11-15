@@ -20,11 +20,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -39,8 +34,6 @@ class MyAgent(Agent):
         """Called when user asks to turn on the light."""
         self.light_on = True
         logger.info("Light is now on")
-
-
 
     @function_tool()
     async def turn_off_light(self):
@@ -67,7 +60,6 @@ async def entrypoint(ctx: JobContext):
     def on_function_tools_executed(ev: FunctionToolsExecutedEvent):
         tools = (fnc.name for fnc in ev.function_calls)
         if "turn_off_light" in tools:
-
             ev.cancel_tool_reply()
 
     await session.start(agent=MyAgent(), room=ctx.room)

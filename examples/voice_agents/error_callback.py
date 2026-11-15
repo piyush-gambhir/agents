@@ -18,9 +18,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
 server = AgentServer()
 
 
@@ -42,33 +39,15 @@ async def entrypoint(ctx: JobContext):
 
         logger.info(f"session is closing due to unrecoverable error {ev.error}")
 
-
         session.say(
             "I'm having trouble connecting right now. Let me transfer your call.",
             audio=audio_frames_from_file(custom_error_audio),
             allow_interruptions=False,
         )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @session.on("close")
     def on_close(_: CloseEvent):
         logger.info("Session is closing")
-
 
         participant = [
             p
@@ -82,7 +61,6 @@ async def entrypoint(ctx: JobContext):
             else:
                 logger.info("SIP participant transferred")
             ctx.delete_room()
-
 
         if participant.kind == ParticipantKind.PARTICIPANT_KIND_SIP:
             ctx.transfer_sip_participant(participant, "tel:+18003310500").add_done_callback(

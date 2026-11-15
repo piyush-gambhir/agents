@@ -82,7 +82,6 @@ def _resolve_config(config: ServerConfig | None) -> ServerConfig:
     if cfg is not None:
         return cfg
 
-
     return ServerConfig(url=LK_URL, api_key=LK_API_KEY, api_secret=LK_API_SECRET)
 
 

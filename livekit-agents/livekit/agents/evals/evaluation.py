@@ -149,7 +149,6 @@ class JudgeGroup:
         from ..job import get_job_context
         from ..log import logger
 
-
         async def run_judge(judge: Evaluator) -> tuple[str, JudgmentResult | BaseException]:
             try:
                 result = await judge.evaluate(
@@ -163,7 +162,6 @@ class JudgeGroup:
                 return judge.name, e
 
         results = await asyncio.gather(*[run_judge(j) for j in self._judges])
-
 
         judgments: dict[str, JudgmentResult] = {}
         for name, result in results:
@@ -180,7 +178,6 @@ class JudgeGroup:
                     print(f"    reasoning: {result.reasoning}\n")
                 else:
                     print(f"  [{name}] ERROR: {result}\n")
-
 
         try:
             ctx = get_job_context()

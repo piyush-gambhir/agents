@@ -65,8 +65,6 @@ async def entrypoint(ctx: JobContext):
     participant_identity = os.getenv("SIP_PARTICIPANT_IDENTITY")
     outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
 
-
-
     if not session.room_io:
         raise RuntimeError(
             "session room_io is unavailable. Make sure you use dev or start commands"
@@ -78,7 +76,6 @@ async def entrypoint(ctx: JobContext):
         session,
         participant_identity=participant_identity or NOT_GIVEN,
     ) as detector:
-
         if phone_number and outbound_trunk_id and participant_identity:
             logger.info(f"creating SIP participant for {participant_identity}")
             await ctx.api.sip.create_sip_participant(

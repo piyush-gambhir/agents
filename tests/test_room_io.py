@@ -19,8 +19,6 @@ from livekit.agents.voice.room_io.types import NoiseCancellationParams
 pytestmark = pytest.mark.unit
 
 
-
-
 class _FakeRoom:
     def __init__(self) -> None:
         self._events: dict[str, list[object]] = defaultdict(list)
@@ -143,9 +141,6 @@ def _make_audio_input_stream(
     )
 
 
-
-
-
 @pytest.mark.asyncio
 async def test_participant_input_stream_aclose_unregisters_track_unpublished() -> None:
     room = _FakeRoom()
@@ -229,9 +224,6 @@ async def test_roomio_aclose_unregisters_disconnect_and_closes_transcription_out
     room_io._agent_tr_output.aclose.assert_awaited_once()
 
 
-
-
-
 @pytest.mark.asyncio
 async def test_direct_processor_lifecycle() -> None:
     """Direct FrameProcessor survives track transitions and is only closed on aclose()."""
@@ -244,7 +236,6 @@ async def test_direct_processor_lifecycle() -> None:
     track2, pub2, _ = _make_track_available_args(sid="TR_002")
 
     with patch("livekit.rtc.AudioStream.from_track", side_effect=lambda **kw: _MockAudioStream()):
-
         stream._on_track_available(track1, pub1, participant)
 
         assert stream._processor is processor
@@ -252,14 +243,12 @@ async def test_direct_processor_lifecycle() -> None:
         assert len(processor.stream_info_calls) == 1
         assert len(processor.credentials_calls) == 1
 
-
         stream._on_track_available(track2, pub2, participant)
 
         assert stream._processor is processor
         assert processor.close_calls == 0
         assert len(processor.stream_info_calls) == 2
         assert len(processor.credentials_calls) == 2
-
 
     await stream.aclose()
     assert processor.close_calls == 1
@@ -285,14 +274,12 @@ async def test_selector_processor_lifecycle() -> None:
     track2, pub2, _ = _make_track_available_args(sid="TR_002")
 
     with patch("livekit.rtc.AudioStream.from_track", side_effect=lambda **kw: _MockAudioStream()):
-
         stream._on_track_available(track1, pub1, participant)
 
         assert len(processors) == 1
         assert stream._processor is processors[0]
         assert len(processors[0].stream_info_calls) == 1
         assert len(processors[0].credentials_calls) == 1
-
 
         stream._on_track_available(track2, pub2, participant)
 
@@ -301,7 +288,6 @@ async def test_selector_processor_lifecycle() -> None:
     assert stream._processor is processors[1]
     assert len(processors[1].stream_info_calls) == 1
     assert len(processors[1].credentials_calls) == 1
-
 
     await stream.aclose()
     assert processors[1].close_calls == 1
@@ -324,12 +310,10 @@ async def test_selector_processor_track_disappears() -> None:
     assert stream._processor is processor
     assert len(processor.credentials_calls) == 1
 
-
     stream._on_track_unavailable(publication, participant)
 
     assert processor.close_calls == 1
     assert stream._processor is None
-
 
     room._token = "refreshed-token"
     room._server_url = "wss://refreshed.livekit.cloud"

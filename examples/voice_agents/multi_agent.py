@@ -20,14 +20,6 @@ from livekit.agents.llm import function_tool
 from livekit.agents.voice import MetricsCollectedEvent
 from livekit.plugins import deepgram, openai, silero
 
-
-
-
-
-
-
-
-
 logger = logging.getLogger("multi-agent")
 
 load_dotenv()
@@ -40,9 +32,6 @@ common_instructions = (
 
 @dataclass
 class StoryData:
-
-
-
     name: str | None = None
     location: str | None = None
 
@@ -57,7 +46,6 @@ class IntroAgent(Agent):
         )
 
     async def on_enter(self):
-
 
         self.session.generate_reply()
 
@@ -81,9 +69,6 @@ class IntroAgent(Agent):
 
         story_agent = StoryAgent(name, location)
 
-
-
-
         logger.info(
             "switching to the story agent with the provided user data: %s", context.userdata
         )
@@ -100,15 +85,12 @@ class StoryAgent(Agent):
             "do not end on a statement, where the user is not expected to respond."
             "when interrupted, ask if the user would like to continue or end."
             f"The user's name is {name}, from {location}.",
-
-
             llm=openai.realtime.RealtimeModel(voice="echo"),
             tts=None,
             chat_ctx=chat_ctx,
         )
 
     async def on_enter(self):
-
 
         self.session.generate_reply()
 
@@ -118,8 +100,6 @@ class StoryAgent(Agent):
         want anymore), call this function to end the conversation."""
 
         self.session.interrupt()
-
-
 
         await self.session.generate_reply(
             instructions=f"say goodbye to {context.userdata.name}", allow_interruptions=False
@@ -143,13 +123,11 @@ server.setup_fnc = prewarm
 async def entrypoint(ctx: JobContext):
     session = AgentSession[StoryData](
         vad=ctx.proc.userdata["vad"],
-
         llm=openai.LLM(model="gpt-4.1-mini"),
         stt=deepgram.STT(model="nova-3"),
         tts=openai.TTS(voice="echo"),
         userdata=StoryData(),
     )
-
 
     @session.on("metrics_collected")
     def _on_metrics_collected(ev: MetricsCollectedEvent):

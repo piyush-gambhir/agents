@@ -245,7 +245,6 @@ class TestToolContext:
         assert len(ctx.function_tools) == 3
         assert toolset in ctx.toolsets
 
-
         ctx_copy = ctx.copy()
         assert ctx == ctx_copy
         assert toolset in ctx_copy.toolsets
@@ -260,7 +259,6 @@ class TestToolContext:
     def test_toolset_duplicate_name_conflict(self):
         toolset = MockToolset1()
 
-
         @function_tool
         async def mock_tool_1() -> str:
             """Duplicate name, different instance"""
@@ -272,16 +270,13 @@ class TestToolContext:
     def test_toolset_equality(self):
         toolset = MockToolset1()
 
-
         ctx1 = ToolContext([toolset, mock_tool_3])
         ctx2 = ToolContext([mock_tool_3, toolset])
         assert ctx1 == ctx2
 
-
         ctx3 = ToolContext([MockToolset1()])
         ctx4 = ToolContext([MockToolset1()])
         assert ctx3 != ctx4
-
 
         ctx5 = ToolContext([toolset])
         ctx6 = ToolContext([mock_tool_1, mock_tool_2])
@@ -349,8 +344,6 @@ class TestToolExecution:
         }
 
     def test_field_constraints_preserved(self):
-
-
 
         @function_tool
         async def book(count: Annotated[int, Field(ge=1, le=10, description="how many")]) -> str:
@@ -444,7 +437,6 @@ class TestToolExecution:
         )
         assert args == ("hi", "yo")
 
-
         args, kwargs = prepare_function_arguments(fnc=mock_tool_1, json_arguments="{arg1: 'hi'}")
         assert args == ("hi", None)
 
@@ -463,10 +455,6 @@ class TestToolExecution:
         @function_tool
         async def remove_order_item(order_id: list[str]) -> str:
             return ",".join(order_id)
-
-
-
-
 
         leaked = '{"order_id": ["<|\\"|\\"O_WAAB70<|\\"|\\"]}'
 
@@ -496,7 +484,6 @@ class TestToolExecution:
 
         with pytest.raises(ValueError, match="expected dict"):
             parse_function_arguments("[1, 2, 3]")
-
 
         with pytest.raises(ValueError, match="non-JSON string"):
             parse_function_arguments('"just a string"')
@@ -531,7 +518,6 @@ class TestToolExecution:
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is False
 
-
         assert json.loads(result.fnc_call.arguments) == {"arg1": "hello", "opt_arg2": "world"}
 
     @pytest.mark.asyncio
@@ -560,9 +546,6 @@ class TestToolExecution:
         assert result.fnc_call_out.is_error is False
         assert result.fnc_call_out.output == "O_WAAB70"
 
-
-
-
         assert result.fnc_call.arguments != raw_broken
         parsed = json.loads(result.fnc_call.arguments)
         assert parsed == {"order_id": ["O_WAAB70"]}
@@ -582,7 +565,6 @@ class TestToolExecution:
 
         tool_ctx = ToolContext([take_int])
 
-
         raw_broken = '{arg1: "not_an_int"}'
         tool_call = FunctionToolCall(
             name="take_int", arguments=raw_broken, call_id="call-validate-fail"
@@ -590,10 +572,8 @@ class TestToolExecution:
 
         result = await execute_function_call(tool_call, tool_ctx)
 
-
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is True
-
 
         assert result.fnc_call.arguments != raw_broken
         parsed = json.loads(result.fnc_call.arguments)
@@ -791,7 +771,6 @@ class TestExecuteFunctionCallValidationErrors:
         assert result.fnc_call_out is not None
         assert result.fnc_call_out.is_error is True
 
-
         assert "An internal error occurred" not in result.fnc_call_out.output
         assert "arg1" in result.fnc_call_out.output
 
@@ -950,7 +929,6 @@ class TestAsyncToolOptions:
             _resolve_async_tool_options,
         )
 
-
         resolved = _resolve_async_tool_options(None)
         assert resolved == _ASYNC_TOOL_OPTIONS_DEFAULTS
 
@@ -1018,7 +996,6 @@ class TestAsyncToolOptions:
         session, activity = self._mock_scope(agent_update="agent")
         ts._attach_activity(activity=activity, session=session)
 
-
         assert ts._executor._tool_options["update_template"] == "agent"
 
     def test_toolset_inherits_session_when_no_agent_no_override(self):
@@ -1030,7 +1007,6 @@ class TestAsyncToolOptions:
         assert ts._executor._tool_options["update_template"] == "session"
 
     def test_session_scoped_toolset_skips_agent(self):
-
 
         from livekit.agents.llm.async_toolset import AsyncToolset
 
@@ -1048,7 +1024,6 @@ class TestAsyncToolOptions:
         default = _ToolExecutor()
         mapping = _build_executor_map(toolsets=[ts], default=default)
 
-
         assert mapping["mock_tool_1"] is ts._executor
 
         assert mapping.get("not_in_map") is None
@@ -1061,11 +1036,9 @@ class TestAsyncToolOptions:
         inner = AsyncToolset(id="inner", tools=[mock_tool_2])
         outer_async = AsyncToolset(id="outer", tools=[mock_tool_1, inner])
 
-
         mapping = _build_executor_map(toolsets=[outer_async], default=_ToolExecutor())
         assert mapping["mock_tool_1"] is outer_async._executor
         assert mapping["mock_tool_2"] is inner._executor
-
 
         plain = Toolset(id="plain", tools=[mock_tool_3])
         default = _ToolExecutor()
@@ -1073,8 +1046,6 @@ class TestAsyncToolOptions:
         assert mapping2["mock_tool_3"] is default
 
     def test_session_stores_resolved_options(self):
-
-
 
         from livekit.agents.voice.agent_session import AgentSession
 
@@ -1093,9 +1064,6 @@ class TestAsyncToolOptions:
         )
         assert is_given(agent._async_tool_options)
         assert agent._async_tool_options["update_template"] == "from-agent"
-
-
-
 
 
 def _make_run_context(
@@ -1418,7 +1386,6 @@ class TestCancelAll:
         cancellable = _register_fake(executor, "c", "tool_c", allow_cancellation=True)
         non_cancellable = _register_fake(executor, "nc", "tool_nc", allow_cancellation=False)
         try:
-
             import asyncio as _asyncio
 
             drain_task = _asyncio.create_task(executor.drain())

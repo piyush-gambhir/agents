@@ -1,9 +1,5 @@
 from typing import Literal
 
-
-
-
-
 TTSEncoding = Literal["pcm_s16le"]
 """
 .. deprecated::
@@ -86,10 +82,6 @@ TTSVoiceEmotion = Literal[
 
 def _is_sonic_3(model: str) -> bool:
     return model.startswith("sonic-3")
-
-
-
-
 
 
 STTEncoding = Literal["pcm_s16le"]

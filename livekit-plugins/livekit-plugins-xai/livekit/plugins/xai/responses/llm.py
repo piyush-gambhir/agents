@@ -17,7 +17,6 @@ XAI_BASE_URL = "https://api.x.ai/v1"
 
 
 class LLM(openai.responses.LLM):
-
     _provider_tool_type = XAITool
 
     def __init__(

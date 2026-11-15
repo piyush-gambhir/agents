@@ -175,7 +175,6 @@ def collect_usage(ev: AgentMetrics) -> None:
         if ev.num_requests:
             _interruption_num_requests.add(ev.num_requests, attributes=attrs)
 
-
     if isinstance(ev, (STTMetrics, TTSMetrics, RealtimeModelMetrics)):
         if ev.acquire_time > 0:
             conn_attrs = _model_attrs(ev.metadata)

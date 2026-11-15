@@ -22,11 +22,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
 COLORS = [
     "\033[36m",
     "\033[32m",
@@ -76,7 +71,6 @@ class TextStreamPrinter:
 
             color = self._get_color(chunk.participant_identity)
             if self._current_segment_id != chunk.segment_id:
-
                 overwrite = (
                     "overwrite"
                     if chunk.segment_id in self._segment_to_stream
@@ -84,7 +78,6 @@ class TextStreamPrinter:
                     else "new"
                 )
                 type = "transcript" if chunk.track_id else "chat"
-
 
                 line_header = header.format(
                     participant_identity=chunk.participant_identity,
@@ -117,7 +110,6 @@ class TextStreamPrinter:
                 await self._text_chunk_queue.put(
                     Chunk(stream_id, participant_identity, track_id, segment_id, content=chunk)
                 )
-
 
             final = reader.info.attributes.get(ATTRIBUTE_TRANSCRIPTION_FINAL, "null")
             await self._text_chunk_queue.put(

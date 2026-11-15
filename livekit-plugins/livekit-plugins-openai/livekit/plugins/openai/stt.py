@@ -55,8 +55,6 @@ from .log import logger
 from .models import STTModels
 from .utils import AsyncAzureADTokenProvider
 
-
-
 _max_session_duration = 10 * 60
 
 _delta_transcript_interval = 0.5
@@ -65,7 +63,6 @@ NUM_CHANNELS = 1
 
 
 def _is_whisper_realtime(model: str) -> bool:
-
 
     return model.startswith("gpt-realtime-whisper")
 
@@ -372,7 +369,6 @@ class STT(stt.STT):
             "transcription": transcription_config,
         }
 
-
         if not _is_whisper_realtime(self._opts.model):
             input_config["turn_detection"] = self._opts.turn_detection
 
@@ -429,7 +425,6 @@ class STT(stt.STT):
 
             format = "json"
             if self._opts.model == "whisper-1":
-
                 format = "verbose_json"
 
             resp = await self._client.audio.transcriptions.create(
@@ -500,7 +495,6 @@ class SpeechStream(stt.SpeechStream):
         ) -> None:
             nonlocal closing_ws
 
-
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=SAMPLE_RATE,
                 num_channels=NUM_CHANNELS,
@@ -550,7 +544,6 @@ class SpeechStream(stt.SpeechStream):
                 ):
                     if closing_ws:
                         return
-
 
                     raise APIStatusError(
                         message="OpenAI Realtime STT connection closed unexpectedly",
@@ -627,7 +620,6 @@ class SpeechStream(stt.SpeechStream):
                                 audio_duration = (end_ms - start_ms) / 1000.0
                             del item_audio_timing[item_id]
 
-
                         usage = data.get("usage", {})
                         input_tokens = usage.get("input_tokens", 0)
                         output_tokens = usage.get("output_tokens", 0)
@@ -643,7 +635,6 @@ class SpeechStream(stt.SpeechStream):
                                 ),
                             )
                         )
-
 
                         if time.time() - connected_at > _max_session_duration:
                             logger.info("resetting Realtime STT session due to timeout")
@@ -683,7 +674,6 @@ class SpeechStream(stt.SpeechStream):
                         (tasks_group, wait_reconnect_task),
                         return_when=asyncio.FIRST_COMPLETED,
                     )
-
 
                     for task in done:
                         if task != wait_reconnect_task:

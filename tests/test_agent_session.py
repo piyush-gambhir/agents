@@ -92,9 +92,7 @@ async def test_events_and_metrics() -> None:
     actions = FakeActions()
     actions.add_user_speech(0.5, 2.5, "Hello, how are you?", stt_delay=0.2)
     actions.add_llm("I'm doing well, thank you!", ttft=0.1, duration=0.3)
-    actions.add_tts(
-        2.0, ttfb=0.2, duration=0.3
-    )
+    actions.add_tts(2.0, ttfb=0.2, duration=0.3)
 
     session = create_session(actions, speed_factor=speed)
     agent = MyAgent()
@@ -113,7 +111,6 @@ async def test_events_and_metrics() -> None:
 
     t_origin = await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-
     assert len(conversation_events) == 3
     assert conversation_events[0].item.type == "agent_handoff"
     assert conversation_events[1].item.type == "message"
@@ -125,19 +122,16 @@ async def test_events_and_metrics() -> None:
     assert conversation_events[2].item.text_content == "I'm doing well, thank you!"
     check_timestamp(conversation_events[2].created_at - t_origin, 5.5, speed_factor=speed)
 
-
     assert len(user_transcription_events) >= 1
     assert user_transcription_events[-1].transcript == "Hello, how are you?"
     assert user_transcription_events[-1].is_final is True
     check_timestamp(user_transcription_events[-1].created_at - t_origin, 2.7, speed_factor=speed)
-
 
     assert len(user_state_events) == 2
     check_timestamp(user_state_events[0].created_at - t_origin, 0.5, speed_factor=speed)
     assert user_state_events[0].new_state == "speaking"
     check_timestamp(user_state_events[1].created_at - t_origin, 3.0, speed_factor=speed)
     assert user_state_events[1].new_state == "listening"
-
 
     assert len(agent_state_events) == 4
     assert agent_state_events[0].old_state == "initializing"
@@ -148,7 +142,6 @@ async def test_events_and_metrics() -> None:
     check_timestamp(agent_state_events[2].created_at - t_origin, 3.5, speed_factor=speed)
     assert agent_state_events[3].new_state == "listening"
     check_timestamp(agent_state_events[3].created_at - t_origin, 5.5, speed_factor=speed)
-
 
     metrics_events = [ev for ev in metrics_events if ev.metrics.type != "vad_metrics"]
     assert len(metrics_events) == 3
@@ -202,9 +195,7 @@ async def test_tool_call() -> None:
     assert agent_state_events[0].new_state == "listening"
     assert agent_state_events[1].new_state == "thinking"
     assert agent_state_events[2].new_state == "speaking"
-    assert (
-        agent_state_events[3].new_state == "thinking"
-    )
+    assert agent_state_events[3].new_state == "thinking"
     check_timestamp(agent_state_events[3].created_at - t_origin, 5.5, speed_factor=speed)
     assert agent_state_events[4].new_state == "speaking"
     assert agent_state_events[5].new_state == "listening"
@@ -213,7 +204,6 @@ async def test_tool_call() -> None:
     assert tool_executed_events[0].function_calls[0].name == "get_weather"
     assert tool_executed_events[0].function_calls[0].arguments == '{"location": "Tokyo"}'
     assert tool_executed_events[0].function_calls[0].call_id == "1"
-
 
     chat_ctx_items = agent.chat_ctx.items
     assert len(chat_ctx_items) == 7
@@ -251,7 +241,6 @@ async def test_interruption(
     actions.add_llm("Here is a long story for you ... the end.")
     actions.add_tts(10.0)
     actions.add_user_speech(5.0, 6.0, "Stop!", stt_delay=0.2)
-
 
     session = create_session(
         actions,
@@ -291,7 +280,6 @@ async def test_interruption(
     assert len(playback_finished_events) == 1
     assert playback_finished_events[0].interrupted is True
     if not resume_false_interruption:
-
         check_timestamp(playback_finished_events[0].playback_position, 2.0, speed_factor=speed)
 
 
@@ -303,8 +291,6 @@ async def test_interruption_options() -> None:
     actions.add_tts(5.0)
     actions.add_user_speech(5.0, 6.0, "Stop!")
     actions.add_user_speech(6.5, 7.5, "ok, stop!", stt_delay=0.0)
-
-
 
     session = create_session(
         actions,
@@ -319,7 +305,6 @@ async def test_interruption_options() -> None:
     assert len(playback_finished_events) == 1
     assert playback_finished_events[0].interrupted is True
     check_timestamp(playback_finished_events[0].playback_position, 4.0, speed_factor=speed)
-
 
     session = create_session(
         actions,
@@ -445,7 +430,6 @@ async def test_interruption_before_speaking(
     assert agent.chat_ctx.items[2].role == "user"
     assert agent.chat_ctx.items[2].text_content == "Tell me a story."
 
-
     assert agent.chat_ctx.items[3].type == "message"
     assert agent.chat_ctx.items[3].role == "user"
     assert agent.chat_ctx.items[3].text_content == "Stop!"
@@ -474,12 +458,9 @@ async def test_interrupt_before_speaking_with_pausable_audio() -> None:
 
     t_origin = await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-
     assert not any(ev.new_state == "speaking" for ev in agent_state_events), (
         "stale reply should have been paused before the first frame reached the transport"
     )
-
-
 
     assert len(agent_state_events) == 5
     assert agent_state_events[0].old_state == "initializing"
@@ -488,13 +469,9 @@ async def test_interrupt_before_speaking_with_pausable_audio() -> None:
     assert agent_state_events[2].new_state == "listening"
     check_timestamp(agent_state_events[2].created_at - t_origin, 3.5, speed_factor=speed)
 
-
-
     assert len(playback_finished_events) == 1
     assert playback_finished_events[0].interrupted is True
     assert playback_finished_events[0].playback_position == 0.0
-
-
 
     user_messages = [
         item for item in agent.chat_ctx.items if item.type == "message" and item.role == "user"
@@ -528,15 +505,10 @@ async def test_false_interruption_before_speaking_resumes() -> None:
 
     t_origin = await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-
     speaking_events = [ev for ev in agent_state_events if ev.new_state == "speaking"]
     assert len(speaking_events) == 1
 
-
-
     check_timestamp(speaking_events[0].created_at - t_origin, 3.8, speed_factor=speed)
-
-
 
     assert len(playback_finished_events) == 1
     assert playback_finished_events[0].interrupted is False
@@ -563,8 +535,6 @@ async def test_generate_reply() -> None:
         tool_calls=[FunctionToolCall(name="goodbye", arguments="", call_id="1")],
     )
 
-
-
     session = create_session(actions, speed_factor=speed)
     agent = MyAgent(generate_reply_on_enter=True, say_on_user_turn_completed=True)
 
@@ -579,7 +549,6 @@ async def test_generate_reply() -> None:
         run_session(session, agent, drain_delay=0.5), timeout=SESSION_TIMEOUT
     )
 
-
     assert len(playback_finished_events) == 3
     assert playback_finished_events[0].interrupted is False
     check_timestamp(playback_finished_events[0].playback_position, 2.0, speed_factor=speed)
@@ -588,10 +557,8 @@ async def test_generate_reply() -> None:
     assert playback_finished_events[2].interrupted is False
     check_timestamp(playback_finished_events[2].playback_position, 3.0, speed_factor=speed)
 
-
     assert len(tool_executed_events) == 1
     assert tool_executed_events[0].function_calls[0].name == "goodbye"
-
 
     assert len(conversation_events) == 5
     assert conversation_events[0].item.type == "agent_handoff"
@@ -615,7 +582,6 @@ async def test_generate_reply() -> None:
     check_timestamp(
         conversation_events[4].created_at - t_origin, 9.0, speed_factor=speed, max_abs_diff=1.0
     )
-
 
     assert len(agent.chat_ctx.items) == 8
     assert agent.chat_ctx.items[0].type == "message"
@@ -650,8 +616,6 @@ async def test_aec_warmup() -> None:
     actions.add_user_speech(0.5, 2.5, "Tell me a story.")
     actions.add_llm("Here is a long story for you ... the end.")
     actions.add_tts(15.0)
-
-
 
     actions.add_user_speech(4.0, 5.0, "Stop!", stt_delay=0.2)
 
@@ -692,7 +656,6 @@ async def test_start_boundary_does_not_block_vad_interruption() -> None:
     actions.add_user_speech(0.5, 2.5, "Tell me a story.")
     actions.add_llm("Here is a long story for you ... the end.")
     actions.add_tts(15.0)
-
 
     actions.add_user_speech(4.0, 5.0, "Stop!", stt_delay=0.2)
 
@@ -741,14 +704,11 @@ async def test_backchannel_boundary_suppresses_start_boundary_backchannel() -> N
     try:
         recognition.on_start_of_agent_speech(started_at=time.time())
 
-
         await recognition._on_overlap_speech_event(_backchannel_event())
         assert hooks.interruptions == []
 
-
         await recognition._on_overlap_speech_event(_interruption_event())
         assert len(hooks.interruptions) == 1
-
 
         await asyncio.sleep(0.06)
         await recognition._on_overlap_speech_event(_backchannel_event())
@@ -990,9 +950,6 @@ async def test_preemptive_generation(preemptive_generation: dict, expected_laten
     actions.add_llm("I'm doing great, thank you!", ttft=0.1, duration=0.3)
     actions.add_tts(3.0, ttfb=0.3)
 
-
-
-
     session = create_session(
         actions,
         speed_factor=speed,
@@ -1068,7 +1025,6 @@ async def test_interrupt_during_on_user_turn_completed(
     assert agent_state_events[0].old_state == "initializing"
     assert agent_state_events[0].new_state == "listening"
     if on_user_turn_completed_delay == 0.0:
-
         assert len(agent_state_events) == 6
         assert agent_state_events[1].new_state == "thinking"
         assert agent_state_events[2].new_state == "listening"
@@ -1145,7 +1101,6 @@ async def test_invalid_tool_arguments_surface_as_tool_error() -> None:
     actions = FakeActions()
     actions.add_user_speech(0.5, 2.5, "What's the weather?")
 
-
     actions.add_llm(
         content="",
         tool_calls=[
@@ -1161,7 +1116,6 @@ async def test_invalid_tool_arguments_surface_as_tool_error() -> None:
 
     await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-
     assert len(tool_executed_events) == 1
     ev = tool_executed_events[0]
     assert len(ev.function_calls) == 1
@@ -1170,14 +1124,10 @@ async def test_invalid_tool_arguments_surface_as_tool_error() -> None:
     output = ev.function_call_outputs[0]
     assert output.is_error is True
 
-
-
     assert "An internal error occurred" not in output.output
     assert "get_weather" in output.output
 
     assert "location" in output.output
-
-
 
     items = agent.chat_ctx.items
     function_calls = [i for i in items if i.type == "function_call"]
@@ -1230,9 +1180,6 @@ async def test_tool_internal_exception_returns_generic_error() -> None:
     assert output.output == "An internal error occurred"
     assert "kaboom" not in output.output
     assert "secret" not in output.output
-
-
-
 
 
 class _TestRecognitionHooks:
@@ -1345,7 +1292,6 @@ async def test_silent_tool_call_pause_state_does_not_leak_into_tool_reply() -> N
     actions = FakeActions()
     actions.add_user_speech(0.1, 0.2, "What's the weather in Tokyo?", stt_delay=0.05)
 
-
     actions.add_llm(
         content="",
         tool_calls=[
@@ -1358,8 +1304,6 @@ async def test_silent_tool_call_pause_state_does_not_leak_into_tool_reply() -> N
         ttft=0.05,
         duration=1.0,
     )
-
-
 
     actions.add_user_speech(0.85, 2.0, "", stt_delay=0.05)
 
@@ -1393,8 +1337,6 @@ async def test_silent_tool_call_pause_state_does_not_leak_into_tool_reply() -> N
     transitions = [(ev.old_state, ev.new_state) for ev in agent_state_events]
     silent_step_finished = transitions.index(("speaking", "listening"))
 
-
-
     assert transitions[silent_step_finished + 1] == ("listening", "speaking")
     assert false_interruption_events
     assert false_interruption_events[-1].resumed is True
@@ -1422,7 +1364,6 @@ async def test_pipeline_multi_segment_flush() -> None:
     actions = FakeActions()
     actions.add_user_speech(0.5, 2.5, "Hello, how are you?", stt_delay=0.2)
 
-
     actions.add_tts(1.0, input="Hello there. ", ttfb=0.1, duration=0.1)
     actions.add_tts(1.0, input="How are you?", ttfb=0.1, duration=0.1)
 
@@ -1434,10 +1375,8 @@ async def test_pipeline_multi_segment_flush() -> None:
 
     await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
 
-
     assert len(playback_finished_events) == 2
     assert all(not ev.interrupted for ev in playback_finished_events)
-
 
     assistant_msgs = [
         it for it in agent.chat_ctx.items if it.type == "message" and it.role == "assistant"
@@ -1463,8 +1402,6 @@ async def test_pipeline_multi_segment_interrupted() -> None:
     asyncio.get_event_loop().call_later(5 / speed, session.interrupt)
 
     await asyncio.wait_for(run_session(session, agent, drain_delay=0.5), timeout=SESSION_TIMEOUT)
-
-
 
     assert len(playback_finished_events) == 1
     assert playback_finished_events[0].interrupted is True

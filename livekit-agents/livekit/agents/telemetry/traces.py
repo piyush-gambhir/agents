@@ -133,7 +133,6 @@ class _TraceLevelLoggingHandler(LoggingHandler):
     def _translate(self, record: logging.LogRecord) -> OTelLogRecord:
         log_record = super()._translate(record)
 
-
         if record.levelno == TRACE_LEVEL:
             log_record.severity_number = SeverityNumber.TRACE
         return log_record
@@ -212,9 +211,6 @@ def _setup_cloud_tracer(
     )
 
     if enable_traces:
-
-
-
         tracer_provider: trace_api.TracerProvider
         if isinstance(
             tracer._tracer_provider,
@@ -223,7 +219,6 @@ def _setup_cloud_tracer(
             tracer_provider = trace_sdk.TracerProvider(resource=resource)
             set_tracer_provider(tracer_provider)
         else:
-
             tracer_provider = tracer._tracer_provider
             if isinstance(tracer_provider, trace_sdk.TracerProvider):
                 tracer_provider.resource.merge(resource)
@@ -237,8 +232,6 @@ def _setup_cloud_tracer(
         if isinstance(tracer_provider, trace_sdk.TracerProvider):
             tracer_provider.add_span_processor(_MetadataSpanProcessor(metadata))
             tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
-
-
 
     logger_provider = get_logger_provider()
     if not isinstance(logger_provider, LoggerProvider):
@@ -258,7 +251,6 @@ def _setup_cloud_tracer(
 
         root = logging.getLogger()
         root.addHandler(handler)
-
 
     current_meter_provider = metrics_api.get_meter_provider()
     if not isinstance(current_meter_provider, SdkMeterProvider):
@@ -283,10 +275,6 @@ def _setup_cloud_tracer(
 def _chat_ctx_to_otel_events(chat_ctx: ChatContext) -> list[tuple[str, Attributes]]:
     role_to_event = {
         "system": trace_types.EVENT_GEN_AI_SYSTEM_MESSAGE,
-
-
-
-
         "developer": trace_types.EVENT_GEN_AI_SYSTEM_MESSAGE,
         "user": trace_types.EVENT_GEN_AI_USER_MESSAGE,
         "assistant": trace_types.EVENT_GEN_AI_ASSISTANT_MESSAGE,
@@ -295,7 +283,6 @@ def _chat_ctx_to_otel_events(chat_ctx: ChatContext) -> list[tuple[str, Attribute
     events: list[tuple[str, Attributes]] = []
     for item in chat_ctx.items:
         if item.type == "message" and (event_name := role_to_event.get(item.role)):
-
             events.append((event_name, {"content": item.text_content or ""}))
         elif item.type == "function_call":
             events.append(
@@ -560,7 +547,6 @@ async def _upload_session_report(
     if not recording_options["transcript"] and not has_audio:
         return
 
-
     access_token = (
         api.AccessToken()
         .with_observability_grants(api.ObservabilityGrants(write=True))
@@ -671,7 +657,6 @@ def _shutdown_telemetry(timeout: float = _TELEMETRY_SHUTDOWN_TIMEOUT) -> None:
     - https://github.com/open-telemetry/opentelemetry-python/issues/4623
       (TracerProvider.shutdown() has no configurable timeout — still open)
     """
-
 
     root = logging.getLogger()
     for h in list(root.handlers):

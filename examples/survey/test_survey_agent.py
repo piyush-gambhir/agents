@@ -62,9 +62,6 @@ from .agent import (
     Userdata,
 )
 
-
-
-
 _TASK_TRANSITION_DELAY = 0.5
 
 
@@ -77,14 +74,7 @@ def _llm_model() -> llm.LLM:
 
 def _userdata() -> Userdata:
 
-
-
     return Userdata(filename="results-test.csv", candidate_name="", task_results={})
-
-
-
-
-
 
 
 SessionStarter = Callable[[Agent], Awaitable[AgentSession]]
@@ -179,11 +169,6 @@ class _SingleTaskAgent(Agent):
         await self._task
 
 
-
-
-
-
-
 @pytest.mark.asyncio
 async def test_intro_task_in_isolation(session: SessionStarter) -> None:
     """IntroTask records the candidate's name via record_intro."""
@@ -198,7 +183,6 @@ async def test_intro_task_in_isolation(session: SessionStarter) -> None:
         ),
     )
 
-
     assert sess.userdata.candidate_name.lower() == "alice"
 
 
@@ -212,7 +196,6 @@ async def test_commute_task_records_can_commute(session: SessionStarter) -> None
         expected="record_commute_flexibility",
         initial="Yes, I can commute three days a week. I usually take the subway.",
     )
-
 
     args = json.loads(calls["record_commute_flexibility"].arguments)
     assert args["can_commute"] is True
@@ -260,11 +243,6 @@ async def test_behavioral_task_completes_after_three_records(
         ),
         max_turns=6,
     )
-
-
-
-
-
 
 
 class _SurveyAgentForTesting(Agent):
@@ -316,13 +294,6 @@ async def test_full_task_group_flow(session: SessionStarter) -> None:
 
     sess = await session(_SurveyAgentForTesting(completed_ids=completed_ids, done=done))
 
-
-
-
-
-
-
-
     await _drive_until_called(
         sess,
         expected="record_intro",
@@ -348,8 +319,6 @@ async def test_full_task_group_flow(session: SessionStarter) -> None:
             "last three at Hooli leading an API team."
         ),
     )
-
-
 
     await asyncio.wait_for(done.wait(), timeout=10)
 

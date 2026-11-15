@@ -13,7 +13,6 @@ from livekit import rtc
 from ..log import logger
 from .aio.utils import cancel_and_wait
 
-
 AudioBuffer = list[rtc.AudioFrame] | rtc.AudioFrame
 
 combine_frames = rtc.combine_audio_frames
@@ -161,7 +160,6 @@ class AudioByteStream:
                 )
             )
 
-
             if self._current_bytes_per_frame < self._target_bytes_per_frame:
                 self._current_bytes_per_frame = min(
                     self._current_bytes_per_frame * 2, self._target_bytes_per_frame
@@ -252,7 +250,6 @@ async def audio_frames_from_file(
     finally:
         await cancel_and_wait(reader_task)
         await decoder.aclose()
-
 
     if reader_task.done() and not reader_task.cancelled():
         if exc := reader_task.exception():

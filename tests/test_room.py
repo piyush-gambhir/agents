@@ -101,9 +101,6 @@ async def _test_wait_disconnect(wait_fn: Callable[[rtc.Room], Awaitable[object]]
         await asyncio.wait_for(task, timeout=TIMEOUT)
 
 
-
-
-
 @pytest.mark.usefixtures("livekit_server")
 class TestWaitForParticipant:
     async def test_joins_after(self):
@@ -134,11 +131,9 @@ class TestWaitForParticipant:
             task = asyncio.ensure_future(wait_for_participant(room_a, identity="target"))
             await asyncio.sleep(0.3)
 
-
             async with connect_room("decoy", name):
                 await asyncio.sleep(0.3)
                 assert not task.done()
-
 
                 async with connect_room("target", name):
                     result = await asyncio.wait_for(task, timeout=TIMEOUT)
@@ -156,11 +151,9 @@ class TestWaitForParticipant:
             )
             await asyncio.sleep(0.3)
 
-
             async with connect_room("standard", name):
                 await asyncio.sleep(0.3)
                 assert not task.done()
-
 
                 async with connect_room("agent-p", name, kind="agent", agent=True):
                     result = await asyncio.wait_for(task, timeout=TIMEOUT)
@@ -169,9 +162,6 @@ class TestWaitForParticipant:
     async def test_disconnect(self):
         """Room disconnects while waiting -> RuntimeError raised."""
         await _test_wait_disconnect(wait_for_participant)
-
-
-
 
 
 @pytest.mark.usefixtures("livekit_server")
@@ -205,9 +195,6 @@ class TestWaitForTrackPublication:
         await _test_wait_disconnect(wait_for_track_publication)
 
 
-
-
-
 @pytest.mark.usefixtures("livekit_server")
 class TestWaitForAgent:
     async def test_agent_joins(self):
@@ -221,11 +208,6 @@ class TestWaitForAgent:
                 result = await asyncio.wait_for(task, timeout=TIMEOUT)
                 assert result.identity == "my-agent"
                 assert result.kind == rtc.ParticipantKind.PARTICIPANT_KIND_AGENT
-
-
-
-
-
 
 
 _AGENT_IDENTITY = "agent"
@@ -248,9 +230,6 @@ async def _agent_publishing_tone(agent_room: rtc.Room):
         track_publish_options=rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE),
         track_name=_TONE_NAME,
     )
-
-
-
 
     await output._audio_source.aclose()
     output._audio_source = tone.source
@@ -326,7 +305,6 @@ class TestReconnect:
             async with AudioEnergyMonitor.watch(track) as mon:
                 await mon.wait_for_audio(min_rms=_AUDIO_RMS_THRESHOLD, timeout=5.0)
 
-
                 publications_before = _agent_audio_publications(user_room)
                 assert len(publications_before) == 1, publications_before
                 sid_before = publications_before[0].sid
@@ -336,23 +314,18 @@ class TestReconnect:
 
                 await simulate_resume(agent_room)
 
-
-
                 await _wait_back_to_connected(agent_room, timeout=15.0)
-
 
                 await asyncio.sleep(1.0)
                 assert reconnected_fired.is_set(), (
                     "RoomEvent::Reconnected should be fired on a resume"
                 )
 
-
                 publications_after = _agent_audio_publications(user_room)
                 assert len(publications_after) == 1, publications_after
                 assert publications_after[0].sid == sid_before, (
                     "publication SID changed on resume — engine should have preserved it"
                 )
-
 
                 await mon.assert_audio_continuous(min_rms=_AUDIO_RMS_THRESHOLD, duration=1.5)
 
@@ -380,7 +353,6 @@ class TestReconnect:
                 publications_before = _agent_audio_publications(user_room)
                 assert len(publications_before) == 1
 
-
                 reconnect_count = 0
 
                 def _count(*_args) -> None:
@@ -392,13 +364,7 @@ class TestReconnect:
                 await simulate_full_reconnect(agent_room)
                 await wait_for_event(agent_room, "reconnected", timeout=20.0)
 
-
-
                 new_track = await _await_subscribed_audio(user_room)
-
-
-
-
 
                 await asyncio.sleep(0.5)
                 publications_after = _agent_audio_publications(user_room)

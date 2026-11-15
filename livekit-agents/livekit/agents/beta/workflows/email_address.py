@@ -37,7 +37,6 @@ class GetEmailTask(AgentTask[GetEmailResult]):
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
         require_confirmation: NotGivenOr[bool] = NOT_GIVEN,
-
         extra_instructions: str = "",
     ) -> None:
         if not is_given(instructions):
@@ -51,7 +50,6 @@ class GetEmailTask(AgentTask[GetEmailResult]):
                 extra=instructions.extra,
                 _modality_specific=Instructions(audio=AUDIO_SPECIFIC, text=TEXT_SPECIFIC),
                 _confirmation=Instructions(
-
                     audio=CONFIRMATION_INSTRUCTION if require_confirmation is not False else "",
                     text=CONFIRMATION_INSTRUCTION if require_confirmation is True else "",
                 ),
@@ -141,7 +139,6 @@ class GetEmailTask(AgentTask[GetEmailResult]):
 EMAIL_REGEX = (
     r"^[A-Za-z0-9][A-Za-z0-9._%+\-]*@(?:[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$"
 )
-
 
 
 PERSONA = "You are only a single step in a broader system, responsible solely for capturing an email address."

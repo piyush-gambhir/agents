@@ -18,15 +18,12 @@ from .judge import (
 )
 
 __all__ = [
-
     "EvaluationResult",
     "Evaluator",
     "JudgeGroup",
-
     "Judge",
     "JudgmentResult",
     "Verdict",
-
     "accuracy_judge",
     "coherence_judge",
     "conciseness_judge",

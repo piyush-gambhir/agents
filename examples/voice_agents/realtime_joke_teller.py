@@ -129,7 +129,6 @@ async def tell_joke(category: str = "Any") -> dict[str, Any]:
             Available categories are: Any, Misc, Programming, Dark, Pun, Spooky, Christmas
     """
     try:
-
         category_map = {
             "puns": "Pun",
             "pun": "Pun",
@@ -210,9 +209,7 @@ async def entrypoint(ctx: agents.JobContext):
             if shutdown_future in done:
                 break
 
-
             agent_mode = os.getenv("AGENT_MODE", "realtime").lower()
-
 
             if agent_mode == "pipeline":
                 print("🔧 Using PIPELINE mode: STT + LLM + TTS")
@@ -274,7 +271,6 @@ async def entrypoint(ctx: agents.JobContext):
 if __name__ == "__main__":
     import sys
 
-
     mode = "realtime"
     if "--mode" in sys.argv:
         idx = sys.argv.index("--mode")
@@ -284,13 +280,10 @@ if __name__ == "__main__":
             sys.argv.pop(idx)
             sys.argv.pop(idx)
 
-
     if mode not in ["realtime", "pipeline"]:
         print(f"Error: Invalid mode '{mode}'. Must be 'realtime' or 'pipeline'")
         sys.exit(1)
 
-
     os.environ["AGENT_MODE"] = mode
-
 
     agents.cli.run_app(server)

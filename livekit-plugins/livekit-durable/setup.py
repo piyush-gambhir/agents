@@ -52,7 +52,6 @@ class CMakeBuild(build_ext):
         print(f"cmake_args: {cmake_args}")
 
         if sys.platform.startswith("darwin"):
-
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]

@@ -10,7 +10,6 @@ def create_mock_room() -> Any:
     MockRoom = create_autospec(rtc.Room, instance=True)
     MockRoom.local_participant = create_autospec(rtc.LocalParticipant, instance=True)
 
-
     MockRoom.local_participant.sid = ""
     MockRoom.local_participant.identity = "agent"
     MockRoom._info = create_autospec(rtc.room.proto_room.RoomInfo, instance=True)  # type: ignore

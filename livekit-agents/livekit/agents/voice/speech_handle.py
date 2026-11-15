@@ -44,7 +44,6 @@ class SpeechHandle:
 
         self._generations: list[asyncio.Future[None]] = []
 
-
         self._tasks: list[asyncio.Task] = []
         self._chat_items: list[llm.ChatItem] = []
         self._num_steps = 1
@@ -161,7 +160,6 @@ class SpeechHandle:
         This is appropriate to call when you want to ensure the speech output
         has entirely played out, including any tool calls and response follow-ups."""
 
-
         from .agent import _get_activity_task_info
 
         if task := asyncio.current_task():
@@ -276,9 +274,6 @@ class SpeechHandle:
     def _mark_done(self) -> None:
         with contextlib.suppress(asyncio.InvalidStateError):
             self._done_fut.set_result(None)
-
-
-
 
         if self._generations:
             self._mark_generation_done()

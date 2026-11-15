@@ -142,7 +142,6 @@ class _ContextLogFieldsFilter(logging.Filter):
                 if ctx != self.job_ctx:
                     return True
 
-
         for key, value in self.job_ctx._log_fields.items():
             if not hasattr(record, key):
                 setattr(record, key, value)
@@ -154,7 +153,6 @@ class JobContext:
     _PARTICIPANT_ENTRYPOINT_CALLBACK = Callable[
         ["JobContext", rtc.RemoteParticipant], Coroutine[None, None, None]
     ]
-
 
     def __init__(
         self,
@@ -243,7 +241,6 @@ class JobContext:
         if not replay:
             return
 
-
         from opentelemetry.sdk._logs import LoggingHandler
 
         for h in logging.getLogger().handlers:
@@ -262,13 +259,11 @@ class JobContext:
 
         c = AgentsConsole.get_instance()
 
-
         if (recorder_io := session._recorder_io) and recorder_io.recording:
             logger.warning("recorder_io is still recording at session end, closing it")
             await recorder_io.aclose()
 
         report = self.make_session_report(session)
-
 
         if c.enabled and c.record:
             try:
@@ -301,7 +296,6 @@ class JobContext:
                 logger.exception("failed to upload the session report to LiveKit Cloud")
 
     def _on_cleanup(self) -> None:
-
 
         if self._early_log_handler is not None and not self._recording_initialized:
             try:
@@ -495,7 +489,6 @@ class JobContext:
         If the participant has already joined, the function will return immediately.
         """
 
-
         if not self._room.isconnected():
             await self.connect()
 
@@ -509,7 +502,6 @@ class JobContext:
         auto_subscribe: AutoSubscribe = AutoSubscribe.SUBSCRIBE_ALL,
         rtc_config: rtc.RtcConfiguration | None = None,
         single_peer_connection: bool | None = None,
-
         e2ee: rtc.E2EEOptions | None = None,
     ) -> None:
         """Connect to the room. This method should be called only once.
@@ -720,8 +712,6 @@ class JobContext:
             enable_traces=options["traces"],
             enable_logs=options["logs"],
         )
-
-
 
         self._flush_early_log_buffer(replay=options["logs"])
 

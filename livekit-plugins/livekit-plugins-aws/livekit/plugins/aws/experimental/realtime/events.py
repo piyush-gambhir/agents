@@ -323,7 +323,6 @@ class SonicEventBuilder:
 
         history_events: list[str] = []
 
-
         messages = chat_ctx.messages()
         if messages:
             logger.debug("initiating session with chat context")
@@ -340,8 +339,6 @@ class SonicEventBuilder:
                     merged[-1] = (role, merged[-1][1] + "\n" + text)
                 else:
                     merged.append((role, text))
-
-
 
             if merged and merged[0][0] == "ASSISTANT":
                 logger.debug("Stripping leading ASSISTANT message from history events")

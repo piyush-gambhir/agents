@@ -11,7 +11,6 @@ from livekit.agents import llm
 
 from ...log import logger
 
-
 BARGE_IN_CONTENT = '{ "interrupted" : true }'
 
 
@@ -21,8 +20,6 @@ class _Phase(enum.Enum):
     USER_FINISHED = 2
     ASSISTANT_RESPONDING = 3
     DONE = 4
-
-
 
 
 @dataclass
@@ -57,9 +54,6 @@ class _TurnTracker:
         self._curr_turn: _Turn | None = None
         self._emit_generation_fn = emit_generation_fn
 
-
-
-
     def feed(self, event: dict) -> None:
         turn = self._ensure_turn()
         kind = _classify(event)
@@ -69,17 +63,10 @@ class _TurnTracker:
             self._maybe_emit_input_started(turn)
             self._emit_transcript_updated(turn)
 
-
-
-
-
-
         elif kind == "TOOL_OUTPUT_CONTENT_START" or kind == "ASSISTANT_SPEC_START":
-
             self._maybe_emit_input_stopped(turn)
             self._maybe_emit_transcript_completed(turn)
             self._maybe_emit_generation_created(turn)
-
 
             if turn.ev_trans_completed:
                 turn.phase = _Phase.DONE
@@ -134,7 +121,6 @@ class _TurnTracker:
             turn.ev_trans_completed = True
             self._emit(
                 "input_audio_transcription_completed",
-
                 llm.InputTranscriptionCompleted(
                     item_id=turn.input_id,
                     transcript=turn.curr_transcript,
@@ -169,8 +155,6 @@ def _classify(ev: dict) -> str:
 
     if "textOutput" in e and e["textOutput"]["content"] == BARGE_IN_CONTENT:
         return "BARGE_IN"
-
-
 
     if "contentEnd" in e and e["contentEnd"]["type"] == "AUDIO":
         return "ASSISTANT_AUDIO_END"

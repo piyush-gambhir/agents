@@ -14,7 +14,6 @@ class Plugin(ABC):  # noqa: B024
     registered_plugins: list[Plugin] = []
     emitter: utils.EventEmitter[EventTypes] = utils.EventEmitter()
 
-
     def __init__(
         self,
         title: str,
@@ -34,7 +33,6 @@ class Plugin(ABC):  # noqa: B024
 
         cls.registered_plugins.append(plugin)
         cls.emitter.emit("plugin_registered", plugin)
-
 
     def download_files(self) -> None:  # noqa: B027
         pass

@@ -18,9 +18,6 @@ import json
 import sys
 from unittest.mock import MagicMock
 
-
-
-
 _AWS_STUBS = [
     "aws_sdk_bedrock_runtime",
     "aws_sdk_bedrock_runtime.client",
@@ -89,7 +86,6 @@ class TestHandleToolOutputContentEvent:
         await RealtimeSession._handle_tool_output_content_event(session, event)
 
         assert len(captured) == 1
-
 
         assert captured[0].arguments == inner_json
 

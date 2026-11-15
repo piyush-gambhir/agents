@@ -122,7 +122,6 @@ class WorkerPermissions:
 
 
 if sys.platform.startswith("win"):
-
     _default_job_executor_type = JobExecutorType.THREAD
 else:
     _default_job_executor_type = JobExecutorType.PROCESS
@@ -170,7 +169,6 @@ def _validate_and_normalize_log_level(
             prod_default=log_level.prod_default.upper(),
         )
     return log_level.upper()
-
 
 
 @dataclass
@@ -363,11 +361,9 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         self._server_type = ServerType.ROOM
         self._id = "unregistered"
 
-
         self._entrypoint_fnc: Callable[[JobContext], Awaitable[None]] | None = None
         self._request_fnc: Callable[[JobRequest], Awaitable[None]] | None = None
         self._session_end_fnc: Callable[[JobContext], Awaitable[None]] | None = None
-
 
         self._setup_fnc: Callable[[JobProcess], Any] | None = setup_fnc
         self._load_fnc: Callable[[AgentServer], float] | Callable[[], float] | None = load_fnc
@@ -886,7 +882,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
                 await asyncio.gather(*self._job_lifecycle_tasks, return_exceptions=True)
 
-
                 while True:
                     procs = [p for p in self._proc_pool.processes if p.running_job]
                     if not procs:
@@ -911,7 +906,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
     ) -> None:
         async with self._lock:
             if token is not None:
-
                 agent_identity = api.TokenVerifier().verify(token, verify_signature=False).identity
 
             if agent_identity is None:
@@ -925,8 +919,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                     raise ValueError("room_info is None but fake_job is False")
 
                 room_info = models.Room(sid=utils.shortuuid("SRM_"), name=room)
-
-
 
             job = agent.Job(
                 id=utils.shortuuid("job-") if not fake_job else utils.shortuuid("mock-job-"),
@@ -975,8 +967,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             if self._load_task is not None:
                 await utils.aio.cancel_and_wait(self._load_task)
 
-
-
             await asyncio.gather(*self._job_lifecycle_tasks, return_exceptions=True)
 
             await self._proc_pool.aclose()
@@ -991,7 +981,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                 await self._prometheus_server.aclose()
 
             await self._api.aclose()  # type: ignore
-
 
             self._msg_chan.close()
 
@@ -1049,7 +1038,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
                 retry_count = 0
 
-
                 req = agent.WorkerMessage()
                 req.register.type = self._server_type.value
                 req.register.allowed_permissions.CopyFrom(
@@ -1068,7 +1056,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
                 req.register.version = __version__
                 await ws.send_bytes(req.SerializeToString())
 
-
                 first_msg_b = await ws.receive_bytes()
                 msg = agent.ServerMessage()
                 msg.ParseFromString(first_msg_b)
@@ -1078,7 +1065,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
 
                 self._handle_register(msg.register)
                 self._connecting = False
-
 
                 await self._report_active_jobs()
 
@@ -1273,8 +1259,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         if math.isinf(load_threshold):
             return True
 
-
-
         return self._get_effective_load() < load_threshold
 
     async def _answer_availability(self, msg: agent.AvailabilityRequest) -> None:
@@ -1288,8 +1272,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             availability_resp.availability.available = False
             await self._queue_msg(availability_resp)
             return
-
-
 
         self._reserved_slots += 1
         answered = False
@@ -1323,7 +1305,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
             wait_assignment = asyncio.Future[agent.JobAssignment]()
             self._pending_assignments[job_req.id] = wait_assignment
             await self._queue_msg(availability_resp)
-
 
             try:
                 await asyncio.wait_for(wait_assignment, ASSIGNMENT_TIMEOUT)
@@ -1413,7 +1394,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
     async def _handle_termination(self, msg: agent.JobTermination) -> None:
         proc = self._proc_pool.get_by_job_id(msg.job_id)
         if not proc:
-
             return
         await proc.aclose()
 
@@ -1436,7 +1416,6 @@ class AgentServer(utils.EventEmitter[EventTypes]):
         )
 
         update = agent.UpdateWorkerStatus(load=self._worker_load, status=status, job_count=job_cnt)
-
 
         if self._previous_status != status and not self._draining:
             self._previous_status = status

@@ -50,8 +50,6 @@ OrderedItem = Annotated[OrderedCombo | OrderedHappy | OrderedRegular, Field(disc
 class OrderState:
     items: dict[str, OrderedItem]
 
-
-
     on_change: Callable[[], Awaitable[None]] | None = field(default=None)
 
     async def _fire(self) -> None:

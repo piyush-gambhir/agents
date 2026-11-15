@@ -22,7 +22,6 @@ def _session_update_payload(model: RealtimeModel) -> dict[str, Any]:
         session: dict[str, Any] = event["session"]
         return session
     finally:
-
         sess._msg_ch.close()
 
 

@@ -158,7 +158,6 @@ async def entrypoint(ctx: JobContext) -> None:
                 session.update_agent(make_agent(new_persona))
                 state.persona = new_persona
 
-
                 await asyncio.sleep(1.2)
 
             if supports_actions(new_persona.id):

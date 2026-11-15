@@ -83,19 +83,15 @@ def _default_stt_endpoint(*, slng_base_url: str, model: str) -> str:
 
 @dataclass
 class STTOptions:
-
     sample_rate: int = 16000
     buffer_size_seconds: float = DEFAULT_BUFFER_SIZE_SECONDS
     encoding: str = "pcm_s16le"
 
-
     enable_partial_transcripts: bool = True
-
 
     vad_threshold: float = 0.5
     vad_min_silence_duration_ms: int = 300
     vad_speech_pad_ms: int = 30
-
 
     enable_diarization: bool = False
     min_speakers: int | None = None
@@ -117,7 +113,6 @@ class STT(stt.STT):
         sample_rate: int = 16000,
         encoding: NotGivenOr[STTEncoding] = NOT_GIVEN,
         buffer_size_seconds: float = DEFAULT_BUFFER_SIZE_SECONDS,
-
         enable_partial_transcripts: bool = True,
         vad_threshold: float = 0.5,
         vad_min_silence_duration_ms: int = 300,
@@ -156,9 +151,6 @@ class STT(stt.STT):
         resolved_key = api_key or os.environ.get("SLNG_API_KEY")
         if not resolved_key:
             raise ValueError("api_key is required, or set SLNG_API_KEY environment variable")
-
-
-
 
         resolved_model_endpoint = model_endpoint or _default_stt_endpoint(
             slng_base_url=slng_base_url,
@@ -210,7 +202,6 @@ class STT(stt.STT):
         if is_given(encoding):
             self._opts.encoding = encoding
 
-
         self._model_options = model_options
 
         self._session = http_session
@@ -249,18 +240,14 @@ class STT(stt.STT):
 
         lang = language if is_given(language) else self._opts.language
 
-
         audio_data = rtc.combine_audio_frames(buffer).data.tobytes()
 
-
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
-
 
         payload = {
             "audio_b64": audio_b64,
             "language": lang,
         }
-
 
         if self._model_options:
             payload.update(self._model_options)
@@ -292,16 +279,12 @@ class STT(stt.STT):
 
                 data = await resp.json()
 
-
-
                 text = data.get("text", "")
                 detected_language = data.get("language", lang)
                 segments = data.get("segments", [])
 
-
                 start_time = segments[0].get("start", 0.0) if segments else 0.0
                 end_time = segments[-1].get("end", 0.0) if segments else 0.0
-
 
                 return stt.SpeechEvent(
                     type=stt.SpeechEventType.FINAL_TRANSCRIPT,
@@ -417,7 +400,6 @@ class SpeechStream(stt.SpeechStream):
         self._model_options = model_options
         self._session = http_session
         self._speech_duration: float = 0
-
 
         self._final_events: list[SpeechEvent] = []
         self._reconnect_event = asyncio.Event()
@@ -608,8 +590,6 @@ class SpeechStream(stt.SpeechStream):
                     text = data.get("transcript", "")
                     is_final = msg_type == "final_transcript"
                     if not text:
-
-
                         if is_final and self._speech_duration > 0:
                             self._event_ch.send_nowait(
                                 stt.SpeechEvent(
@@ -626,7 +606,6 @@ class SpeechStream(stt.SpeechStream):
                     confidence = data.get("confidence", 0.0)
                     language = data.get("language", self._opts.language)
                     words = data.get("words", [])
-
 
                     if not speech_started:
                         speech_started = True
@@ -656,10 +635,6 @@ class SpeechStream(stt.SpeechStream):
                         ],
                     )
                     self._event_ch.send_nowait(event)
-
-
-
-
 
                     if is_final:
                         self._event_ch.send_nowait(
@@ -697,7 +672,6 @@ class SpeechStream(stt.SpeechStream):
                 ws = await self._connect_ws(model_endpoint=endpoint, model=model)
                 if did_failover:
                     logger.info("STT switched to fallback: model=%s", model)
-
 
                     self._stt_parent._set_active_endpoint_index(self._active_endpoint_index)
                     did_failover = False
@@ -758,8 +732,6 @@ class SpeechStream(stt.SpeechStream):
         }
         if self._region_override_header:
             headers["X-Region-Override"] = self._region_override_header
-
-
 
         try:
             ws = await asyncio.wait_for(

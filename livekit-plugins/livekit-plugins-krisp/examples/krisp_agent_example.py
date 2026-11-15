@@ -64,7 +64,6 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     """Main entrypoint for the agent session."""
 
-
     session = AgentSession(
         vad=silero.VAD.load(),
         stt=openai.STT(model="whisper-1"),
@@ -77,14 +76,11 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Starting agent session with RoomIO and Krisp noise cancellation")
 
-
     processor = krisp.KrispVivaFilterFrameProcessor(
         noise_suppression_level=100,
         frame_duration_ms=10,
         sample_rate=16000,
     )
-
-
 
     await session.start(
         agent=KrispAgent(),

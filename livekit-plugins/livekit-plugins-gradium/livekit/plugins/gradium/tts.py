@@ -231,15 +231,12 @@ class ChunkedStream(tts.ChunkedStream):
                         aiohttp.WSMsgType.CLOSED,
                         aiohttp.WSMsgType.CLOSING,
                     ):
-
-
                         break
 
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         msg_data = json.loads(msg.data)
                         type_ = msg_data.get("type")
                         if type_ == "text":
-
                             pass
                         elif type_ == "ready":
                             pass
@@ -357,8 +354,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-
-
                     output_emitter.end_segment()
                     break
 
@@ -366,7 +361,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     msg_data = json.loads(msg.data)
                     type_ = msg_data.get("type")
                     if type_ == "text":
-
                         pass
                     elif type_ == "ready":
                         pass

@@ -5,7 +5,6 @@ from multiprocessing import current_process
 if current_process().name == "agents_inference_process":
     import signal
 
-
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 

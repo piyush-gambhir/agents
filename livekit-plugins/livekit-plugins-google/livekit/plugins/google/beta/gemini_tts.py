@@ -227,7 +227,6 @@ class ChunkedStream(tts.ChunkedStream):
                     and inline_data.mime_type
                     and inline_data.mime_type.startswith("audio/")
                 ):
-
                     output_emitter.push(inline_data.data)
 
         except ClientError as e:

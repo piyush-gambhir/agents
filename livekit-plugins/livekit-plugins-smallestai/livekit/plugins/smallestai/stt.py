@@ -48,11 +48,7 @@ from .version import __version__
 NUM_CHANNELS = 1
 
 
-
 SMALLEST_STT_BASE_URL = "https://api.smallest.ai/waves/v1"
-
-
-
 
 
 T = TypeVar("T")
@@ -78,9 +74,6 @@ class _PeriodicCollector(Generic[T]):
             self._callback(self._total)
             self._total = None
         self._last_flush_time = time.monotonic()
-
-
-
 
 
 @dataclass
@@ -203,7 +196,6 @@ class STT(stt.STT):
                     "X-LiveKit-Version": __version__,
                 },
                 params=params,
-
                 data=rtc.combine_audio_frames(buffer).to_wav_bytes(),
                 timeout=aiohttp.ClientTimeout(
                     total=30,
@@ -280,9 +272,6 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-
-
-
     _CLOSE_STREAM_MSG: str = json.dumps({"type": "close_stream"})
 
     def __init__(
@@ -332,7 +321,6 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-
             samples_per_chunk = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -346,15 +334,10 @@ class SpeechStream(stt.SpeechStream):
                         self._audio_duration_collector.push(frame.duration)
                         await ws.send_bytes(frame.data.tobytes())
                 elif isinstance(data, self._FlushSentinel):
-
-
-
                     for frame in audio_bstream.flush():
                         self._audio_duration_collector.push(frame.duration)
                         await ws.send_bytes(frame.data.tobytes())
                     self._audio_duration_collector.flush()
-
-
 
             closing_ws = True
             await ws.send_str(SpeechStream._CLOSE_STREAM_MSG)
@@ -388,7 +371,6 @@ class SpeechStream(stt.SpeechStream):
                     continue
 
                 self._process_stream_event(data)
-
 
                 if data.get("is_last"):
                     return
@@ -433,9 +415,6 @@ class SpeechStream(stt.SpeechStream):
             "diarize": str(self._opts.diarize).lower(),
         }
 
-
-
-
         if self._opts.eou_timeout_ms > 0:
             params["eou_timeout_ms"] = self._opts.eou_timeout_ms
         ws_url = (
@@ -446,8 +425,6 @@ class SpeechStream(stt.SpeechStream):
 
         t0 = time.perf_counter()
         try:
-
-
             ws = await asyncio.wait_for(
                 self._session.ws_connect(
                     ws_url,
@@ -478,17 +455,6 @@ class SpeechStream(stt.SpeechStream):
 
     def _process_stream_event(self, data: dict[str, Any]) -> None:
 
-
-
-
-
-
-
-
-
-
-
-
         session_id = data.get("session_id", "")
         if session_id:
             self._session_id = session_id
@@ -498,7 +464,6 @@ class SpeechStream(stt.SpeechStream):
 
         if not transcript:
             return
-
 
         if not self._speaking:
             self._speaking = True
@@ -558,8 +523,6 @@ def _transcript_to_speech_data(
     start_time = raw_words[0].get("start", 0.0) + start_time_offset if raw_words else 0.0
     end_time = raw_words[-1].get("end", 0.0) + start_time_offset if raw_words else 0.0
 
-
-
     speaker_id: str | None = None
     if diarize and raw_words:
         speaker_counts = Counter(w["speaker"] for w in raw_words if "speaker" in w)
@@ -586,15 +549,6 @@ def _batch_transcription_to_speech_event(
     language: str,
     data: dict[str, Any],
 ) -> stt.SpeechEvent:
-
-
-
-
-
-
-
-
-
 
     transcript = data.get("transcription", "")
     raw_words: list[dict[str, Any]] = data.get("words") or []

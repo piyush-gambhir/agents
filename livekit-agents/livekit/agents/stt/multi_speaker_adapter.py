@@ -115,7 +115,6 @@ class MultiSpeakerAdapterWrapper(RecognizeStream):
                 if updated_ev is not None:
                     self._event_ch.send_nowait(updated_ev)
                 elif ev.type == SpeechEventType.FINAL_TRANSCRIPT:
-
                     self._event_ch.send_nowait(
                         SpeechEvent(
                             type=SpeechEventType.FINAL_TRANSCRIPT,
@@ -152,7 +151,6 @@ class PrimarySpeakerDetectionOptions:
     """Minimum RMS samples needed for a speech event"""
     rms_smoothing_factor: float = 0.5
     """Smoothing factor for RMS for a speaker, rms = rms * factor + new_rms * (1 - factor)"""
-
 
     threshold_multiplier: float = 1.3
     """Candidate's RMS needs to be louder than current primary's RMS by this multiplier"""
@@ -246,7 +244,6 @@ class _PrimarySpeakerDetector:
 
         sd.is_primary_speaker = sd.speaker_id == self._primary_speaker
 
-
         if sd.is_primary_speaker:
             sd.text = self._primary_format.format(text=sd.text, speaker_id=sd.speaker_id)
         else:
@@ -291,7 +288,6 @@ class _PrimarySpeakerDetector:
         if rms is None:
             return
 
-
         speaker_id = sd.speaker_id
         if data := self._speaker_data.get(speaker_id):
             data.last_activity_time = sd.end_time
@@ -308,10 +304,6 @@ class _PrimarySpeakerDetector:
         if self._primary_speaker == speaker_id:
             return
 
-
-
-
-
         if (
             self._primary_speaker is None
             or (primary := self._speaker_data.get(self._primary_speaker)) is None
@@ -321,7 +313,6 @@ class _PrimarySpeakerDetector:
             return
 
         silence_duration = self._pushed_duration - primary.last_activity_time
-
 
         if self._opt.threshold_multiplier > 1.0:
             decay_rate = (self._opt.threshold_multiplier - 1.0) / self._opt.decay_to_equal_time

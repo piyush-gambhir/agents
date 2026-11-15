@@ -207,9 +207,7 @@ class RealtimeSession(ABC, rtc.EventEmitter[EventTypes | TEvent], Generic[TEvent
     async def update_instructions(self, instructions: str) -> None: ...
 
     @abstractmethod
-    async def update_chat_ctx(
-        self, chat_ctx: ChatContext
-    ) -> None: ...
+    async def update_chat_ctx(self, chat_ctx: ChatContext) -> None: ...
 
     @abstractmethod
     async def update_tools(self, tools: list[Tool]) -> None: ...
@@ -232,18 +230,14 @@ class RealtimeSession(ABC, rtc.EventEmitter[EventTypes | TEvent], Generic[TEvent
         tools: NotGivenOr[list[Tool]] = NOT_GIVEN,
     ) -> asyncio.Future[GenerationCreatedEvent]: ...
 
-
     @abstractmethod
     def commit_audio(self) -> None: ...
-
 
     @abstractmethod
     def clear_audio(self) -> None: ...
 
-
     @abstractmethod
     def interrupt(self) -> None: ...
-
 
     @abstractmethod
     def truncate(

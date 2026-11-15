@@ -21,10 +21,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
 class MyAgent(Agent):
     def __init__(self) -> None:
         super().__init__(instructions=("You are a voice agent."))
@@ -36,10 +32,6 @@ class MyAgent(Agent):
             query: The query to search the web for.
         """
         logger.info(f"Searching the web for {query}")
-
-
-
-
 
         wait_for_result = asyncio.ensure_future(self._a_long_running_task(query))
         await run_ctx.speech_handle.wait_if_not_interrupted([wait_for_result])

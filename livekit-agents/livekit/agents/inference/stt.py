@@ -166,10 +166,6 @@ class InworldOptions(TypedDict, total=False):
     vad_threshold: float
 
 
-
-
-
-
 _DIARIZATION_EXTRA_KEYS: tuple[str, ...] = (
     "diarize",
     "speaker_labels",
@@ -495,12 +491,9 @@ class STT(stt.STT):
                 gateway on end of speech. Only applicable to Speechmatics models.
         """
 
-
-
         diarization_enabled = _diarization_enabled(
             dict(extra_kwargs) if is_given(extra_kwargs) else None
         )
-
 
         if is_given(model) and isinstance(model, str):
             parsed_model, parsed_language = _parse_model_string(model)
@@ -625,7 +618,6 @@ class STT(stt.STT):
     ) -> None:
         """Update STT configuration options."""
         if is_given(model):
-
             if isinstance(model, str):
                 parsed_model, parsed_language = _parse_model_string(model)
                 model = parsed_model
@@ -897,7 +889,6 @@ class SpeechStream(stt.SpeechStream):
     def _build_speech_data(self, data: dict) -> stt.SpeechData:
         language = LanguageCode(data.get("language", self._opts.language or "en"))
         words = data.get("words", []) or []
-
 
         extra = data.get("extra")
         metadata = extra if isinstance(extra, dict) and extra else None

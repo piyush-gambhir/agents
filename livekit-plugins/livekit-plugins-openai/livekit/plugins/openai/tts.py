@@ -199,7 +199,6 @@ class TTS(tts.TTS):
         self, text: str, *, conn_options: APIConnectOptions = DEFAULT_API_CONNECT_OPTIONS
     ) -> tts.ChunkedStream:
 
-
         if self._opts.model in AUDIO_STREAM_MODELS:
             return AudioChunkedStream(tts=self, input_text=text, conn_options=conn_options)
         return SSEChunkedStream(tts=self, input_text=text, conn_options=conn_options)
@@ -294,7 +293,6 @@ class SSEChunkedStream(tts.ChunkedStream):
                     mime_type=f"audio/{self._opts.response_format}",
                 )
 
-
                 async for line in stream.iter_lines():
                     if not line or not line.startswith("data: "):
                         continue
@@ -311,14 +309,12 @@ class SSEChunkedStream(tts.ChunkedStream):
                     event_type = event.get("type", "")
 
                     if event_type == "speech.audio.delta":
-
                         audio_b64 = event.get("delta", "") or event.get("audio", "")
                         if audio_b64:
                             audio_data = base64.b64decode(audio_b64)
                             output_emitter.push(audio_data)
 
                     elif event_type == "speech.audio.done":
-
                         usage = event.get("usage", {})
                         input_tokens = usage.get("input_tokens", 0)
                         output_tokens = usage.get("output_tokens", 0)

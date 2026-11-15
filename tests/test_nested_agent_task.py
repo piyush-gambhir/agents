@@ -64,11 +64,8 @@ async def test_nested_agent_task_no_deadlock():
     async with AgentSession(llm=llm) as sess:
         await sess.start(RootAgent())
 
-
-
         first_result = await asyncio.wait_for(sess.run(user_input="go"), timeout=5.0)
         assert first_result is not None
-
 
         second_result = await asyncio.wait_for(sess.run(user_input="done"), timeout=5.0)
         assert second_result is not None
@@ -77,7 +74,6 @@ async def test_nested_agent_task_no_deadlock():
 def _build_fake_llm() -> FakeLLM:
     return FakeLLM(
         fake_responses=[
-
             FakeLLMResponse(
                 input="go",
                 content="",
@@ -85,8 +81,6 @@ def _build_fake_llm() -> FakeLLM:
                 duration=0,
                 tool_calls=[FunctionToolCall(name="start_outer", arguments="{}", call_id="call_1")],
             ),
-
-
             FakeLLMResponse(
                 input="outer_greeting",
                 content="",
@@ -94,15 +88,12 @@ def _build_fake_llm() -> FakeLLM:
                 duration=0,
                 tool_calls=[FunctionToolCall(name="start_inner", arguments="{}", call_id="call_2")],
             ),
-
-
             FakeLLMResponse(
                 input="inner_greeting",
                 content="hello from inner",
                 ttft=0,
                 duration=0,
             ),
-
             FakeLLMResponse(
                 input="done",
                 content="",
@@ -110,14 +101,12 @@ def _build_fake_llm() -> FakeLLM:
                 duration=0,
                 tool_calls=[FunctionToolCall(name="finish", arguments="{}", call_id="call_3")],
             ),
-
             FakeLLMResponse(
                 input="inner completed",
                 content="",
                 ttft=0,
                 duration=0,
             ),
-
             FakeLLMResponse(
                 input="outer completed",
                 content="all done",

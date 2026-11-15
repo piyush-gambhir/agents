@@ -5,7 +5,6 @@ from multiprocessing import current_process
 if current_process().name == "job_proc":
     import signal
 
-
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
@@ -43,11 +42,6 @@ from .proto import (
     ShuttingDown,
     StartJobRequest,
 )
-
-
-
-
-
 
 _SESSION_ACLOSE_TIMEOUT = 60.0
 
@@ -201,7 +195,6 @@ class _JobProc:
         self._session_end_timeout = session_end_timeout
         self._job_task: asyncio.Task[None] | None = None
 
-
         self._ctx_connect_called = False
         self._ctx_shutdown_called = False
 
@@ -252,14 +245,12 @@ class _JobProc:
                 if isinstance(msg, DumpStackTraceRequest):
                     _dump_stack_traces_impl()
 
-
             self._inf_client.close()
 
         read_task = asyncio.create_task(_read_ipc_task(), name="job_ipc_read")
         try:
             await self._exit_proc_flag.wait()
         finally:
-
             if self._job_task is not None:
                 await aio.cancel_and_wait(self._job_task)
             await aio.cancel_and_wait(read_task)
@@ -347,7 +338,6 @@ class _JobProc:
                     exc_info=t.exception(),
                 )
 
-
                 with contextlib.suppress(asyncio.InvalidStateError):
                     self._shutdown_fut.set_result(
                         _ShutdownInfo(user_initiated=False, reason="job crashed")
@@ -365,7 +355,6 @@ class _JobProc:
 
         shutdown_info = await self._shutdown_fut
 
-
         if not job_entry_task.done():
             try:
                 await asyncio.wait_for(asyncio.shield(job_entry_task), timeout=15)
@@ -373,8 +362,6 @@ class _JobProc:
                 logger.warning("entrypoint did not exit in time, cancelling")
                 await aio.cancel_and_wait(job_entry_task)
             except Exception:
-
-
                 pass
 
         if session := self._job_ctx._primary_agent_session:

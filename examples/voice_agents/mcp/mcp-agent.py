@@ -22,7 +22,6 @@ class MyAgent(Agent):
 
     async def on_enter(self):
 
-
         self.session.generate_reply(instructions="greeting the user and introducing yourself")
 
 

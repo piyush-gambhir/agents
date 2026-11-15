@@ -74,9 +74,6 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
     tool_outputs: list[llm.FunctionCallOutput] = []
     for item in chat_ctx.items:
         if (item.type == "message" and item.role == "assistant") or item.type == "function_call":
-
-
-
             if item.type == "function_call" and item.group_id:
                 group_id = item.group_id
             else:
@@ -90,7 +87,6 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
         else:
             item_groups[item.id] = _ChatItemGroup().add(item)
 
-
     call_id_to_group: dict[str, _ChatItemGroup] = {
         tool_call.call_id: group for group in item_groups.values() for tool_call in group.tool_calls
     }
@@ -103,7 +99,6 @@ def group_tool_calls(chat_ctx: llm.ChatContext) -> list[_ChatItemGroup]:
             continue
 
         call_id_to_group[tool_output.call_id].add(tool_output)
-
 
     for group in item_groups.values():
         group.remove_invalid_tool_calls()

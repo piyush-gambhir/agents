@@ -49,7 +49,6 @@ def prewarm(proc: JobProcess):
     if not bithuman_model_path:
         return
 
-
     logger.info("loading bithuman runtime")
     runtime = AsyncBithuman(
         model_path=bithuman_model_path, api_secret=bithuman_api_secret, load_model=True

@@ -123,9 +123,6 @@ async def _llm_inference_task(
     if asyncio.iscoroutine(llm_node):
         llm_node = await llm_node
 
-
-
-
     tool_ctx.update_tools(tools)
     tools_snapshot = tools.copy()
 
@@ -138,12 +135,10 @@ async def _llm_inference_task(
     if not isinstance(llm_node, AsyncIterable):
         return False
 
-
     try:
         async for chunk in llm_node:
             if data.ttft is None:
                 data.ttft = time.perf_counter() - start_time
-
 
             if isinstance(chunk, str):
                 data.generated_text += chunk
@@ -157,7 +152,6 @@ async def _llm_inference_task(
                     for tool in chunk.delta.tool_calls:
                         if tool.type != "function":
                             continue
-
 
                         if (
                             tool_ctx.get_function_tool(tool.name) is None
@@ -583,8 +577,6 @@ async def _execute_tools_task(
         )
         return
 
-
-
     executor_by_name = _build_executor_map(
         toolsets=tool_ctx.toolsets, default=activity._tool_executor
     )
@@ -601,8 +593,6 @@ async def _execute_tools_task(
                     },
                 )
                 continue
-
-
 
             if (function_tool := tool_ctx.function_tools.get(fnc_call.name)) is None:
                 logger.warning(
@@ -638,10 +628,6 @@ async def _execute_tools_task(
                 )
                 continue
 
-
-
-
-
             json_args = fnc_call.arguments or "{}"
             try:
                 raw_args = llm_utils.parse_function_arguments(json_args)
@@ -662,8 +648,6 @@ async def _execute_tools_task(
                     )
                 )
                 continue
-
-
 
             canonical = json.dumps(raw_args, default=str)
             if canonical != json_args:
@@ -744,7 +728,6 @@ async def _execute_tools_task(
                             trace_types.ATTR_FUNCTION_TOOL_IS_ERROR, fnc_call_out.is_error
                         )
 
-
                     _tool_completed(output)
 
                 task = asyncio.create_task(
@@ -757,9 +740,6 @@ async def _execute_tools_task(
                 tasks.append(task)
                 task.add_done_callback(lambda task: tasks.remove(task))
             except Exception as e:
-
-
-
                 logger.exception(
                     "exception occurred while executing tool",
                     extra={
@@ -897,7 +877,6 @@ def update_instructions(
     idx = chat_ctx.index_by_id(INSTRUCTIONS_MESSAGE_ID)
     if idx is not None:
         if chat_ctx.items[idx].type == "message":
-
             chat_ctx.items[idx] = llm.ChatMessage(
                 id=INSTRUCTIONS_MESSAGE_ID,
                 role="system",
@@ -909,7 +888,6 @@ def update_instructions(
                 "expected the instructions inside the chat_ctx to be of type 'message'"
             )
     elif add_if_missing:
-
         chat_ctx.items.insert(
             0,
             llm.ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instructions]),
@@ -924,7 +902,6 @@ def apply_instructions_modality(
         has_modality_specific = any(isinstance(c, Instructions) for c in item.content)
         if not has_modality_specific:
             return
-
 
         new_item = item.model_copy()
         new_item.content = [

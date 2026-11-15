@@ -58,7 +58,6 @@ class WorkerLauncher:
             except subprocess.TimeoutExpired:
                 worker.process.kill()
 
-
         cmd = [sys.executable, str(THIS_DIR / "avatar_runner.py")]
         env = os.environ.copy()
         env["LIVEKIT_URL"] = connection_info.url

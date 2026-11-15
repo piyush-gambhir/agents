@@ -9,7 +9,6 @@ from ..types import DEFAULT_API_CONNECT_OPTIONS, NOT_GIVEN, APIConnectOptions, N
 from ..vad import VAD, VADEventType
 from .stt import STT, RecognizeStream, SpeechEvent, SpeechEventType, STTCapabilities
 
-
 DEFAULT_STREAM_ADAPTER_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -26,7 +25,6 @@ class StreamAdapter(STT):
         )
         self._vad = vad
         self._stt = stt
-
 
         self._stt.on("metrics_collected", self._on_metrics_collected)
 

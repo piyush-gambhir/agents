@@ -152,7 +152,6 @@ class _ParticipantInputStream(Generic[T], ABC):
         logger.debug("start reading stream", extra=extra)
         async for event in stream:
             if not self._attached:
-
                 continue
             frame = cast(T, event.frame)
             self._process_frame(frame)
@@ -230,7 +229,6 @@ class _ParticipantInputStream(Generic[T], ABC):
             return
 
         self._close_stream()
-
 
         for publication in participant.track_publications.values():
             if publication.track is None:
@@ -353,7 +351,6 @@ class _ParticipantAudioInputStream(_ParticipantInputStream[rtc.AudioFrame], Audi
                 )
 
         await super()._forward_task(old_task, stream, publication, participant)
-
 
         silent_samples = int(self._sample_rate * 0.5)
         await self._data_ch.send(

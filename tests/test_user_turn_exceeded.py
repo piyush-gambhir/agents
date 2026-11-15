@@ -96,8 +96,6 @@ async def test_reset_on_agent_speaking() -> None:
     speed = 5.0
     agent = _CapturingAgent()
 
-
-
     actions = FakeActions()
     actions.add_user_speech(0.5, 1.5, "one two three", stt_delay=0.2)
     actions.add_llm("reply one", ttft=0.1, duration=0.1)
@@ -113,7 +111,6 @@ async def test_reset_on_agent_speaking() -> None:
     )
 
     await asyncio.wait_for(run_session(session, agent), timeout=SESSION_TIMEOUT)
-
 
     assert len(agent.exceeded_events) == 0
 
@@ -144,15 +141,12 @@ async def test_no_accumulation_after_clear_user_turn() -> None:
     try:
         await session.start(agent)
 
-
         recognition = session._activity._audio_recognition  # type: ignore[union-attr]
         recognition._check_user_turn_limit("one two three")
         assert recognition._turn_tracker.words == 3
         assert len(agent.exceeded_events) == 0
 
-
         session.clear_user_turn()
-
 
         recognition._check_user_turn_limit("four five six")
         assert recognition._turn_tracker.words == 3
@@ -194,9 +188,7 @@ async def test_accumulation_across_interrupted_turns() -> None:
     assert len(agent.exceeded_events) == 1
     ev = agent.exceeded_events[0]
 
-
     assert ev.transcript == turn2
-
 
     user_texts = [
         item.text_content
@@ -204,7 +196,6 @@ async def test_accumulation_across_interrupted_turns() -> None:
         if item.type == "message" and item.role == "user"
     ]
     assert turn1 in user_texts, f"turn1 not found in chat_ctx: {user_texts}"
-
 
     assert ev.accumulated_transcript == f"{turn1} {turn2}"
 
@@ -263,7 +254,6 @@ async def test_skipped_when_new_turns_blocked() -> None:
         activity = session._activity
         assert activity is not None
 
-
         activity._new_turns_blocked = True
 
         ev = UserTurnExceededEvent(
@@ -319,7 +309,6 @@ async def test_inflight_task_aborts_when_handoff_starts() -> None:
         activity.on_user_turn_exceeded(ev)
         task = activity._user_turn_exceeded_atask
         assert task is not None
-
 
         activity._new_turns_blocked = True
 

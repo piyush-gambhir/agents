@@ -68,7 +68,6 @@ class _CerebrasClient(openai.AsyncClient):
 
         json_data = options.json_data
         if json_data is not None:
-
             if options.extra_json is not None:
                 if is_mapping(json_data):
                     json_data = {**json_data, **options.extra_json}
@@ -82,7 +81,6 @@ class _CerebrasClient(openai.AsyncClient):
 
             if self._use_gzip:
                 body = gzip.compress(body, compresslevel=5)
-
 
             options.json_data = None
             options.extra_json = None

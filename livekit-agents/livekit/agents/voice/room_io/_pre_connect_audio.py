@@ -24,7 +24,6 @@ class PreConnectAudioHandler:
         self._timeout = timeout
         self._max_delta_s = max_delta_s
 
-
         self._buffers: dict[str, asyncio.Future[_PreConnectAudioBuffer]] = {}
         self._tasks: set[asyncio.Task[Any]] = set()
 
@@ -98,7 +97,6 @@ class PreConnectAudioHandler:
             return
 
         if (fut := self._buffers.get(track_id)) and fut.done():
-
             self._buffers.pop(track_id)
         self._buffers.setdefault(track_id, asyncio.Future())
         fut = self._buffers[track_id]
@@ -116,10 +114,8 @@ class PreConnectAudioHandler:
 
             duration: float = 0
 
-
             is_opus = False
             if reader.info.mime_type:
-
                 is_opus = (
                     reader.info.mime_type == "audio/opus" or "codecs=opus" in reader.info.mime_type
                 )
@@ -138,13 +134,11 @@ class PreConnectAudioHandler:
                     buf.frames.append(decoded_frame)
                     duration += decoded_frame.duration
             else:
-
                 audio_stream = utils.audio.AudioByteStream(sample_rate, num_channels)
                 async for chunk in reader:
                     for frame in audio_stream.push(chunk):
                         buf.frames.append(frame)
                         duration += frame.duration
-
 
                 for frame in audio_stream.flush():
                     buf.frames.append(frame)

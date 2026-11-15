@@ -205,7 +205,6 @@ class FakeRecognizeStream(RecognizeStream):
         if not self._stt._fake_user_speeches:
             return
 
-
         await self._input_ch.recv()
         start_time = time.perf_counter()
 
@@ -214,9 +213,6 @@ class FakeRecognizeStream(RecognizeStream):
 
         for fake_speech in self._stt._fake_user_speeches:
             if not fake_speech.transcript:
-
-
-
                 final_transcript_time = fake_speech.end_time + fake_speech.stt_delay
                 if curr_time() < final_transcript_time:
                     await asyncio.sleep(final_transcript_time - curr_time())

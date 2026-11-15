@@ -66,11 +66,6 @@ STTs: list[Callable[[], stt.STT]] = [
         azure,
         aws,
         sarvam,
-
-
-
-
-
     ]
 ] + [
     pytest.param(lambda: cartesia.STT(model="ink-whisper"), id="livekit.plugins.cartesia._legacy"),
@@ -127,7 +122,6 @@ async def test_recognize(stt_factory: Callable[[], stt.STT], request):
     sample_rate = SAMPLE_RATE
     frames, transcript, duration = await make_test_speech(sample_rate=sample_rate)
 
-
     try:
         stt_instance = stt_factory()
     except ValueError as e:
@@ -142,7 +136,6 @@ async def test_recognize(stt_factory: Callable[[], stt.STT], request):
             try:
                 start_time = time.time()
 
-
                 if stt.provider == "Sarvam" and duration > 30:
                     frames, *_ = await make_test_speech(
                         sample_rate=sample_rate, chunk_duration_ms=5 * 1000
@@ -155,7 +148,6 @@ async def test_recognize(stt_factory: Callable[[], stt.STT], request):
                 dt = time.time() - start_time
 
                 print(f"WER: {wer(text, transcript)} for {stt} in {dt:.2f}s")
-
 
                 if stt.provider in {
                     "Gladia",
@@ -179,7 +171,6 @@ async def test_stream(stt_factory: Callable[[], STT], request):
     sample_rate = SAMPLE_RATE
     plugin_id = request.node.callspec.id.split("-")[0]
     frames, transcript, _ = await make_test_speech(chunk_duration_ms=10, sample_rate=sample_rate)
-
 
     try:
         stt_instance: STT = stt_factory()

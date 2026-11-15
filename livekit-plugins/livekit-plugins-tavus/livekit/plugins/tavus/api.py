@@ -56,7 +56,6 @@ class TavusAPI:
 
         persona_id = persona_id or (os.getenv("TAVUS_PERSONA_ID") or NOT_GIVEN)
         if not persona_id:
-
             persona_id = await self.create_persona()
 
         properties = properties or {}

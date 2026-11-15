@@ -72,7 +72,6 @@ async def test_tee_cancelled_error_does_not_propagate_to_peers():
 
     async def consume_peer0():
         async for _item in tee[0]:
-
             await asyncio.sleep(1000)
 
     async def consume_peer1():
@@ -82,14 +81,11 @@ async def test_tee_cancelled_error_does_not_propagate_to_peers():
     task0 = asyncio.create_task(consume_peer0())
     task1 = asyncio.create_task(consume_peer1())
 
-
     await asyncio.sleep(0.01)
-
 
     task0.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task0
-
 
     await asyncio.wait_for(task1, timeout=2.0)
     assert peer1_results == items

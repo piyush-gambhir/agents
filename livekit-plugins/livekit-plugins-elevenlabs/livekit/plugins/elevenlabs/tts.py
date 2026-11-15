@@ -47,8 +47,6 @@ from livekit.agents.voice.io import TimedString
 from .log import logger
 from .models import TTSEncoding, TTSModels
 
-
-
 _DefaultEncoding: TTSEncoding = "mp3_22050_32"
 
 
@@ -683,7 +681,6 @@ class _Connection:
                     if msg.flush:
                         pkt["flush"] = True
 
-
                     self._start_timeout_timer(msg.context_id)
 
                     await self._ws.send_json(pkt)
@@ -714,7 +711,6 @@ class _Connection:
                     aiohttp.WSMsgType.CLOSING,
                 ):
                     if not self._closed and len(self._context_data) > 0:
-
                         raise APIStatusError(
                             "ElevenLabs websocket connection closed unexpectedly",
                             status_code=self._ws.close_code or -1,
@@ -726,7 +722,6 @@ class _Connection:
                     continue
 
                 data = json.loads(msg.data)
-
 
                 context_id = data.get("contextId") or data.get("context_id")
                 ctx = self._context_data.get(context_id) if context_id is not None else None
@@ -757,7 +752,6 @@ class _Connection:
 
                 emitter = ctx.emitter
                 stream = ctx.stream
-
 
                 alignment = (
                     data.get("normalizedAlignment")
@@ -854,8 +848,6 @@ class _Connection:
 
         for ctx in self._context_data.values():
             if not ctx.waiter.done():
-
-
                 ctx.waiter.set_exception(APIStatusError("connection closed"))
             if ctx.timeout_timer:
                 ctx.timeout_timer.cancel()

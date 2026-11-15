@@ -22,9 +22,6 @@ from livekit.agents.llm import function_tool
 from livekit.plugins import silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-
-
-
 logger = logging.getLogger("basic-agent")
 
 load_dotenv()
@@ -43,10 +40,7 @@ class MyAgent(Agent):
 
     async def on_enter(self) -> None:
 
-
         self.session.generate_reply(instructions="greet the user and introduce yourself")
-
-
 
     @function_tool
     async def lookup_weather(
@@ -85,31 +79,18 @@ async def entrypoint(ctx: JobContext) -> None:
         "room": ctx.room.name,
     }
     session: AgentSession = AgentSession(
-
-
         stt=inference.STT("deepgram/nova-3", language="multi"),
-
-
         llm=inference.LLM("openai/gpt-4.1-mini"),
-
-
         tts=inference.TTS("cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
         vad=ctx.proc.userdata["vad"],
         turn_handling=TurnHandlingOptions(
-
-
             turn_detection=MultilingualModel(),
             interruption={
-
-
                 "resume_false_interruption": True,
                 "false_interruption_timeout": 1.0,
             },
-
-
             preemptive_generation={"enabled": True, "max_retries": 3},
         ),
-
         aec_warmup_duration=3.0,
         tts_text_transforms=[
             "filter_emoji",
@@ -125,17 +106,13 @@ async def entrypoint(ctx: JobContext) -> None:
     async def log_usage():
         logger.info(f"Usage: {session.usage}")
 
-
     ctx.add_shutdown_callback(log_usage)
 
     await session.start(
         agent=MyAgent(),
         room=ctx.room,
         room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-
-
-            ),
+            audio_input=room_io.AudioInputOptions(),
         ),
     )
 

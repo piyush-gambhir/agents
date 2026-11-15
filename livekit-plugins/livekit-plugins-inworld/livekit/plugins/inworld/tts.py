@@ -118,7 +118,6 @@ class _TTSOptions:
             return "audio/wav"
 
 
-
 class _ContextState(Enum):
     ACTIVE = "active"
     CREATING = "creating"
@@ -135,9 +134,6 @@ class _ContextInfo:
     flush_after_push: bool = False
     created_at: float = field(default_factory=time.time)
     close_started_at: float | None = None
-
-
-
 
     cumulative_time: float = 0.0
     generation_end_time: float = 0.0
@@ -186,20 +182,16 @@ class _InworldConnection:
         self._on_capacity_available = on_capacity_available
         self._ws: aiohttp.ClientWebSocketResponse | None = None
 
-
         self._contexts: dict[str, _ContextInfo] = {}
         self._context_available = asyncio.Event()
         self._pending_acquisitions: int = 0
 
-
         self._outbound_queue: asyncio.Queue[_OutboundMessage] = asyncio.Queue()
-
 
         self._closed = False
         self._connect_lock = asyncio.Lock()
         self._acquire_lock = asyncio.Lock()
         self._last_activity: float = time.time()
-
 
         self._send_task: asyncio.Task[None] | None = None
         self._recv_task: asyncio.Task[None] | None = None
@@ -289,21 +281,16 @@ class _InworldConnection:
         """
         await self.connect()
 
-
         if self._closed or self._ws is None:
             raise APIConnectionError("Connection is closed")
 
         start_time = time.time()
 
         while True:
-
             if self._closed or self._ws is None:
                 raise APIConnectionError("Connection is closed")
 
-
             async with self._acquire_lock:
-
-
                 if self.context_count < self.MAX_CONTEXTS:
                     self._last_activity = time.time()
                     ctx_id = utils.shortuuid()
@@ -323,7 +310,6 @@ class _InworldConnection:
                     await self._outbound_queue.put(_CreateContextMsg(context_id=ctx_id, opts=opts))
                     return ctx_id, waiter
 
-
             elapsed = time.time() - start_time
             remaining = timeout - elapsed
             if remaining <= 0:
@@ -333,7 +319,6 @@ class _InworldConnection:
                 await asyncio.wait_for(self._context_available.wait(), timeout=remaining)
 
                 self._context_available.clear()
-
 
                 if self._closed or self._ws is None:
                     raise APIConnectionError("Connection is closed")
@@ -458,7 +443,6 @@ class _InworldConnection:
 
                 data = json.loads(msg.data)
 
-
                 if err_obj := data.get("error"):
                     logger.warning(
                         "Received error from Inworld",
@@ -473,7 +457,6 @@ class _InworldConnection:
                 context_id = result.get("contextId")
 
                 ctx = self._contexts.get(context_id) if context_id else None
-
 
                 status = result.get("status", {})
                 if status.get("code", 0) != 0:
@@ -511,7 +494,6 @@ class _InworldConnection:
                         if not ctx.segment_started:
                             ctx.emitter.start_segment(segment_id=context_id)
                             ctx.segment_started = True
-
 
                         if timestamp_info := audio_chunk.get("timestampInfo"):
                             if word_align := timestamp_info.get("wordAlignment"):
@@ -559,10 +541,6 @@ class _InworldConnection:
                     continue
 
                 if "flushCompleted" in result:
-
-
-
-
                     if ctx.generation_end_time > 0:
                         logger.debug(
                             "flushCompleted - updating cumulative time",
@@ -593,7 +571,6 @@ class _InworldConnection:
             await asyncio.sleep(60.0)
             now = time.time()
             for ctx in list(self._contexts.values()):
-
                 close_time = ctx.close_started_at or ctx.created_at
                 if ctx.state == _ContextState.CLOSING and now - close_time > 120.0:
                     if ctx.waiter and not ctx.waiter.done():
@@ -608,9 +585,7 @@ class _InworldConnection:
         self._contexts.clear()
         self._closed = True
 
-
         self._context_available.set()
-
 
         if self._on_capacity_available:
             self._on_capacity_available()
@@ -619,7 +594,6 @@ class _InworldConnection:
         """Close the connection and all contexts."""
         self._closed = True
 
-
         for task in [self._send_task, self._recv_task, self._cleanup_task]:
             if task:
                 task.cancel()
@@ -627,7 +601,6 @@ class _InworldConnection:
                     await task
                 except asyncio.CancelledError:
                     pass
-
 
         for ctx in list(self._contexts.values()):
             if ctx.waiter and not ctx.waiter.done():
@@ -670,10 +643,8 @@ class _ConnectionPool:
         self._pool_lock = asyncio.Lock()
         self._closed = False
 
-
         self._capacity_available = asyncio.Event()
         self._capacity_available.set()
-
 
         self._cleanup_task: asyncio.Task[None] | None = None
 
@@ -700,19 +671,15 @@ class _ConnectionPool:
             created_new = False
 
             async with self._pool_lock:
-
                 if self._cleanup_task is None:
                     self._cleanup_task = asyncio.create_task(self._cleanup_idle_connections())
 
-
                 self._connections = [c for c in self._connections if not c._closed]
-
 
                 for existing in self._connections:
                     if not existing._closed and existing.has_capacity:
                         conn = existing
                         break
-
 
                 if conn is None and len(self._connections) < self._max_connections:
                     conn = _InworldConnection(
@@ -729,16 +696,13 @@ class _ConnectionPool:
                         extra={"pool_size": len(self._connections)},
                     )
 
-
                 if conn:
                     conn.reserve_capacity()
-
 
             if conn:
                 try:
                     ctx_id, waiter = await conn.acquire_context(emitter, opts, remaining_timeout)
                 except BaseException:
-
                     conn.release_reservation()
 
                     if created_new:
@@ -749,7 +713,6 @@ class _ConnectionPool:
                     raise
 
                 return ctx_id, waiter, conn
-
 
             elapsed = time.time() - start_time
             remaining_timeout = timeout - elapsed
@@ -796,7 +759,6 @@ class _ConnectionPool:
                         "Closing idle Inworld connection",
                         extra={"pool_size": len(self._connections)},
                     )
-
 
             for conn in connections_to_close:
                 await conn.aclose()
@@ -1185,7 +1147,6 @@ class ChunkedStream(tts.ChunkedStream):
                 },
                 json=body_params,
                 timeout=aiohttp.ClientTimeout(sock_connect=self._conn_options.timeout),
-
                 read_bufsize=10 * 1024 * 1024,
             ) as resp:
                 resp.raise_for_status()
@@ -1210,7 +1171,6 @@ class ChunkedStream(tts.ChunkedStream):
                         continue
 
                     if result := data.get("result"):
-
                         if timestamp_info := result.get("timestampInfo"):
                             timed_strings = _parse_timestamp_info(timestamp_info)
                             if timed_strings:
@@ -1317,7 +1277,6 @@ def _parse_timestamp_info(
     """
     timed_strings: list[TimedString] = []
 
-
     if word_align := timestamp_info.get("wordAlignment"):
         words = word_align.get("words", [])
         starts = word_align.get("wordStartTimeSeconds", [])
@@ -1332,7 +1291,6 @@ def _parse_timestamp_info(
                     end_time=cumulative_time + end,
                 )
             )
-
 
     if char_align := timestamp_info.get("characterAlignment"):
         chars = char_align.get("characters", [])

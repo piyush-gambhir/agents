@@ -35,10 +35,6 @@ from livekit.protocol.agent_pb import agent_session as agent_pb
 pytestmark = pytest.mark.unit
 
 
-
-
-
-
 class InMemoryTransport(SessionTransport):
     """A simple in-memory transport that captures sent messages."""
 
@@ -71,11 +67,6 @@ class InMemoryTransport(SessionTransport):
             return await asyncio.wait_for(self._inbound.get(), timeout=0.5)
         except (asyncio.TimeoutError, asyncio.CancelledError):
             raise StopAsyncIteration from None
-
-
-
-
-
 
 
 class TestChatItemToProto:
@@ -238,11 +229,6 @@ class TestSessionUsageToProto:
         assert len(pb.model_usage) == 3
 
 
-
-
-
-
-
 class TestRoomSessionTransport:
     def test_remote_identity_property(self) -> None:
         room = MagicMock()
@@ -256,11 +242,6 @@ class TestRoomSessionTransport:
         room = MagicMock()
         transport = RoomSessionTransport(room)
         assert transport.remote_identity is None
-
-
-
-
-
 
 
 class TestSessionHostEvents:
@@ -409,11 +390,6 @@ class TestSessionHostEvents:
         assert msg.event.session_usage_updated.usage.model_usage[0].llm.provider == "openai"
 
         await host.aclose()
-
-
-
-
-
 
 
 class TestSessionHostRequests:

@@ -30,13 +30,8 @@ class LogQueueListener:
         if self._thread is None:
             return
 
-
-
-
-
         self._thread.join(timeout=2)
         if self._thread.is_alive():
-
             self._duplex.close()
             self._thread.join()
         else:
@@ -92,10 +87,8 @@ class LogQueueHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
-
             if sys.is_finalizing():
                 return
-
 
             msg = self.format(record)
             record = copy.copy(record)
@@ -106,8 +99,6 @@ class LogQueueHandler(logging.Handler):
 
             record.exc_text = record.exc_text
             record.stack_info = None
-
-
 
             if hasattr(record, "websocket"):
                 record.websocket = None

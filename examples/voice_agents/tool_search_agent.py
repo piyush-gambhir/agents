@@ -175,15 +175,11 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
     )
 
-
-
-
     usage_collector = metrics.UsageCollector()
 
     @session.on("metrics_collected")
     def _on_metrics_collected(ev: MetricsCollectedEvent):
         usage_collector.collect(ev.metrics)
-
 
         if isinstance(ev.metrics, LLMMetrics) and ev.metrics.prompt_tokens > 0:
             metrics.log_metrics(ev.metrics)

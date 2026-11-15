@@ -17,12 +17,6 @@ from livekit.agents import stt
 from livekit.plugins.sarvam.stt import SpeechStream
 
 
-
-
-
-
-
-
 def _make_stream_under_test() -> tuple[SpeechStream, list[Any]]:
     """Construct a minimal SpeechStream and collect its emitted events.
 
@@ -65,11 +59,6 @@ def _final_event(captured: list[Any]) -> stt.SpeechEvent:
     return finals[0]
 
 
-
-
-
-
-
 @pytest.mark.parametrize(
     "language_probability, expected_confidence",
     [
@@ -88,11 +77,6 @@ async def test_ws_threads_language_probability_into_confidence(
     await instance._handle_transcript_data(_ws_message(language_probability=language_probability))
     final = _final_event(captured)
     assert final.alternatives[0].confidence == pytest.approx(expected_confidence)
-
-
-
-
-
 
 
 async def test_ws_missing_language_probability_falls_back_to_1_0() -> None:
@@ -127,12 +111,6 @@ async def test_ws_unexpected_type_falls_back_to_1_0(bad_value: Any) -> None:
     assert final.alternatives[0].confidence == 1.0
 
     assert instance._logger.debug.called  # type: ignore[attr-defined]
-
-
-
-
-
-
 
 
 @pytest.mark.parametrize("value", [-0.5, 1.5, 2.0])

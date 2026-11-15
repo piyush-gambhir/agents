@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 from livekit.agents import Agent, AgentServer, AgentSession, JobContext, cli, llm
 from livekit.plugins import openai
 
-
-
 logger = logging.getLogger("realtime-load-chat-history")
 
 load_dotenv()
@@ -43,9 +41,6 @@ async def entrypoint(ctx: JobContext):
     agent = Agent(
         instructions="You are a helpful travel planner.",
         llm=openai.realtime.RealtimeModel(voice="alloy", model="gpt-4o-mini-realtime-preview"),
-
-
-
         tts=openai.TTS(voice="alloy"),
         chat_ctx=chat_ctx,
     )

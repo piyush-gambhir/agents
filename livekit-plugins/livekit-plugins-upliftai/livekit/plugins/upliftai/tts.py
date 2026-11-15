@@ -29,7 +29,6 @@ from livekit.agents.utils import is_given
 
 from .log import logger
 
-
 OutputFormat = Literal[
     "PCM_22050_16",
     "WAV_22050_16",
@@ -133,7 +132,6 @@ class TTS(tts.TTS):
             num_channels=num_channels,
         )
 
-
         resolved_base_url: str = (
             base_url
             if is_given(base_url)
@@ -147,7 +145,6 @@ class TTS(tts.TTS):
             raise ValueError(
                 "API key is required, either as argument or set UPLIFTAI_API_KEY environment variable"
             )
-
 
         resolved_word_tokenizer: tokenize.WordTokenizer | tokenize.SentenceTokenizer
         if is_given(word_tokenizer):
@@ -238,14 +235,11 @@ class WebSocketClient:
                 engineio_logger=False,
             )
 
-
             self.sio.on("message", self._on_message, namespace=WEBSOCKET_NAMESPACE)
             self.sio.on("connect", self._on_connect, namespace=WEBSOCKET_NAMESPACE)
             self.sio.on("disconnect", self._on_disconnect, namespace=WEBSOCKET_NAMESPACE)
 
-
             auth_data = {"token": self.opts.api_key}
-
 
             await self.sio.connect(
                 self.opts.base_url,
@@ -254,7 +248,6 @@ class WebSocketClient:
                 transports=["websocket"],
                 wait_timeout=10,
             )
-
 
             max_wait = 5.0
             start_time = time.time()
@@ -281,11 +274,9 @@ class WebSocketClient:
         if not request_id:
             request_id = str(uuid.uuid4())
 
-
         audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self.audio_callbacks[request_id] = audio_queue
         self.active_requests[request_id] = True
-
 
         message: dict[str, Any] = {
             "type": "synthesize",
@@ -378,7 +369,6 @@ class ChunkedStream(tts.ChunkedStream):
         request_id = utils.shortuuid()
 
         try:
-
             output_emitter.initialize(
                 request_id=request_id,
                 sample_rate=self._tts._opts.sample_rate,
@@ -388,13 +378,10 @@ class ChunkedStream(tts.ChunkedStream):
                 ),
             )
 
-
             if not self._tts._client:
                 self._tts._client = WebSocketClient(self._tts._opts)
 
-
             audio_queue = await self._tts._client.synthesize(self._input_text, request_id)
-
 
             while True:
                 try:
@@ -488,10 +475,8 @@ class SynthesizeStream(tts.SynthesizeStream):
         output_emitter.start_segment(segment_id=segment_id)
 
         try:
-
             if not self._tts._client:
                 self._tts._client = WebSocketClient(self._tts._opts)
-
 
             text_parts = []
             async for data in word_stream:
@@ -500,7 +485,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             if not text_parts:
                 return
 
-
             if isinstance(self._tts._opts.word_tokenizer, tokenize.WordTokenizer):
                 full_text = self._tts._opts.word_tokenizer.format_words(text_parts)
             else:
@@ -508,9 +492,7 @@ class SynthesizeStream(tts.SynthesizeStream):
 
             self._mark_started()
 
-
             audio_queue = await self._tts._client.synthesize(full_text, segment_id)
-
 
             while True:
                 try:

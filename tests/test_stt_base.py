@@ -99,16 +99,10 @@ async def test_start_time_reseeded_on_retry() -> None:
     stt = _DummySTT()
     stream = _DummyStream(stt=stt, fail_first_run=True)
 
-
-
     sentinel = 1.0
     stream.start_time = sentinel
 
-
-
-
     await asyncio.wait_for(stream._task, timeout=5.0)
-
 
     assert stream.start_time != sentinel
 

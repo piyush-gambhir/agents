@@ -15,9 +15,6 @@ from .toxic_proxy import Toxiproxy
 TEST_CONNECT_OPTIONS = dataclasses.replace(DEFAULT_API_CONNECT_OPTIONS, retry_interval=0.0)
 
 
-
-
-
 _PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 
@@ -30,7 +27,6 @@ def _load_categories() -> tuple[str, ...]:
 
 
 CATEGORIES = _load_categories()
-
 
 
 _CATEGORY_RE = re.compile(r"pytest\.mark\.(" + "|".join(CATEGORIES) + r")\b")
@@ -184,8 +180,6 @@ def pytest_ignore_collect(collection_path: Path, config: pytest.Config) -> bool 
     except OSError:
         return None
 
-
-
     if any(f"pytest.mark.{category}" in source for category in selected):
         return None
     return True
@@ -270,7 +264,6 @@ def logger():
 def _is_ignorable_task(task) -> bool:
     try:
         coro = task.get_coro()
-
 
         coro_name = getattr(coro, "__qualname__", "") or type(coro).__name__
         if "async_generator_athrow" in coro_name:

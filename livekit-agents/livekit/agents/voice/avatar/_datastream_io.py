@@ -63,14 +63,11 @@ class DataStreamAudioOutput(AudioOutput):
         self._lock = asyncio.Lock()
         self._start_atask: asyncio.Task | None = None
 
-
-
         self._clear_buffer_timeout = clear_buffer_timeout
         self._clear_buffer_timeout_handler: asyncio.TimerHandle | None = None
 
         def _on_room_connected(fut: asyncio.Future[None]) -> None:
             if not self._start_atask and not fut.cancelled() and not fut.exception():
-
                 self._register_playback_finished_rpc(
                     self._room,
                     caller_identity=self._destination_identity,
@@ -135,11 +132,8 @@ class DataStreamAudioOutput(AudioOutput):
     async def capture_frame(self, frame: rtc.AudioFrame) -> None:
         """Capture and stream audio frame to remote worker"""
 
-
         if self._start_atask is None:
             self._start_atask = asyncio.create_task(self._start_task())
-
-
 
         await asyncio.shield(self._start_atask)
 
@@ -157,8 +151,6 @@ class DataStreamAudioOutput(AudioOutput):
             )
             self._pushed_duration = 0.0
             if not self._wait_playback_start:
-
-
                 self.on_playback_started(created_at=time.time())
 
         await self._stream_writer.write(bytes(frame.data))
@@ -169,7 +161,6 @@ class DataStreamAudioOutput(AudioOutput):
         super().flush()
         if self._stream_writer is None or not self._started:
             return
-
 
         task = asyncio.create_task(self._stream_writer.aclose())
         self._tasks.add(task)
@@ -395,7 +386,6 @@ class DataStreamAudioReceiver(AudioReceiver):
             if self._current_reader:
                 self._current_reader_cleared = True
 
-
             while not self._data_ch.empty():
                 self._data_ch.recv_nowait()
 
@@ -467,7 +457,6 @@ class DataStreamAudioReceiver(AudioReceiver):
                     break
                 except rtc.RpcError as e:
                     if e.code == rtc.RpcError.ErrorCode.UNSUPPORTED_METHOD:
-
                         if method == RPC_PLAYBACK_STARTED:
                             logger.error(
                                 "remote participant didn't register lk.playback_started RPC"
@@ -510,7 +499,6 @@ class DataStreamAudioReceiver(AudioReceiver):
                 try:
                     async for data in self._current_reader:
                         if self._current_reader_cleared:
-
                             while not self._data_ch.empty():
                                 self._data_ch.recv_nowait()
                             bstream.clear()

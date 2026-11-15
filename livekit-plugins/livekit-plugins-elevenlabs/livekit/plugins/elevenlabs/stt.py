@@ -59,7 +59,6 @@ class VADOptions(TypedDict, total=False):
     """Minimum silence duration in milliseconds. Default to 2500"""
 
 
-
 ElevenLabsSTTModels = Literal["scribe_v1", "scribe_v2", "scribe_v2_realtime"]
 
 
@@ -357,7 +356,6 @@ class SpeechStream(stt.SpeechStream):
         async def keepalive_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             try:
                 while True:
-
                     await asyncio.sleep(10)
                     await ws.send_str(
                         json.dumps(
@@ -376,7 +374,6 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -386,7 +383,6 @@ class SpeechStream(stt.SpeechStream):
 
             has_ended = False
             async for data in self._input_ch:
-
                 frames: list[rtc.AudioFrame] = []
                 if isinstance(data, rtc.AudioFrame):
                     frames.extend(audio_bstream.write(data.data.tobytes()))
@@ -511,7 +507,6 @@ class SpeechStream(stt.SpeechStream):
 
         query_string = "&".join(params)
 
-
         base_url = self._opts.base_url.replace("https://", "wss://").replace("http://", "ws://")
         ws_url = f"{base_url}/speech-to-text/realtime?{query_string}"
 
@@ -539,7 +534,6 @@ class SpeechStream(stt.SpeechStream):
 
         normalized_language = LanguageCode(language_code) if language_code else LanguageCode("en")
 
-
         speech_data = stt.SpeechData(
             language=normalized_language,
             text=text,
@@ -561,13 +555,11 @@ class SpeechStream(stt.SpeechStream):
             logger.debug("Received message type partial_transcript: %s", data)
 
             if text:
-
                 if not self._speaking:
                     self._event_ch.send_nowait(
                         stt.SpeechEvent(type=SpeechEventType.START_OF_SPEECH)
                     )
                     self._speaking = True
-
 
                 interim_event = stt.SpeechEvent(
                     type=SpeechEventType.INTERIM_TRANSCRIPT,
@@ -575,21 +567,15 @@ class SpeechStream(stt.SpeechStream):
                 )
                 self._event_ch.send_nowait(interim_event)
 
-
         elif (message_type == "committed_transcript" and not self._opts.include_timestamps) or (
             message_type == "committed_transcript_with_timestamps" and self._opts.include_timestamps
         ):
-
-
             if text:
-
                 if not self._speaking:
                     self._event_ch.send_nowait(
                         stt.SpeechEvent(type=SpeechEventType.START_OF_SPEECH)
                     )
                     self._speaking = True
-
-
 
                 final_event = stt.SpeechEvent(
                     type=SpeechEventType.FINAL_TRANSCRIPT,
@@ -597,21 +583,16 @@ class SpeechStream(stt.SpeechStream):
                 )
                 self._event_ch.send_nowait(final_event)
             else:
-
-
                 if self._speaking:
                     self._event_ch.send_nowait(stt.SpeechEvent(type=SpeechEventType.END_OF_SPEECH))
                     self._speaking = False
 
         elif message_type == "committed_transcript":
-
             pass
 
         elif message_type == "session_started":
-
             session_id = data.get("session_id", "unknown")
             logger.debug("Session started with ID: %s", session_id)
-
 
         elif message_type in (
             "auth_error",

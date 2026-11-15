@@ -241,7 +241,6 @@ class GetDOBTask(AgentTask[GetDOBResult]):
 
     def _build_confirm_tool(self, *, dob: date | None) -> llm.FunctionTool:
 
-
         captured_dob = dob
         captured_time = self._current_time
 

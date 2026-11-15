@@ -16,12 +16,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
-
 class RoomName(str, Enum):
     BEDROOM = "bedroom"
     LIVING_ROOM = "living room"
@@ -45,16 +39,6 @@ class MyAgent(Agent):
         Args:
             location: The location to get the weather for
         """
-
-
-
-
-
-
-
-
-
-
 
         logger.info(f"Getting weather for {location}")
         return f"The weather in {location} is sunny today."

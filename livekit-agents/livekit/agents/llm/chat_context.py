@@ -250,8 +250,6 @@ class AudioContent(BaseModel):
 ChatRole: TypeAlias = Literal["developer", "system", "user", "assistant"]
 
 
-
-
 class MetricsMetadata(TypedDict, total=False):
     model_name: str
     model_provider: str
@@ -488,7 +486,6 @@ class ChatContext:
                 elif isinstance(tool, Toolset):
                     yield from get_tool_names(tool.tools)
                 else:
-
                     continue
 
         valid_tools = set(get_tool_names(tools)) if tools else set()
@@ -547,7 +544,6 @@ class ChatContext:
         )
 
         new_items = self._items[-max_items:]
-
 
         while new_items and new_items[0].type in [
             "function_call",
@@ -742,10 +738,6 @@ class ChatContext:
         keep_last_turns: int = 2,
     ) -> ChatContext:
 
-
-
-
-
         msg_budget = keep_last_turns * 2
         split_idx = len(self.items)
 
@@ -759,14 +751,12 @@ class ChatContext:
                         split_idx = i
                         break
             else:
-
                 return self
 
         if split_idx == 0:
             return self
 
         head_items, tail_items = self.items[:split_idx], self.items[split_idx:]
-
 
         to_summarize: list[ChatMessage | FunctionCall | FunctionCallOutput] = []
         for item in head_items:
@@ -784,7 +774,6 @@ class ChatContext:
 
         if not to_summarize:
             return self
-
 
         contents: list[str] = []
         for m in to_summarize:
@@ -833,10 +822,6 @@ class ChatContext:
         summary = "".join(chunks).strip()
         if not summary:
             return self
-
-
-
-
 
         preserved: list[ChatItem] = []
         for it in head_items:
@@ -926,7 +911,6 @@ class _ReadOnlyChatContext(ChatContext):
         def _raise_error(self, *args: Any, **kwargs: Any) -> None:
             logger.error(_ReadOnlyChatContext.error_msg)
             raise RuntimeError(_ReadOnlyChatContext.error_msg)
-
 
         append = extend = pop = remove = clear = sort = reverse = _raise_error  # type: ignore
         __setitem__ = __delitem__ = __iadd__ = __imul__ = _raise_error  # type: ignore

@@ -151,7 +151,6 @@ def _new_start_args(mp_ctx: BaseContext) -> _StartArgs:
 def _initialize_proc(proc: JobProcess) -> None:
     start_args: _StartArgs = proc.user_arguments
 
-
     with start_args.initialize_counter.get_lock():
         start_args.initialize_counter.value += 1
 
@@ -193,7 +192,6 @@ async def _job_entrypoint_session_aclose_hangs(job_ctx: JobContext) -> None:
     _SESSION_ACLOSE_TIMEOUT guardrail must fire so shutdown callbacks still run."""
     from livekit.agents.ipc import job_proc_lazy_main
 
-
     job_proc_lazy_main._SESSION_ACLOSE_TIMEOUT = 2.0
 
     start_args: _StartArgs = job_ctx.proc.user_arguments
@@ -209,9 +207,6 @@ async def _job_entrypoint_session_aclose_hangs(job_ctx: JobContext) -> None:
             await asyncio.Event().wait()
 
     job_ctx._primary_agent_session = _HangingSession()  # type: ignore[assignment]
-
-
-
 
     async def _noop_session_end() -> None:
         return None
@@ -238,8 +233,6 @@ async def _job_entrypoint_raises_after_shutdown(job_ctx: JobContext) -> None:
 
     with start_args.entrypoint_counter.get_lock():
         start_args.entrypoint_counter.value += 1
-
-
 
     fut: asyncio.Future[None] = asyncio.Future()
 
@@ -346,7 +339,6 @@ async def test_proc_pool():
         assert not psutil.pid_exists(pid)
 
     for exitcode in exitcodes:
-
         assert exitcode == 0, f"process did not exit cleanly: {exitcode}"
 
 
@@ -395,7 +387,6 @@ async def test_slow_initialization():
 
     await _wait_for_elements(start_q, num_idle_processes)
     await _wait_for_elements(close_q, num_idle_processes)
-
 
     await _wait_for_elements(start_q, num_idle_processes)
     await _wait_for_elements(close_q, num_idle_processes)
@@ -518,7 +509,6 @@ async def test_job_slow_shutdown():
     await _poll_until(lambda: start_args.entrypoint_counter.value >= 1)
     await proc.aclose()
 
-
     assert proc.exitcode != 0, "process should have been killed"
     assert proc.killed
 
@@ -603,17 +593,14 @@ def test_log_queue_drains_before_stop():
     parent_dup = duplex_unix._Duplex.open(parent_sock)
     child_dup = duplex_unix._Duplex.open(child_sock)
 
-
     class _CapturingListener(LogQueueListener):
         def handle(self, record: logging.LogRecord) -> None:
             received.append(record.getMessage())
-
 
             time.sleep(0.001)
 
     listener = _CapturingListener(parent_dup, lambda r: None)
     listener.start()
-
 
     handler = LogQueueHandler(child_dup)
     test_logger = logging.getLogger("test_log_queue_drain")
@@ -624,11 +611,8 @@ def test_log_queue_drains_before_stop():
     for i in range(NUM_LOGS):
         test_logger.info("msg %d", i)
 
-
     handler.close()
     handler.thread.join()
-
-
 
     listener.stop()
 

@@ -111,10 +111,8 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
     elif resize_opts.strategy == "center_aspect_fit":
         result = Image.new("RGB", (resize_opts.width, resize_opts.height))  # noqa
 
-
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
-
 
         if resize_opts.width / resize_opts.height > image.width / image.height:
             new_height = resize_opts.height
@@ -134,10 +132,8 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
     elif resize_opts.strategy == "center_aspect_cover":
         result = Image.new("RGB", (resize_opts.width, resize_opts.height))  # noqa
 
-
         new_height = int(image.height * (resize_opts.width / image.width))
         new_width = resize_opts.width
-
 
         if resize_opts.height / resize_opts.width > image.height / image.width:
             new_width = int(image.width * (resize_opts.height / image.height))
@@ -154,10 +150,8 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
         )
         return result
     elif resize_opts.strategy == "scale_aspect_cover":
-
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
-
 
         if new_height < resize_opts.height:
             new_height = resize_opts.height
@@ -165,10 +159,8 @@ def _resize_image(image: "Image.Image", options: EncodeOptions) -> "Image.Image"
 
         return image.resize((new_width, new_height))
     elif resize_opts.strategy == "scale_aspect_fit":
-
         new_width = resize_opts.width
         new_height = int(image.height * (resize_opts.width / image.width))
-
 
         if new_height > resize_opts.height:
             new_height = resize_opts.height

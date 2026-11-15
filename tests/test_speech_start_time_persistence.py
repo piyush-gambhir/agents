@@ -40,7 +40,6 @@ class TestUserTurnStartPersistence:
         with patch.object(AudioRecognition, "__init__", lambda self, *args, **kwargs: None):
             audio_recognition = AudioRecognition.__new__(AudioRecognition)
 
-
         audio_recognition._speech_start_time = None
         audio_recognition._vad_speech_started = False
 
@@ -58,7 +57,6 @@ class TestUserTurnStartPersistence:
         audio_recognition._stt_provider = None
         audio_recognition._audio_transcript = ""
         audio_recognition._last_speaking_time = None
-
 
         audio_recognition._hooks = MagicMock()
         audio_recognition._session = MagicMock()
@@ -119,21 +117,17 @@ class TestUserTurnStartPersistence:
         """
         audio_recognition = self._create_audio_recognition()
 
-
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=5.0)
         )
         first_burst_start = audio_recognition._user_turn_start
         assert first_burst_start is not None
 
-
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.END_OF_SPEECH, speech_duration=5.0, silence_duration=0.6)
         )
 
-
         await asyncio.sleep(0.05)
-
 
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=0.0)
@@ -169,7 +163,6 @@ class TestUserTurnStartPersistence:
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=0.0)
         )
-
 
         assert audio_recognition._speech_start_time is not None
         assert audio_recognition._speech_start_time > first_burst_speech_start

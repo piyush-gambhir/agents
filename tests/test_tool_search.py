@@ -231,7 +231,6 @@ class TestToolSearchToolset:
 
         await ts._handle_search({"query": "weather"})
 
-
         ctx = ToolContext([ts])
         assert "tool_search" in ctx.function_tools
         assert "weather_tool" in ctx.function_tools
@@ -242,7 +241,6 @@ class TestToolSearchToolset:
         """If a toolset matches, ALL its tools are loaded (not just the matching one)."""
         ts = ToolSearchToolset(id="search", tools=[WeatherToolset(), FinanceToolset()])
         await ts.setup()
-
 
         await ts._handle_search({"query": "weather"})
         ctx = ToolContext([ts])
@@ -258,7 +256,6 @@ class TestToolSearchToolset:
         )
         await ts.setup()
 
-
         await ts._handle_search({"query": "weather"})
         assert len(ts._loaded_tools) == 1
 
@@ -268,7 +265,6 @@ class TestToolSearchToolset:
             tools=[calculator, WeatherToolset()],
         )
         await ts.setup()
-
 
         assert len(ts._search_items) == 3
 
@@ -396,7 +392,6 @@ class TestToolSearchWithToolContext:
         assert len(ctx.function_tools) == 1
 
         await ts._handle_search({"query": "weather"})
-
 
         ctx2 = ToolContext([ts])
         assert "tool_search" in ctx2.function_tools

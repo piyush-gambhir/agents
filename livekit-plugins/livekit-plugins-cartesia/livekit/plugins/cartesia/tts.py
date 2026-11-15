@@ -192,7 +192,6 @@ class TTS(tts.TTS):
                     "fr",
                 }
             ):
-
                 logger.warning(
                     "word_timestamps is only supported for languages en, de, es, and fr with `sonic` models"
                     " or all languages with `preview` models"
@@ -478,11 +477,9 @@ class SynthesizeStream(tts.SynthesizeStream):
                     output_emitter.push(b64data)
                 elif data.get("done"):
                     if sent_tokenizer_stream.closed:
-
                         output_emitter.end_input()
                         break
                 elif word_timestamps := data.get("word_timestamps"):
-
                     for word, start, end in zip(
                         word_timestamps["words"],
                         word_timestamps["start"],
@@ -499,7 +496,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                                 if sent.strip():
                                     sent_tokens.appendleft(sent)
                                 elif sent and sent_tokens:
-
                                     sent_tokens[0] = sent + sent_tokens[0]
                             else:
                                 word = f"{word} "

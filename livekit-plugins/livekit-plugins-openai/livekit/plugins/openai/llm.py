@@ -426,7 +426,6 @@ class LLM(llm.LLM):
             temperature=temperature,
             parallel_tool_calls=parallel_tool_calls,
             tool_choice=tool_choice,
-
             reasoning_effort=reasoning_effort,
             safety_identifier=safety_identifier,
             prompt_cache_key=prompt_cache_key,
@@ -468,19 +467,16 @@ class LLM(llm.LLM):
                 "OpenRouter API key is required, either as argument or set OPENROUTER_API_KEY environment variable"
             )
 
-
         default_headers: dict[str, str] = {}
         if site_url:
             default_headers["HTTP-Referer"] = site_url
         if app_name:
             default_headers["X-Title"] = app_name
 
-
         or_body: dict[str, Any] = {}
         if provider:
             or_body["provider"] = provider
         if fallback_models:
-
             or_body["models"] = [model, *fallback_models]
         if plugins:
             or_body["plugins"] = [

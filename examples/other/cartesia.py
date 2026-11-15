@@ -101,8 +101,6 @@ def main() -> None:
                 api_key=api_key,
             ),
             turn_handling={
-
-
                 "turn_detection": "stt",
             },
         )

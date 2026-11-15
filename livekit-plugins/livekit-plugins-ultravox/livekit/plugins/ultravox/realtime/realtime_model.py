@@ -280,7 +280,6 @@ class RealtimeSession(
         self._current_generation: _ResponseGeneration | None = None
         self._chat_ctx = llm.ChatContext.empty()
 
-
         self._pending_generation_epoch: float | None = None
 
         self._last_seen_user_ord: int = -1
@@ -297,7 +296,6 @@ class RealtimeSession(
         self._last_user_final_ts: float | None = None
 
         self._session_should_close = asyncio.Event()
-
 
     def _pick_created_timestamp(self) -> float:
         """Pick a creation timestamp anchored to the most recent user-final if fresh.
@@ -319,7 +317,6 @@ class RealtimeSession(
             old_ch = self._msg_ch
             old_ch.close()
             self._msg_ch = utils.aio.Chan[UltravoxEvent | dict[str, Any] | bytes]()
-
 
             if self._pending_generation_fut and not self._pending_generation_fut.done():
                 self._pending_generation_fut.cancel("Session restart")
@@ -354,7 +351,6 @@ class RealtimeSession(
 
         diff_ops = compute_chat_ctx_diff(self._chat_ctx, chat_ctx)
 
-
         if lk_ultravox_debug:
             logger.debug(f"[ultravox] update_chat_ctx: to_create={len(diff_ops.to_create)}")
 
@@ -367,7 +363,6 @@ class RealtimeSession(
             logger.warning(
                 f"[ultravox] Ignoring {len(diff_ops.to_remove)} message deletions (not supported by Ultravox)"
             )
-
 
         for _, msg_id in diff_ops.to_create:
             item = chat_ctx.get_by_id(msg_id)
@@ -384,13 +379,11 @@ class RealtimeSession(
                     )
 
             elif item.type == "message" and item.role == "user":
-
                 if item.text_content:
                     self._send_client_event(
                         UserTextMessageEvent(text=item.text_content, defer_response=True)
                     )
             elif item.type == "function_call_output":
-
                 if lk_ultravox_debug:
                     logger.debug(
                         f"[ultravox] bridging tool result: invocationId={item.call_id} "
@@ -413,10 +406,8 @@ class RealtimeSession(
 
                 self._send_client_event(tool_result)
 
-
                 if lk_ultravox_debug:
                     logger.debug(f"[ultravox] tool_result_bridged: id={item.call_id}")
-
 
         self._chat_ctx = chat_ctx.copy()
 
@@ -425,10 +416,8 @@ class RealtimeSession(
 
         current_tool_names = set(self._tools.function_tools.keys())
 
-
         self._tools.update_tools(tools)
         new_tool_names = set(self._tools.function_tools.keys())
-
 
         if current_tool_names != new_tool_names:
             self._mark_restart_needed()
@@ -491,11 +480,9 @@ class RealtimeSession(
                 "generate_reply called while another generation is pending, cancelling previous."
             )
 
-
             old_fut = self._pending_generation_fut
             self._pending_generation_fut = None
             old_fut.cancel("Superseded by new generate_reply call")
-
 
         self._pending_generation_epoch = time.perf_counter()
 
@@ -503,7 +490,6 @@ class RealtimeSession(
         self._pending_generation_fut = fut
 
         if is_given(instructions):
-
             self._send_client_event(
                 UserTextMessageEvent(
                     text=f"<instruction>{instructions}</instruction>", defer_response=False
@@ -511,8 +497,6 @@ class RealtimeSession(
             )
         else:
             self._send_client_event(UserTextMessageEvent(text="", defer_response=False))
-
-
 
         def _on_timeout() -> None:
             if not fut.done():
@@ -534,8 +518,6 @@ class RealtimeSession(
                 self._pending_generation_fut = None
                 self._pending_generation_epoch = None
             if f.cancelled() and is_current:
-
-
                 self._send_client_event(
                     UserTextMessageEvent(text="", urgency="immediate", defer_response=True)
                 )
@@ -548,14 +530,9 @@ class RealtimeSession(
         """Interrupt the current generation."""
 
         if self._current_generation and not self._current_generation._done:
-
-
-
-
             self._send_client_event(
                 UserTextMessageEvent(text="", urgency="immediate", defer_response=True)
             )
-
 
             self._interrupt_current_generation()
 
@@ -593,31 +570,26 @@ class RealtimeSession(
     async def _main_task(self) -> None:
         """Main task with restart loop for managing WebSocket sessions."""
         while not self._msg_ch.closed:
-
             self._session_should_close.clear()
 
             self._last_seen_user_ord = -1
             self._last_seen_agent_ord = -1
 
             try:
-
                 headers = {
                     "User-Agent": "LiveKit Agents",
                     "X-API-Key": self._realtime_model._opts.api_key,
                     "Content-Type": "application/json",
                 }
 
-
                 query_params = {}
                 if not self._realtime_model._opts.enable_greeting_prompt:
                     query_params["enableGreetingPrompt"] = "false"
-
 
                 create_call_url = f"{self._realtime_model._opts.base_url.rstrip('/')}/calls"
                 if query_params:
                     query_string = "&".join(f"{k}={v}" for k, v in query_params.items())
                     create_call_url += f"?{query_string}"
-
 
                 payload: dict[str, Any] = {
                     "systemPrompt": self._realtime_model._opts.system_prompt,
@@ -633,7 +605,6 @@ class RealtimeSession(
                     "selectedTools": parse_tools(list(self._tools.function_tools.values())),
                 }
 
-
                 if is_given(self._realtime_model._opts.temperature):
                     payload["temperature"] = self._realtime_model._opts.temperature
                 if is_given(self._realtime_model._opts.language_hint):
@@ -647,7 +618,6 @@ class RealtimeSession(
                 if is_given(self._realtime_model._opts.first_speaker):
                     payload["firstSpeaker"] = self._realtime_model._opts.first_speaker
 
-
                 http_session = self._realtime_model._ensure_http_session()
                 async with http_session.post(
                     create_call_url, json=payload, headers=headers
@@ -659,14 +629,12 @@ class RealtimeSession(
                         raise APIConnectionError("Ultravox call created, but no joinUrl received.")
 
                 if self._realtime_model._opts.output_medium == "text":
-
                     self._send_client_event(SetOutputMediumEvent(medium="text"))
 
                 t0 = time.perf_counter()
                 ws_conn = await http_session.ws_connect(join_url)
                 self._report_connection_acquired(time.perf_counter() - t0)
                 self._closing = False
-
 
                 send_task = asyncio.create_task(self._send_task(ws_conn), name="_send_task")
                 recv_task = asyncio.create_task(self._recv_task(ws_conn), name="_recv_task")
@@ -675,7 +643,6 @@ class RealtimeSession(
                 )
 
                 try:
-
                     done, _ = await asyncio.wait(
                         [send_task, recv_task, restart_wait_task],
                         return_when=asyncio.FIRST_COMPLETED,
@@ -683,14 +650,10 @@ class RealtimeSession(
 
                     for task in done:
                         if task != restart_wait_task:
-
                             task.result()
                 finally:
-
                     await ws_conn.close()
                     await utils.aio.cancel_and_wait(send_task, recv_task, restart_wait_task)
-
-
 
                 if restart_wait_task not in done and self._msg_ch.closed:
                     break
@@ -698,11 +661,9 @@ class RealtimeSession(
             except Exception as e:
                 logger.error(f"Ultravox WebSocket error: {e}", exc_info=True)
 
-
                 is_recoverable = False
                 if isinstance(e, (aiohttp.ClientConnectionError, asyncio.TimeoutError)):
                     is_recoverable = True
-
 
                 if isinstance(e, (APIConnectionError, APIError)):
                     error = e
@@ -721,10 +682,8 @@ class RealtimeSession(
                     ),
                 )
 
-
                 if not is_recoverable or self._msg_ch.closed:
                     break
-
 
                 await asyncio.sleep(1.0)
 
@@ -732,19 +691,15 @@ class RealtimeSession(
     async def _send_task(self, ws_conn: aiohttp.ClientWebSocketResponse) -> None:
         """Task for sending messages to Ultravox WebSocket."""
         async for msg in self._msg_ch:
-
             if self._session_should_close.is_set():
                 break
 
             try:
                 if isinstance(msg, bytes):
-
                     self.emit(
                         "ultravox_client_event_queued", {"type": "audio_bytes", "len": len(msg)}
                     )
                     await ws_conn.send_bytes(msg)
-
-
 
                 elif isinstance(msg, dict):
                     msg_dict = msg
@@ -768,12 +723,10 @@ class RealtimeSession(
     async def _recv_task(self, ws_conn: aiohttp.ClientWebSocketResponse) -> None:
         """Task for receiving messages from Ultravox WebSocket."""
         while True:
-
             if self._session_should_close.is_set():
                 break
 
             msg = await ws_conn.receive()
-
 
             if msg.type == aiohttp.WSMsgType.TEXT:
                 try:
@@ -795,7 +748,6 @@ class RealtimeSession(
                 aiohttp.WSMsgType.CLOSE,
                 aiohttp.WSMsgType.CLOSING,
             ):
-
                 if self._closing:
                     return
 
@@ -855,14 +807,12 @@ class RealtimeSession(
         gen.message_ch.close()
         gen._done = True
 
-
         if gen.output_text:
             self._chat_ctx.add_message(
                 role="assistant",
                 content=gen.output_text,
                 id=gen.response_id,
             )
-
 
         self._emit_generation_metrics(interrupted=True)
 
@@ -894,7 +844,6 @@ class RealtimeSession(
             )
 
         if event.role == "user":
-
             if event.final and (event.text and event.text.strip()):
                 self._chat_ctx.add_message(
                     role="user",
@@ -920,13 +869,10 @@ class RealtimeSession(
 
             assert (msg_gen := self._current_generation) is not None
 
-
             incremental_text = event.delta or (event.text if not event.final else None)
             if incremental_text:
-
                 if msg_gen._first_token_timestamp is None:
                     msg_gen._first_token_timestamp = time.time()
-
 
                     if (
                         self._pending_generation_fut
@@ -945,7 +891,6 @@ class RealtimeSession(
 
                 msg_gen.text_ch.send_nowait(incremental_text)
                 msg_gen.output_text += incremental_text
-
 
             if event.final:
                 msg_gen.text_ch.close()
@@ -967,7 +912,6 @@ class RealtimeSession(
         self._current_generation.function_ch.close()
         self._current_generation.message_ch.close()
 
-
         self._emit_generation_metrics(interrupted=False)
 
     def _emit_generation_metrics(self, interrupted: bool = False) -> None:
@@ -984,8 +928,6 @@ class RealtimeSession(
         completed_timestamp = gen._completed_timestamp or current_time
         created_timestamp = gen._created_timestamp
         first_token_timestamp = gen._first_token_timestamp
-
-
 
         ttft = first_token_timestamp - created_timestamp if first_token_timestamp else -1
         duration = completed_timestamp - created_timestamp
@@ -1021,7 +963,6 @@ class RealtimeSession(
 
         self.emit("metrics_collected", metrics)
 
-
         self._current_generation = None
 
     def _handle_state_event(self, event: StateEvent) -> None:
@@ -1030,19 +971,14 @@ class RealtimeSession(
             logger.debug(f"Ultravox state: {event.state}")
 
         if event.state == "listening":
-
             self._interrupt_current_generation()
 
         elif event.state == "thinking":
-
-
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation(created_ts=self._pick_created_timestamp())
 
         elif event.state == "speaking":
-
             if not self._current_generation or self._current_generation._done:
-
                 self._start_new_generation(created_ts=self._pick_created_timestamp())
 
             assert self._current_generation is not None
@@ -1074,7 +1010,6 @@ class RealtimeSession(
                 f"invocationId={event.invocation_id} params_keys={list(event.parameters.keys())}"
             )
 
-
         function_call = llm.FunctionCall(
             call_id=event.invocation_id,
             name=event.tool_name,
@@ -1082,7 +1017,6 @@ class RealtimeSession(
         )
 
         if self._current_generation is None:
-
             self._start_new_generation(created_ts=self._pick_created_timestamp())
 
         assert self._current_generation is not None
@@ -1096,7 +1030,6 @@ class RealtimeSession(
             logger.debug(
                 f"[ultravox] tool_invocation trace: id={event.invocation_id} gen_id={gen_id}"
             )
-
 
         if lk_ultravox_debug:
             logger.debug(
@@ -1132,7 +1065,6 @@ class RealtimeSession(
     def _handle_audio_data(self, audio_data: bytes) -> None:
         """Handle binary audio data from Ultravox."""
         try:
-
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation()
 
@@ -1164,7 +1096,6 @@ class RealtimeSession(
         """Resample audio frame to the required sample rate."""
         if self._input_resampler:
             if frame.sample_rate != self._input_resampler._input_rate:
-
                 self._input_resampler = None
 
         if self._input_resampler is None and (

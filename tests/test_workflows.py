@@ -28,7 +28,6 @@ async def test_collect_email(input_modality: Literal["text", "audio"]) -> None:
         if input_modality == "text":
             assert isinstance(result.final_output, beta.workflows.GetEmailResult)
         else:
-
             result = await sess.run(
                 user_input="Yes",
                 output_type=beta.workflows.GetEmailResult,

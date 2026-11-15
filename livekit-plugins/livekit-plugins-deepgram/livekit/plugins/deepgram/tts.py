@@ -136,12 +136,8 @@ class TTS(tts.TTS):
 
     async def _close_ws(self, ws: aiohttp.ClientWebSocketResponse) -> None:
         try:
-
-
             await ws.send_str(SynthesizeStream._FLUSH_MSG)
             await ws.send_str(SynthesizeStream._CLOSE_MSG)
-
-
 
             try:
                 await asyncio.wait_for(ws.receive(), timeout=1.0)
@@ -316,7 +312,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                 self._mark_started()
                 await ws.send_str(json.dumps(speak_msg))
                 input_sent_event.set()
-
 
             flush_msg = {"type": "Flush"}
             await ws.send_str(json.dumps(flush_msg))

@@ -73,9 +73,6 @@ async def rt_session(request, job_process):
     await asyncio.sleep(0.5)
 
 
-
-
-
 async def _collect_text(gen_ev: llm.GenerationCreatedEvent) -> str:
     parts: list[str] = []
     async for msg_gen in gen_ev.message_stream:
@@ -117,9 +114,6 @@ async def _push_speech(session: llm.RealtimeSession, wav_name: str = "hello_worl
     session.push_audio(_silence())
 
 
-
-
-
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
 async def test_generate_reply(rt_session: llm.RealtimeSession):
     gen_ev = await asyncio.wait_for(rt_session.generate_reply(), timeout=15)
@@ -158,9 +152,6 @@ async def test_multiple_sequential_replies(rt_session: llm.RealtimeSession):
         )
         text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
         assert len(text) > 0, f"Reply {i} was empty"
-
-
-
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -245,13 +236,9 @@ async def test_input_audio_transcription(rt_session: llm.RealtimeSession):
     assert "weather" in full or "paris" in full
 
 
-
-
-
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
 async def test_update_chat_ctx(rt_session: llm.RealtimeSession):
     chat_ctx = llm.ChatContext()
-
 
     chat_ctx.add_message(role="user", content="My favorite number is seven")
     await asyncio.wait_for(rt_session.update_chat_ctx(chat_ctx), timeout=10)
@@ -276,7 +263,6 @@ async def test_chat_ctx_populated_after_reply(rt_session: llm.RealtimeSession):
     assert any(item.type == "message" and item.role == "assistant" for item in ctx.items)
 
 
-
 @pytest.mark.parametrize("rt_session", OPENAI_AND_AZURE, indirect=True)
 async def test_update_chat_ctx_replaces_history(rt_session: llm.RealtimeSession):
     ctx1 = llm.ChatContext()
@@ -293,9 +279,6 @@ async def test_update_chat_ctx_replaces_history(rt_session: llm.RealtimeSession)
     )
     text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
     assert "blue" in text.lower()
-
-
-
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -327,7 +310,6 @@ async def test_generate_reply_cancellation(rt_session: llm.RealtimeSession):
     fut.cancel()
     assert fut.cancelled()
 
-
     await asyncio.sleep(1.0)
 
     gen_ev = await asyncio.wait_for(
@@ -336,9 +318,6 @@ async def test_generate_reply_cancellation(rt_session: llm.RealtimeSession):
     )
     text = await asyncio.wait_for(_collect_text(gen_ev), timeout=15)
     assert "pineapple" in text.lower()
-
-
-
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)
@@ -401,9 +380,6 @@ async def test_function_tool_reply(rt_session: llm.RealtimeSession):
     assert "paris" in text.lower()
 
 
-
-
-
 @pytest.mark.parametrize(
     "model_factory",
     [
@@ -415,7 +391,6 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
     validate correctness, and print handoff + first reply timing."""
     model = model_factory()
     loop = asyncio.get_event_loop()
-
 
     long_ctx = llm.ChatContext()
     for i in range(10):
@@ -437,18 +412,15 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
         try:
             t0 = loop.time()
 
-
             await asyncio.wait_for(
                 session._update_session(instructions=new_instructions, chat_ctx=chat_ctx),
                 timeout=15,
             )
             handoff_time = loop.time() - t0
 
-
             ctx = session.chat_ctx.copy()
             ctx.add_message(role="user", content=question)
             await asyncio.wait_for(session.update_chat_ctx(ctx), timeout=15)
-
 
             gen = await asyncio.wait_for(session.generate_reply(), timeout=15)
             reply_time = loop.time() - t0
@@ -466,16 +438,12 @@ async def test_reuse_session_across_handoff(model_factory: Callable[[], llm.Real
     await _run_trial("fresh (copy ctx)", reuse=False, chat_ctx=long_ctx.copy())
     await _run_trial("fresh (empty ctx)", reuse=False, chat_ctx=llm.ChatContext())
 
-
     print("\n┌──────────────────────┬──────────────┬──────────────┐")
     print("│ Mode                 │ Handoff (s)  │ Reply (s)    │")
     print("├──────────────────────┼──────────────┼──────────────┤")
     for label, ht, rt in timings:
         print(f"│ {label:<20} │ {ht:>12.3f} │ {rt:>12.3f} │")
     print("└──────────────────────┴──────────────┴──────────────┘")
-
-
-
 
 
 @pytest.mark.parametrize("rt_session", REALTIME_MODELS, indirect=True)

@@ -54,7 +54,6 @@ class AMDPredictionEvent(BaseModel):
         )
 
 
-
 AMD_PROMPT = """Task:
 Classify the call greeting transcript into exactly one of these categories:
 
@@ -83,8 +82,6 @@ Output: machine-vm
 
 Input: "Hello, this is Lisa."
 Output: human"""
-
-
 
 
 def _listening_guard(method: Callable[..., Any]) -> Callable[..., Any]:
@@ -206,7 +203,6 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
 
         self._speech_ended_at = time.time() - silence_duration
         speech_duration = self._speech_ended_at - self._speech_started_at
-
 
         if self._eot_timer is not None:
             self._eot_timer.cancel()
@@ -391,7 +387,6 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
             self._silence_timer = None
             self._silence_timer_trigger = None
 
-
             assert self._speech_ended_at is not None
             remaining = (self._speech_ended_at + self._machine_silence_threshold) - time.time()
             self._silence_timer = asyncio.get_running_loop().call_later(
@@ -451,14 +446,8 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
 
             def _on_postpone_elapsed() -> None:
 
-
-
-
                 self._silence_reached = True
                 if not self._input_ch.closed:
-
-
-
                     self._input_ch.send_nowait("")
                 self._try_emit_result()
 

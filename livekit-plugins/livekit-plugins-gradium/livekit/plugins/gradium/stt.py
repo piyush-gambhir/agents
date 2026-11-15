@@ -62,7 +62,6 @@ class STTOptions:
     vad_threshold: float = 0.6
     vad_bucket: int | None = 2
 
-
     vad_flush: bool = True
 
 
@@ -191,7 +190,6 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-
     _CLOSE_MSG: str = json.dumps({"terminate_session": True})
 
     def __init__(
@@ -371,7 +369,6 @@ class SpeechStream(stt.SpeechStream):
                     elif type_ == "ready":
                         self._ready_msg = data
                     elif type_ == "end_text":
-
                         pass
                     else:
                         logger.warning(f"Unknown message type from Gradium {type_}")
@@ -416,7 +413,6 @@ class SpeechStream(stt.SpeechStream):
         headers = {"x-api-key": self._api_key, "x-api-source": "livekit"}
 
         ws = await self._session.ws_connect(self._model_endpoint, headers=headers)
-
 
         setup_msg: dict[str, Any] = {
             "type": "setup",

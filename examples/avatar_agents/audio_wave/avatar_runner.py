@@ -38,15 +38,12 @@ class AudioWaveGenerator(VideoGenerator):
         self._canvas.fill(255)
         self._wave_visualizer = WaveformVisualizer(sample_rate=options.audio_sample_rate)
 
-
         self._audio_bstream = utils.audio.AudioByteStream(
             sample_rate=options.audio_sample_rate,
             num_channels=options.audio_channels,
             samples_per_channel=options.audio_sample_rate // options.video_fps,
         )
         self._frame_ts: deque[float] = deque(maxlen=options.video_fps)
-
-
 
     async def push_audio(self, frame: rtc.AudioFrame | AudioSegmentEnd) -> None:
         """Called by the runner to push audio frames to the generator."""
@@ -75,27 +72,22 @@ class AudioWaveGenerator(VideoGenerator):
         """
         return self._video_generation_impl()
 
-
-
     async def _video_generation_impl(
         self,
     ) -> AsyncGenerator[rtc.VideoFrame | rtc.AudioFrame | AudioSegmentEnd, None]:
         while True:
             try:
-
                 frame = await asyncio.wait_for(
                     self._audio_queue.get(), timeout=0.5 / self._options.video_fps
                 )
                 self._audio_queue.task_done()
             except asyncio.TimeoutError:
-
                 yield self._generate_frame(None)
                 self._frame_ts.append(time.time())
                 continue
 
             audio_frames: list[rtc.AudioFrame] = []
             if isinstance(frame, rtc.AudioFrame):
-
                 if not self._audio_resampler and (
                     frame.sample_rate != self._options.audio_sample_rate
                     or frame.num_channels != self._options.audio_channels
@@ -118,13 +110,11 @@ class AudioWaveGenerator(VideoGenerator):
 
                 audio_frames += self._audio_bstream.flush()
 
-
             for audio_frame in audio_frames:
                 video_frame = self._generate_frame(audio_frame)
                 yield video_frame
                 yield audio_frame
                 self._frame_ts.append(time.time())
-
 
             if isinstance(frame, AudioSegmentEnd):
                 yield AudioSegmentEnd()
@@ -133,7 +123,6 @@ class AudioWaveGenerator(VideoGenerator):
         canvas = self._canvas.copy()
 
         if audio_frame is None:
-
             audio_data = np.zeros((1, self._options.audio_channels))
         else:
             audio_data = np.frombuffer(audio_frame.data, dtype=np.int16).reshape(
@@ -174,7 +163,6 @@ async def main(api_url: str, api_token: str):
 
     should_stop = asyncio.Event()
 
-
     @room.on("participant_disconnected")
     def _on_participant_disconnected(participant: rtc.RemoteParticipant):
         if participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_AGENT:
@@ -185,7 +173,6 @@ async def main(api_url: str, api_token: str):
     def _on_disconnected():
         logging.info("Room disconnected, stopping worker")
         should_stop.set()
-
 
     avatar_options = AvatarOptions(
         video_width=1280,
@@ -200,7 +187,6 @@ async def main(api_url: str, api_token: str):
     )
     try:
         await runner.start()
-
 
         tasks = [
             asyncio.create_task(runner.wait_for_complete()),

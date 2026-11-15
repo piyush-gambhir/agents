@@ -37,7 +37,6 @@ def create_tools_config(
     if function_tools:
         gemini_tools.append(types.Tool(function_declarations=function_tools))
 
-
     if _only_single_type and gemini_tools:
         return gemini_tools
 
@@ -62,12 +61,8 @@ def get_tool_results_for_realtime(
                 response={"output": msg.output},
             )
             if is_given(tool_response_scheduling):
-
-
                 res.scheduling = tool_response_scheduling
             if not vertexai:
-
-
                 res.id = msg.call_id
             function_responses.append(res)
     return (
@@ -93,7 +88,6 @@ class _GeminiJsonSchema:
     based on pydantic-ai implementation
     https://github.com/pydantic/pydantic-ai/blob/085a9542a7360b7e388ce575323ce189b397d7ad/pydantic_ai_slim/pydantic_ai/models/gemini.py#L809
     """
-
 
     TYPE_MAPPING: dict[str, types.Type] = {
         "string": types.Type.STRING,
@@ -122,7 +116,6 @@ class _GeminiJsonSchema:
         schema.pop("$schema", None)
 
         if (const := schema.pop("const", None)) is not None:
-
             schema["enum"] = [const]
 
         schema.pop("discriminator", None)
@@ -141,7 +134,6 @@ class _GeminiJsonSchema:
         if "enum" in schema and "type" not in schema:
             schema["type"] = self._infer_type(schema["enum"][0])
 
-
         if "type" in schema and schema["type"] != "null":
             json_type = schema["type"]
             if json_type in self.TYPE_MAPPING:
@@ -151,9 +143,7 @@ class _GeminiJsonSchema:
             else:
                 raise ValueError(f"Unsupported type in JSON Schema: {json_type}")
 
-
         self._map_field_names(schema)
-
 
         if any_of := schema.pop("anyOf", None):
             if any_of:

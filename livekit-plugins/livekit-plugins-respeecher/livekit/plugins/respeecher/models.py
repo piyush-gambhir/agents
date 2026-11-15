@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 TTSModels = Literal[
-
     "/public/tts/en-rt",
-
     "/public/tts/ua-rt",
 ]
 

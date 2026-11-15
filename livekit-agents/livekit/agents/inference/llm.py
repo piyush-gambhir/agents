@@ -39,7 +39,6 @@ from ._utils import (
 lk_oai_debug = int(os.getenv("LK_OPENAI_DEBUG", 0))
 
 
-
 _REASONING_UNSUPPORTED_PARAMS: set[str] = {
     "temperature",
     "top_p",
@@ -50,7 +49,6 @@ _REASONING_UNSUPPORTED_PARAMS: set[str] = {
     "top_logprobs",
     "n",
 }
-
 
 
 _XAI_REASONING_UNSUPPORTED_PARAMS: set[str] = {
@@ -178,10 +176,7 @@ class ChatCompletionOptions(TypedDict, total=False):
     verbosity: Literal["low", "medium", "high"] | None
     web_search_options: completion_create_params.WebSearchOptions
 
-
     tool_choice: ToolChoice
-
-
 
 
 @dataclass
@@ -380,7 +375,6 @@ class LLMStream(llm.LLMStream):
 
     async def _run(self) -> None:
 
-
         self._oai_stream: openai.AsyncStream[ChatCompletionChunk] | None = None
         self._tool_call_id: str | None = None
         self._fnc_name: str | None = None
@@ -406,7 +400,6 @@ class LLMStream(llm.LLMStream):
                     },
                 )
             if not self._tools:
-
                 self._extra_kwargs.pop("tool_choice", None)
 
             extra_headers = self._extra_kwargs.setdefault("extra_headers", {})
@@ -468,8 +461,6 @@ class LLMStream(llm.LLMStream):
         self, id: str, choice: Choice, thinking: asyncio.Event
     ) -> llm.ChatChunk | None:
         delta = choice.delta
-
-
 
         if delta is None:
             return None
@@ -535,7 +526,6 @@ class LLMStream(llm.LLMStream):
             return call_chunk
 
         delta.content = llm_utils.strip_thinking_tokens(delta.content, thinking)
-
 
         delta_extra = getattr(delta, "extra_content", None)
 

@@ -14,7 +14,6 @@
 
 """Lookup tables for language normalization. Kept separate to avoid bloating the class module."""
 
-
 ISO_639_3_TO_1: dict[str, str | None] = {
     "afr": "af",
     "amh": "am",
@@ -117,7 +116,6 @@ ISO_639_3_TO_1: dict[str, str | None] = {
     "xho": "xh",
     "zul": "zu",
 }
-
 
 
 LANGUAGE_NAMES_TO_CODE: dict[str, str] = {

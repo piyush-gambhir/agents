@@ -373,7 +373,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     output_emitter.push(b64data)
                 elif data.get("final"):
                     if sent_tokenizer_stream.closed:
-
                         output_emitter.end_input()
                         break
                 else:

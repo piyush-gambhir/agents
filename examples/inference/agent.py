@@ -25,9 +25,6 @@ DEFAULT_LLM = "openai/gpt-4.1-mini"
 DEFAULT_TTS = "cartesia/sonic-3"
 
 
-
-
-
 INSTRUCTIONS = (
     "You're a friendly agent in the LiveKit Playground. The person "
     "talking to you is prototyping their own voice agent — they can "
@@ -109,9 +106,6 @@ async def entrypoint(ctx: JobContext) -> None:
     @ctx.room.local_participant.register_rpc_method("open_in_builder")
     async def open_in_builder(data: RpcInvocationData) -> str:
 
-
-
-
         params = {
             "modelMode": "pipeline",
             "instructions": agent.instructions or "",
@@ -123,9 +117,6 @@ async def entrypoint(ctx: JobContext) -> None:
 
     @ctx.room.local_participant.register_rpc_method("set_system_prompt")
     async def set_system_prompt(data: RpcInvocationData) -> str:
-
-
-
 
         prompt = parse_value(data.payload, "")
         if not prompt:

@@ -19,7 +19,6 @@ from ..utils.audio import AudioBuffer
 from ..vad import VAD
 from .stt import STT, RecognizeStream, SpeechEvent, SpeechEventType, STTCapabilities
 
-
 DEFAULT_FALLBACK_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -71,8 +70,6 @@ class FallbackAdapter(
             stt = [
                 StreamAdapter(stt=t, vad=vad) if not t.capabilities.streaming else t for t in stt
             ]
-
-
 
         aligned_transcript: Literal["word", "chunk", False] = False
         if all(t.capabilities.aligned_transcript for t in stt):

@@ -161,9 +161,6 @@ class DriveThruAgent(Agent):
             if drink_size not in available_sizes:
                 drink_size = None
 
-
-
-
             if sauce_id and not find_items_by_id(sauce_items, sauce_id):
                 raise ToolError(f"error: the sauce {sauce_id} was not found")
 
@@ -284,7 +281,6 @@ class DriveThruAgent(Agent):
                 ),
             ],
             size: Annotated[
-
                 Literal["S", "M", "L", "null"] | None,
                 Field(
                     description="Size of the item, if applicable (e.g., 'S', 'M', 'L'), otherwise 'null'. "
@@ -319,9 +315,6 @@ class DriveThruAgent(Agent):
 
             if size is not None and not available_sizes:
                 size = None
-
-
-
 
             if (size and available_sizes) and size not in available_sizes:
                 raise ToolError(
@@ -498,14 +491,6 @@ async def drive_thru_agent(ctx: JobContext) -> None:
             volume=1.0,
         ),
     )
-
-
-
-
-
-
-
-
 
     push_pending = False
     push_running = False

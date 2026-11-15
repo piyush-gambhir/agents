@@ -89,7 +89,6 @@ async def _wait_for_stream_failure(
     feed_task = asyncio.create_task(_feed_audio_continuously(stream, stop))
 
     try:
-
         try:
             await stream._task
         except Exception as exc:
@@ -108,11 +107,6 @@ def _mock_request_info() -> MagicMock:
     ri.url = "http://localhost:9999/bargein"
     ri.headers = {}
     return ri
-
-
-
-
-
 
 
 class TestHttpTimeout:
@@ -138,7 +132,6 @@ class TestHttpTimeout:
         assert len(recoverable_errors) == 0
         assert len(unrecoverable_errors) == 1
         assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
-
 
 
 class TestHttp429:
@@ -201,11 +194,6 @@ class TestHttpNonRetryable:
         assert len(unrecoverable_errors) == 1
 
 
-
-
-
-
-
 class TestWsConnectionTimeout:
     @pytest.mark.asyncio
     async def test_retries_then_emits_unrecoverable(self) -> None:
@@ -248,7 +236,6 @@ class TestWsConnection429:
 
         assert exc is not None
         assert isinstance(exc, APIError)
-
 
         recoverable_errors = [e for e in errors if e.recoverable]
         unrecoverable_errors = [e for e in errors if not e.recoverable]

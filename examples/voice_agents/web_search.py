@@ -39,7 +39,6 @@ async def search_web(ctx: RunContext[AppData], query: str):
 
     logger.info(f"Searching for {query}")
 
-
     search = await asyncio.to_thread(ddgs_client.text, query)
     if len(search) == 0:
         raise ToolError("Tell the user that no results were found for the query.")

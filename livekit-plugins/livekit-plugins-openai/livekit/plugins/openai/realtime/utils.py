@@ -30,7 +30,6 @@ from openai.types.realtime.realtime_audio_config_input import NoiseReduction
 
 from ..log import logger
 
-
 DEFAULT_TURN_DETECTION = realtime.realtime_audio_input_turn_detection.SemanticVad(
     type="semantic_vad",
     create_response=True,

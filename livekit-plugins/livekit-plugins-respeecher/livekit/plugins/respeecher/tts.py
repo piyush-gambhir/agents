@@ -203,10 +203,6 @@ class TTS(tts.TTS):
         if is_given(model) and model != self._opts.model:
             self._opts.model = model
 
-
-
-
-
             self._retired_pools.append(self._pool)
             self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
                 connect_cb=self._connect_ws,
@@ -287,7 +283,6 @@ class ChunkedStream(tts.ChunkedStream):
                     request_id=utils.shortuuid(),
                     sample_rate=self._opts.sample_rate,
                     num_channels=1,
-
                     mime_type="audio/wav",
                 )
 

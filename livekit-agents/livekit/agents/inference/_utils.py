@@ -57,10 +57,6 @@ def get_inference_headers() -> dict[str, str]:
         if isinstance(job_id := ctx.job.id, str) and job_id:
             headers[HEADER_JOB_ID] = job_id
 
-
-
-
-
         if ctx.room.isconnected() and isinstance(agent_sid := ctx.agent.sid, str) and agent_sid:
             headers[HEADER_AGENT_ID] = agent_sid
     except RuntimeError:

@@ -8,9 +8,6 @@ class AssignmentTimeoutError(Exception):
     pass
 
 
-
-
-
 class APIError(Exception):
     """Raised when an API request failed.
     This is used on our TTS/STT/LLM plugins."""
@@ -65,10 +62,6 @@ class APIStatusError(APIError):
     ) -> None:
         if retryable is None:
             retryable = True
-
-
-
-
 
         if 400 <= status_code < 500 and status_code not in (408, 429, 499):
             retryable = False

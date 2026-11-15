@@ -102,7 +102,6 @@ class GetDtmfTask(AgentTask[GetDtmfResult]):
             if self._dtmf_reply_running:
                 return
 
-
             if ev.digit == dtmf_stop_event.value:
                 self._generate_dtmf_reply()
                 return
@@ -121,7 +120,6 @@ class GetDtmfTask(AgentTask[GetDtmfResult]):
                 dmtf_str = format_dtmf(self._curr_dtmf_inputs)
                 logger.debug(f"Generating DTMF reply, current inputs: {dmtf_str}")
 
-
                 if len(self._curr_dtmf_inputs) != num_digits:
                     error_msg = (
                         f"Digits input not fully received. "
@@ -129,7 +127,6 @@ class GetDtmfTask(AgentTask[GetDtmfResult]):
                     )
                     self.complete(ToolError(error_msg))
                     return
-
 
                 if not ask_for_confirmation:
                     self.complete(GetDtmfResult.from_dtmf_inputs(self._curr_dtmf_inputs))
@@ -154,10 +151,8 @@ class GetDtmfTask(AgentTask[GetDtmfResult]):
                 return
 
             if ev.new_state == "speaking":
-
                 self._generate_dtmf_reply.cancel()
             elif len(self._curr_dtmf_inputs) != 0:
-
                 self._generate_dtmf_reply.schedule()
 
         def _on_agent_state_changed(ev: AgentStateChangedEvent) -> None:
@@ -165,10 +160,8 @@ class GetDtmfTask(AgentTask[GetDtmfResult]):
                 return
 
             if ev.new_state in ["speaking", "thinking"]:
-
                 self._generate_dtmf_reply.cancel()
             elif len(self._curr_dtmf_inputs) != 0:
-
                 self._generate_dtmf_reply.schedule()
 
         self._generate_dtmf_reply: Debounced[None] = _generate_dtmf_reply

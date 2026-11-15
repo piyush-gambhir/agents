@@ -11,10 +11,6 @@ logger = logging.getLogger("kokoro-tts-agent")
 load_dotenv()
 
 
-
-
-
-
 class MyAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -43,7 +39,6 @@ async def entrypoint(ctx: JobContext):
     }
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
-
         llm=openai.LLM(model="gpt-4.1-mini"),
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=openai.TTS(

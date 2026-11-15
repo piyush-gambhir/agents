@@ -92,7 +92,6 @@ class STT(stt.STT):
             capabilities=stt.STTCapabilities(
                 streaming=True,
                 interim_results=True,
-
                 aligned_transcript="chunk",
                 offline_recognize=False,
             )
@@ -308,7 +307,6 @@ class SpeechStream(stt.SpeechStream):
                 if self._ws:
                     await self._end_segment()
                 has_ended = False
-
 
         if self._ws:
             self._state = _StreamState.CLOSING

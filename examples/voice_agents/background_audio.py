@@ -21,11 +21,6 @@ logger = logging.getLogger("background-audio")
 load_dotenv()
 
 
-
-
-
-
-
 class FakeWebSearchAgent(Agent):
     def __init__(self):
         super().__init__(instructions="You are a helpful assistant")
@@ -41,7 +36,6 @@ class FakeWebSearchAgent(Agent):
             query: The search query to look up on the web.
         """
 
-
         logger.info("FakeWebSearchAgent thinking...")
         await asyncio.sleep(5)
         return "The request failed, give the users some information based on your knowledge"
@@ -56,9 +50,7 @@ async def entrypoint(ctx: JobContext):
     await session.start(FakeWebSearchAgent(), room=ctx.room)
 
     background_audio = BackgroundAudioPlayer(
-
         ambient_sound=AudioConfig(BuiltinAudioClip.OFFICE_AMBIENCE, volume=0.8),
-
         thinking_sound=[
             AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.8),
             AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.7),
@@ -66,9 +58,6 @@ async def entrypoint(ctx: JobContext):
     )
 
     await background_audio.start(room=ctx.room, agent_session=session)
-
-
-
 
 
 if __name__ == "__main__":

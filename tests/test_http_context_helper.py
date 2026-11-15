@@ -33,9 +33,7 @@ async def test_open_yields_working_session_and_closes_on_exit() -> None:
 async def test_open_is_reentrant_inner_does_not_close_outer() -> None:
     async with http_context.open() as outer:
         async with http_context.open() as inner:
-
             assert inner is outer
-
 
         assert not outer.closed
         assert http_context.http_session() is outer
@@ -86,7 +84,6 @@ async def test_inference_stt_surfaces_real_error_outside_ctx(
 
     stt = inference.STT(model="cartesia/sonic-3")
     stream = stt.stream()
-
 
     assert not hasattr(stream, "_session")
 

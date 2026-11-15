@@ -53,7 +53,6 @@ class MultilingualModel(EOUModelBase):
                         data = await resp.json()
                         threshold = data.get("threshold")
                         if threshold:
-
                             self._languages[language.language] = {"threshold": threshold}
             except Exception as e:
                 logger.warning("Error fetching threshold for language %s", language, exc_info=e)
@@ -101,7 +100,6 @@ class MultilingualModel(EOUModelBase):
                 )
                 return probability
             else:
-
                 return 1
 
 

@@ -29,7 +29,6 @@ async def entrypoint(ctx: JobContext):
     logger.info("starting transcription protocol example")
     tts_11labs = elevenlabs.TTS()
 
-
     source = rtc.AudioSource(tts_11labs.sample_rate, tts_11labs.num_channels)
     track = rtc.LocalAudioTrack.create_audio_track("agent-mic", source)
     options = rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE)
@@ -37,7 +36,6 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect(auto_subscribe=AutoSubscribe.SUBSCRIBE_NONE)
     publication = await ctx.room.local_participant.publish_track(track, options)
     await publication.wait_for_subscription()
-
 
     tts_forwarder = transcription.TTSSegmentsForwarder(
         room=ctx.room, participant=ctx.room.local_participant
@@ -80,7 +78,6 @@ async def _eg_streamed_tts_stream(
     source: rtc.AudioSource,
 ):
     """Transcription example using a tts stream (we split text into chunks just for the example)"""
-
 
     tts_stream = tts_11labs.stream()
 

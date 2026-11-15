@@ -39,14 +39,12 @@ async def entrypoint(job: JobContext):
 
     text = "hello from Cartesia. I hope you are having a great day."
 
-
     words = text.split()
     for i in range(0, len(words), 2):
         chunk = " ".join(words[i : i + 2])
         if chunk:
             logger.info(f'pushing chunk: "{chunk} "')
             stream.push_text(chunk + " ")
-
 
     stream.flush()
     stream.end_input()

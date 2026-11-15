@@ -30,7 +30,6 @@ async def entrypoint(ctx: JobContext) -> None:
         framerate=30,
     )
 
-
     @page.on("paint")
     def on_paint(data: PaintData):
 
@@ -40,7 +39,6 @@ async def entrypoint(ctx: JobContext) -> None:
     def on_audio(data: AudioData):
 
         pass
-
 
     async with browser_ctx.playwright() as browser:
         pages = browser.contexts[0].pages

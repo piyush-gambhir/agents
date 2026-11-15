@@ -173,7 +173,6 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
 
         closing_ws = False
 
-
         self._speaking = False
         self._speech_duration = 0
         self._last_speech_end_time = 0
@@ -262,9 +261,6 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
                 keepalive = asyncio.create_task(keepalive_task(ws))
                 wait_reconnect = asyncio.create_task(self._reconnect_event.wait())
                 tasks = [send, recv, keepalive, wait_reconnect]
-
-
-
 
                 send_recv_group = asyncio.gather(send, recv)
 
@@ -358,9 +354,6 @@ class LegacyRecognizeStream(CartesiaRecognizeStream):
 
             if not text and not is_final:
                 return
-
-
-
 
             if not self._speaking:
                 self._speaking = True

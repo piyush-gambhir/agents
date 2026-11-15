@@ -15,11 +15,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self):
         super().__init__(instructions="You are a helpful assistant.")
@@ -45,7 +40,6 @@ async def entrypoint(ctx: JobContext):
         llm=inference.LLM("google/gemini-2.5-flash"),
         tts=cartesia.TTS(),
         vad=silero.VAD.load(),
-
         use_tts_aligned_transcript=True,
     )
 
@@ -54,7 +48,6 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             text_output=room_io.TextOutputOptions(
-
                 json_format=False,
                 sync_transcription=True,
             )

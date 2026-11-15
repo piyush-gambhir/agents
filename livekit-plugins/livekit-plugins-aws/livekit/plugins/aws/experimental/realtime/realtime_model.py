@@ -220,7 +220,6 @@ class Boto3CredentialsResolver(IdentityResolver):  # type: ignore[misc]
         ):
             return self._cached_identity
 
-
         self._cached_identity = None
         self._cached_expiry = None
 
@@ -233,7 +232,6 @@ class Boto3CredentialsResolver(IdentityResolver):  # type: ignore[misc]
 
             creds = credentials.get_frozen_credentials()
 
-
             if not creds.access_key or not creds.secret_key:
                 logger.error("AWS credentials are incomplete")
                 raise ValueError("AWS credentials are incomplete")
@@ -241,7 +239,6 @@ class Boto3CredentialsResolver(IdentityResolver):  # type: ignore[misc]
             logger.debug(
                 f"[CREDS] AWS credentials loaded successfully. AWS_ACCESS_KEY_ID: {creds.access_key[:4]}***"
             )
-
 
             expiry_time = getattr(credentials, "_expiry_time", None)
 
@@ -252,17 +249,14 @@ class Boto3CredentialsResolver(IdentityResolver):  # type: ignore[misc]
                 expiration=expiry_time,
             )
 
-
             self._cached_identity = identity
             if expiry_time:
-
                 self._cached_expiry = expiry_time.timestamp() - 180
                 logger.debug(
                     f"[CREDS] Cached credentials with expiry. "
                     f"expiry_time={expiry_time}, restart_before={self._cached_expiry}"
                 )
             else:
-
                 self._cached_expiry = None
                 logger.debug("[CREDS] Cached static credentials (no expiry)")
 
@@ -516,8 +510,6 @@ class RealtimeSession(  # noqa: F811
         self._tools = llm.ToolContext.empty()
         self._tool_results_ch = utils.aio.Chan[dict[str, str]]()
 
-
-
         self._tools_ready: asyncio.Future[bool] | None = None
         self._instructions_ready: asyncio.Future[bool] | None = None
         self._chat_ctx_ready: asyncio.Future[bool] | None = None
@@ -532,12 +524,8 @@ class RealtimeSession(  # noqa: F811
         self._pending_generation_fut: asyncio.Future[llm.GenerationCreatedEvent] | None = None
         self._sent_message_ids: set[str] = set()
         self._audio_message_ids: set[str] = set()
-        self._no_gen_content_roles: dict[
-            str, str
-        ] = {}
+        self._no_gen_content_roles: dict[str, str] = {}
         self._current_user_content_id: str | None = None
-
-
 
         self._stream_ready = asyncio.Event()
 
@@ -560,7 +548,6 @@ class RealtimeSession(  # noqa: F811
             cast(Callable[[str, Any], None], self.emit),
             self.emit_generation_event,
         )
-
 
         self._main_atask = asyncio.create_task(
             self.initialize_streams(), name="RealtimeSession.initialize_streams"
@@ -585,16 +572,13 @@ class RealtimeSession(  # noqa: F811
         credential_expiry = resolver.get_credential_expiry_time()
 
         if credential_expiry is None:
-
             logger.info(
                 f"[SESSION] Static credentials, using max duration: {MAX_SESSION_DURATION_SECONDS}s"
             )
             return MAX_SESSION_DURATION_SECONDS
 
-
         now = time.time()
         time_until_cred_expiry = credential_expiry - now - CREDENTIAL_EXPIRY_BUFFER_SECONDS
-
 
         duration = min(MAX_SESSION_DURATION_SECONDS, time_until_cred_expiry)
 
@@ -637,7 +621,6 @@ class RealtimeSession(  # noqa: F811
                 f"[SESSION] Session duration limit reached ({duration:.0f}s), initiating recycle"
             )
 
-
             if not self._audio_end_turn_received:
                 logger.info(
                     "[SESSION] Waiting for assistant to finish speaking (AUDIO END_TURN)..."
@@ -645,7 +628,6 @@ class RealtimeSession(  # noqa: F811
                 while not self._audio_end_turn_received:
                     await asyncio.sleep(0.1)
                 logger.debug("[SESSION] Assistant finished speaking")
-
 
             logger.debug("[SESSION] Waiting for audio to fully stop...")
             last_audio_time = self._last_audio_output_time
@@ -660,13 +642,10 @@ class RealtimeSession(  # noqa: F811
                     logger.debug("[SESSION] New audio detected, continuing to wait...")
                     last_audio_time = self._last_audio_output_time
 
-
-
             logger.info("[SESSION] Sending close events to Nova Sonic...")
             if self._stream_response:
                 for event in self._event_builder.create_prompt_end_block():
                     await self._send_raw_event(event)
-
 
             if self._current_generation and self._current_generation._done_fut:
                 try:
@@ -688,7 +667,6 @@ class RealtimeSession(  # noqa: F811
         """Gracefully recycle the session, preserving conversation state."""
         logger.info("[SESSION] Starting graceful session recycle")
 
-
         logger.debug("[SESSION] Draining pending tool results...")
         while True:
             try:
@@ -702,14 +680,10 @@ class RealtimeSession(  # noqa: F811
                 logger.warning(f"[SESSION] Error draining tool result: {e}")
                 break
 
-
         self._is_sess_active.clear()
-
 
         if self._response_task and not self._response_task.done():
             try:
-
-
                 await asyncio.wait_for(self._response_task, timeout=1.0)
             except asyncio.TimeoutError:
                 logger.debug("[SESSION] Response task timeout, cancelling...")
@@ -719,7 +693,6 @@ class RealtimeSession(  # noqa: F811
                 except asyncio.CancelledError:
                     pass
 
-
         if self._audio_input_task and not self._audio_input_task.done():
             self._audio_input_task.cancel()
             try:
@@ -727,14 +700,12 @@ class RealtimeSession(  # noqa: F811
             except asyncio.CancelledError:
                 pass
 
-
         if self._stream_response:
             try:
                 if not self._stream_response.input_stream.closed:
                     await self._stream_response.input_stream.close()
             except Exception as e:
                 logger.debug(f"[SESSION] Error closing stream (expected): {e}")
-
 
         self._stream_response = None
         self._bedrock_client = None
@@ -747,7 +718,6 @@ class RealtimeSession(  # noqa: F811
         logger.debug("[SESSION] Created fresh tool results and audio input channels")
         self._audio_end_turn_received = False
         self._stream_ready.clear()
-
 
         await self.initialize_streams(is_restart=True)
 
@@ -766,7 +736,6 @@ class RealtimeSession(  # noqa: F811
         if not self._stream_response:
             logger.warning("stream not initialized; dropping event (this should never occur)")
             return
-
 
         if '"audioInput"' not in event_json:
             logger.debug(f"[SEND] {event_json}")
@@ -845,7 +814,6 @@ class RealtimeSession(  # noqa: F811
             logger.debug(f"TOOL CHOICE: {tool_choice}")
             tool_cfg = ToolConfiguration(tools=tools, toolChoice=tool_choice)
 
-
             if not is_given(self._realtime_model.top_p):
                 self._realtime_model._opts.top_p = 1.0
             if not is_given(self._realtime_model.temperature):
@@ -881,7 +849,6 @@ class RealtimeSession(  # noqa: F811
             self._report_connection_acquired(time.perf_counter() - t0)
 
             if not is_restart:
-
                 if self._tools_ready is None:
                     self._tools_ready = asyncio.get_running_loop().create_future()
                 if self._instructions_ready is None:
@@ -896,9 +863,6 @@ class RealtimeSession(  # noqa: F811
                     pending_events.append(self._instructions_ready)
                 if not self._chat_ctx_ready.done():
                     pending_events.append(self._chat_ctx_ready)
-
-
-
 
                 try:
                     if pending_events:
@@ -926,7 +890,6 @@ class RealtimeSession(  # noqa: F811
                 )
                 self._chat_ctx.truncate(max_items=MAX_MESSAGES)
 
-
             restart_ctx = self._chat_ctx
             if is_restart and self._chat_ctx.items:
                 first_item = self._chat_ctx.items[0]
@@ -935,10 +898,6 @@ class RealtimeSession(  # noqa: F811
                     dummy_msg = llm.ChatMessage(role="user", content=["[Resuming conversation]"])
                     restart_ctx.items.insert(0, dummy_msg)
                     logger.debug("[SESSION] Added dummy USER message to start of chat history")
-
-
-
-
 
             interactive_user_text: str | None = None
             if is_restart and restart_ctx.items:
@@ -969,36 +928,26 @@ class RealtimeSession(  # noqa: F811
                 endpointing_sensitivity=self._realtime_model._opts.turn_detection,
             )
 
-
             for event in init_events:
                 await self._send_raw_event(event)
 
-
             self._session_start_time = time.time()
             self._start_session_recycle_timer()
-
 
             for event in history_events:
                 await self._send_raw_event(event)
                 await asyncio.sleep(0.01)
 
-
             self._response_task = asyncio.create_task(
                 self._process_responses(), name="RealtimeSession._process_responses"
             )
-
 
             self._audio_input_task = asyncio.create_task(
                 self._process_audio_input(), name="RealtimeSession._process_audio_input"
             )
 
-
-
-
             await asyncio.sleep(0.05)
             self._is_sess_active.set()
-
-
 
             if interactive_user_text:
                 await self._stream_ready.wait()
@@ -1028,7 +977,6 @@ class RealtimeSession(  # noqa: F811
             logger.debug("[GEN] emit_generation_event called but no generation exists - ignoring")
             return
 
-
         if self._current_generation._emitted:
             logger.debug(
                 f"[GEN] EMITTING generation_created (re-emit for tool call) for response_id={self._current_generation.response_id}"
@@ -1046,7 +994,6 @@ class RealtimeSession(  # noqa: F811
             response_id=self._current_generation.response_id,
         )
         self.emit("generation_created", generation_ev)
-
 
         if self._pending_generation_fut and not self._pending_generation_fut.done():
             self._pending_generation_fut.set_result(generation_ev)
@@ -1093,7 +1040,6 @@ class RealtimeSession(  # noqa: F811
                 f"[GEN] Generation already exists: response_id={self._current_generation.response_id}, emitted={self._current_generation._emitted}"
             )
 
-
         if self._current_generation.message_gen is None:
             logger.debug(
                 f"[GEN] Creating message structure for response_id={self._current_generation.response_id}"
@@ -1122,11 +1068,9 @@ class RealtimeSession(  # noqa: F811
                 f"[GEN] Message structure already exists for response_id={self._current_generation.response_id}"
             )
 
-
         if generation_created:
             logger.debug("[GEN] New generation created - calling emit_generation_event()")
             self.emit_generation_event()
-
 
     async def _handle_text_output_content_start_event(self, event_data: dict) -> None:
         """Handle text_output_content_start - track content type."""
@@ -1134,20 +1078,13 @@ class RealtimeSession(  # noqa: F811
 
         role = event_data["event"]["contentStart"]["role"]
 
-
-
-
         if role == "ASSISTANT":
             additional_fields = event_data["event"]["contentStart"].get("additionalModelFields", "")
             if "SPECULATIVE" in additional_fields:
                 logger.debug("[GEN] ASSISTANT SPECULATIVE text received")
                 self._create_response_generation()
 
-
-
-
         if self._current_generation is None:
-
             content_id = event_data["event"]["contentStart"].get("contentId")
             if content_id:
                 self._no_gen_content_roles[content_id] = role
@@ -1155,7 +1092,6 @@ class RealtimeSession(  # noqa: F811
             return
 
         content_id = event_data["event"]["contentStart"]["contentId"]
-
 
         if role == "USER":
             self._current_generation.content_id_map[content_id] = "USER_ASR"
@@ -1171,8 +1107,6 @@ class RealtimeSession(  # noqa: F811
         log_event_data(event_data)
 
         if self._current_generation is None:
-
-
             content_id = event_data["event"]["textOutput"]["contentId"]
             text_content = event_data["event"]["textOutput"]["content"]
 
@@ -1189,13 +1123,11 @@ class RealtimeSession(  # noqa: F811
         content_id = event_data["event"]["textOutput"]["contentId"]
         text_content = event_data["event"]["textOutput"]["content"]
 
-
         if text_content == BARGE_IN_SIGNAL:
             idx = self._chat_ctx.find_insertion_index(created_at=time.time()) - 1
             if idx >= 0 and (item := self._chat_ctx.items[idx]).type == "message":
                 item.interrupted = True
                 logger.debug("Barge-in detected - marked message as interrupted")
-
 
             if not self._pending_tools:
                 self._close_current_generation()
@@ -1210,10 +1142,8 @@ class RealtimeSession(  # noqa: F811
             self._update_chat_ctx(role="user", text_content=text_content, content_id=content_id)
 
         elif content_type == "ASSISTANT_TEXT":
-
             if self._current_generation._first_token_timestamp is None:
                 self._current_generation._first_token_timestamp = time.time()
-
 
             if self._current_generation.message_gen:
                 self._current_generation.message_gen.text_ch.send_nowait(text_content)
@@ -1228,7 +1158,6 @@ class RealtimeSession(  # noqa: F811
             b) 1kB message size limit
         """
         logger.debug(f"Updating chat context with role: {role} and text_content: {text_content}")
-
 
         force_new = False
         if role == "user" and content_id is not None:
@@ -1263,7 +1192,6 @@ class RealtimeSession(  # noqa: F811
                 if len(self._chat_ctx.items) > MAX_MESSAGES:
                     self._chat_ctx.truncate(max_items=MAX_MESSAGES)
 
-
     async def _handle_text_output_content_end_event(self, event_data: dict) -> None:
         """Handle text content end."""
         log_event_data(event_data)
@@ -1271,7 +1199,6 @@ class RealtimeSession(  # noqa: F811
     async def _handle_tool_output_content_start_event(self, event_data: dict) -> None:
         """Track tool content start."""
         log_event_data(event_data)
-
 
         self._create_response_generation()
 
@@ -1293,11 +1220,6 @@ class RealtimeSession(  # noqa: F811
         tool_name = event_data["event"]["toolUse"]["toolName"]
         args = event_data["event"]["toolUse"]["content"]
 
-
-
-
-
-
         if isinstance(args, str):
             try:
                 parsed = json.loads(args)
@@ -1311,16 +1233,11 @@ class RealtimeSession(  # noqa: F811
             except (json.JSONDecodeError, TypeError):
                 pass
 
-
         self._current_generation.function_ch.send_nowait(
             llm.FunctionCall(call_id=tool_use_id, name=tool_name, arguments=args)
         )
         self._pending_tools.add(tool_use_id)
         logger.debug(f"Tool call emitted: {tool_name} (id={tool_use_id})")
-
-
-
-
 
         logger.debug("Closing generation to allow tool result delivery")
         self._close_current_generation()
@@ -1361,7 +1278,6 @@ class RealtimeSession(  # noqa: F811
         """Handle audio content end - track END_TURN for session recycling."""
         log_event_data(event_data)
 
-
         stop_reason = event_data.get("event", {}).get("contentEnd", {}).get("stopReason")
         if stop_reason == "END_TURN":
             self._audio_end_turn_received = True
@@ -1376,10 +1292,8 @@ class RealtimeSession(  # noqa: F811
         response_id = self._current_generation.response_id
         was_emitted = self._current_generation._emitted
 
-
         if self._current_generation._completed_timestamp is None:
             self._current_generation._completed_timestamp = time.time()
-
 
         if self._current_generation.message_gen:
             if not self._current_generation.message_gen.audio_ch.closed:
@@ -1387,12 +1301,10 @@ class RealtimeSession(  # noqa: F811
             if not self._current_generation.message_gen.text_ch.closed:
                 self._current_generation.message_gen.text_ch.close()
 
-
         if not self._current_generation.message_ch.closed:
             self._current_generation.message_ch.close()
         if not self._current_generation.function_ch.closed:
             self._current_generation.function_ch.close()
-
 
         if self._current_generation._done_fut and not self._current_generation._done_fut.done():
             self._current_generation._done_fut.set_result(None)
@@ -1406,7 +1318,6 @@ class RealtimeSession(  # noqa: F811
         """Handle completionEnd - close the generation for this completion cycle."""
         log_event_data(event_data)
 
-
         if self._current_generation:
             logger.debug("completionEnd received, closing generation")
             self._close_current_generation()
@@ -1419,7 +1330,6 @@ class RealtimeSession(  # noqa: F811
         input_tokens = event_data["event"]["usageEvent"]["details"]["delta"]["input"]
         output_tokens = event_data["event"]["usageEvent"]["details"]["delta"]["output"]
 
-
         duration = 0.0
         ttft = 0.0
         tokens_per_second = 0.0
@@ -1429,14 +1339,11 @@ class RealtimeSession(  # noqa: F811
             first_token_ts = self._current_generation._first_token_timestamp
             completed_ts = self._current_generation._completed_timestamp
 
-
             if first_token_ts is not None and isinstance(created_ts, (int, float)):
                 ttft = first_token_ts - created_ts
 
-
             if completed_ts is not None and isinstance(created_ts, (int, float)):
                 duration = completed_ts - created_ts
-
 
             total_tokens = (
                 input_tokens["speechTokens"]
@@ -1488,14 +1395,11 @@ class RealtimeSession(  # noqa: F811
 
             _, output_stream = await self._stream_response.await_output()
 
-
             self._stream_ready.set()
             while self._is_sess_active.is_set():
-
                 try:
                     result = await output_stream.receive()
                     if result is None:
-
                         logger.debug("[SESSION] Stream returned None, exiting")
                         break
                     if result.value and result.value.bytes_:
@@ -1509,14 +1413,11 @@ class RealtimeSession(  # noqa: F811
                     else:
                         logger.warning("No response received")
                 except concurrent.futures.InvalidStateError:
-
-
                     logger.debug(
                         "[SESSION] Future cancelled during receive (expected during shutdown)"
                     )
                     break
                 except AttributeError as ae:
-
                     if "'NoneType' object has no attribute" in str(ae):
                         logger.debug(
                             "[SESSION] Stream closed during receive (expected during shutdown)"
@@ -1536,14 +1437,11 @@ class RealtimeSession(  # noqa: F811
                         logger.warning(f"Validation error: {ve}\nAttempting to recover...")
                         await self._restart_session(ve)
                     elif "Tool Response parsing error" in ve.message:
-
                         logger.warning(f"Tool response parsing error (recoverable): {ve}")
-
 
                         if self._current_generation:
                             logger.debug("Closing generation due to tool parsing error")
                             self._close_current_generation()
-
 
                         if self._pending_tools:
                             logger.debug(f"Clearing {len(self._pending_tools)} pending tools")
@@ -1671,7 +1569,6 @@ class RealtimeSession(  # noqa: F811
             self._is_sess_active.clear()
             return
 
-
         if self._current_generation:
             self._current_generation._restart_attempts += 1
             restart_attempts = self._current_generation._restart_attempts
@@ -1715,11 +1612,8 @@ class RealtimeSession(  # noqa: F811
             exclude_config_update=True,
         )
 
-
         if not self._chat_ctx_ready.done():
             self._chat_ctx = chat_ctx.copy()
-
-
 
             if (
                 self._chat_ctx.items
@@ -1729,25 +1623,19 @@ class RealtimeSession(  # noqa: F811
                 removed = self._chat_ctx.items.pop(0)
                 logger.debug("Stripped leading assistant message from context: %s", removed.id)
 
-
-
-
             for item in chat_ctx.items:
                 if item.type == "message":
                     self._sent_message_ids.add(item.id)
             logger.debug(f"Chat context updated: {self._chat_ctx.items}")
             self._chat_ctx_ready.set_result(True)
 
-
         for item in chat_ctx.items:
-
             if item.type == "function_call_output":
                 if item.call_id not in self._pending_tools:
                     continue
 
                 logger.debug(f"function call output: {item}")
                 self._pending_tools.discard(item.call_id)
-
 
                 if item.is_error:
                     tool_result = json.dumps({"error": str(item.output)})
@@ -1762,20 +1650,16 @@ class RealtimeSession(  # noqa: F811
                 )
                 continue
 
-
-
             if (
                 item.type == "message"
                 and item.role == "user"
                 and item.id not in self._sent_message_ids
             ):
-
                 if item.id not in self._audio_message_ids:
                     if item.text_content and item.text_content.strip():
                         logger.debug(
                             f"Sending user message as interactive text: {item.text_content}"
                         )
-
 
                         fut = asyncio.Future[llm.GenerationCreatedEvent]()
                         self._pending_generation_fut = fut
@@ -1786,7 +1670,6 @@ class RealtimeSession(  # noqa: F811
                             text: str = text, fut: asyncio.Future = fut
                         ) -> None:
                             try:
-
                                 await self._stream_ready.wait()
                                 await self._send_text_message(text, interactive=True)
                             except Exception as e:
@@ -1815,7 +1698,6 @@ class RealtimeSession(  # noqa: F811
         )
         for event in tool_events:
             await self._send_raw_event(event)
-
 
     def _tool_choice_adapter(
         self, tool_choice: llm.ToolChoice | None
@@ -1852,9 +1734,6 @@ class RealtimeSession(  # noqa: F811
                 logger.debug("Tool list has been injected (initial)")
                 return
 
-
-
-
         if old_tools != new_tools and self._is_sess_active.is_set():
             logger.info(
                 f"[SESSION] Tools changed (added={new_tools - old_tools}, "
@@ -1866,7 +1745,6 @@ class RealtimeSession(  # noqa: F811
 
     async def _deferred_tool_recycle(self) -> None:
         """Wait for in-flight tool results to be delivered, then recycle."""
-
 
         await asyncio.sleep(0.15)
 
@@ -1909,7 +1787,6 @@ class RealtimeSession(  # noqa: F811
             )
 
         if self._input_resampler:
-
             yield from self._input_resampler.push(frame)
         else:
             yield frame
@@ -1918,18 +1795,11 @@ class RealtimeSession(  # noqa: F811
     async def _process_audio_input(self) -> None:
         """Background task that feeds audio and tool results into the Bedrock stream."""
 
-
-
-
         await self._stream_ready.wait()
         await self._send_raw_event(self._event_builder.create_audio_content_start_event())
         logger.info("Starting audio input processing loop")
 
-
-
-
         await self._is_sess_active.wait()
-
 
         audio_task = asyncio.create_task(self._audio_input_chan.recv())
         tool_task = asyncio.create_task(self._tool_results_ch.recv())
@@ -1990,7 +1860,6 @@ class RealtimeSession(  # noqa: F811
                 raise
             except Exception:
                 logger.exception("Error processing audio")
-
 
     def _log_significant_audio(self, audio_bytes: bytes) -> None:
         """Utility that prints a debug message when the audio chunk has non-trivial RMS energy."""
@@ -2076,7 +1945,6 @@ class RealtimeSession(  # noqa: F811
                 "to enable this feature."
             )
 
-
             async def _empty_message_stream() -> AsyncIterator[llm.MessageGeneration]:
                 return
                 yield
@@ -2095,19 +1963,14 @@ class RealtimeSession(  # noqa: F811
             )
             return fut
 
-
         if is_given(instructions):
             logger.info(f"generate_reply: sending instructions='{instructions}'")
-
 
             fut = asyncio.Future[llm.GenerationCreatedEvent]()
             self._pending_generation_fut = fut
 
-
             async def _send_text() -> None:
                 try:
-
-
                     await self._stream_ready.wait()
                     await self._send_text_message(instructions, interactive=True)
                 except Exception as e:
@@ -2117,7 +1980,6 @@ class RealtimeSession(  # noqa: F811
                         self._pending_generation_fut = None
 
             send_task = asyncio.create_task(_send_text())
-
 
             def _on_timeout() -> None:
                 if not fut.done():
@@ -2137,14 +1999,11 @@ class RealtimeSession(  # noqa: F811
                 if is_current:
                     self._pending_generation_fut = None
                 if f.cancelled() and is_current and not send_task.done():
-
                     send_task.cancel()
 
             fut.add_done_callback(_on_fut_done)
 
             return fut
-
-
 
         if self._pending_generation_fut is not None:
             logger.debug("generate_reply: no instructions, returning existing pending generation")
@@ -2165,7 +2024,6 @@ class RealtimeSession(  # noqa: F811
 
         content_name = str(uuid.uuid4())
 
-
         if interactive:
             event = self._event_builder.create_text_content_start_event_interactive(
                 content_name=content_name, role="USER"
@@ -2174,7 +2032,6 @@ class RealtimeSession(  # noqa: F811
             event = self._event_builder.create_text_content_start_event(
                 content_name=content_name, role="USER"
             )
-
 
         await self._send_raw_event(event)
         await asyncio.sleep(0.01)
@@ -2234,7 +2091,6 @@ class RealtimeSession(  # noqa: F811
             logger.info("agent session already inactive")
             return
 
-
         if self._pending_generation_fut and not self._pending_generation_fut.done():
             self._pending_generation_fut.set_exception(
                 llm.RealtimeError("Session closed while waiting for generation")
@@ -2244,19 +2100,12 @@ class RealtimeSession(  # noqa: F811
         for event in self._event_builder.create_prompt_end_block():
             await self._send_raw_event(event)
 
-
         self._is_sess_active.clear()
 
         if self._stream_response and not self._stream_response.output_stream.closed:
             await self._stream_response.output_stream.close()
 
-
-
-
-
-
         tasks: list[asyncio.Task[Any]] = []
-
 
         if self._session_recycle_task and not self._session_recycle_task.done():
             self._session_recycle_task.cancel()
@@ -2273,13 +2122,11 @@ class RealtimeSession(  # noqa: F811
                 self._response_task.cancel()
             tasks.append(self._response_task)
 
-
         if self._audio_input_task and not self._audio_input_task.done():
             self._audio_input_task.cancel()
             tasks.append(self._audio_input_task)
         if self._stream_response and not self._stream_response.input_stream.closed:
             await self._stream_response.input_stream.close()
-
 
         if self._main_atask and not self._main_atask.done():
             self._main_atask.cancel()

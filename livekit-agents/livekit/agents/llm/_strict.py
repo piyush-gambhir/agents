@@ -16,19 +16,6 @@ def to_strict_json_schema(model: type[BaseModel] | TypeAdapter[Any]) -> dict[str
     return _ensure_strict_json_schema(schema, path=(), root=schema)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 def _ensure_strict_json_schema(
     json_schema: object,
     *,
@@ -59,8 +46,6 @@ def _ensure_strict_json_schema(
     if typ == "object" and "additionalProperties" not in json_schema:
         json_schema["additionalProperties"] = False
 
-
-
     properties = json_schema.get("properties")
     if is_dict(properties) and properties:
         json_schema["required"] = list(properties.keys())
@@ -69,18 +54,9 @@ def _ensure_strict_json_schema(
             for key, prop_schema in properties.items()
         }
 
-
-
     items = json_schema.get("items")
     if is_dict(items):
         json_schema["items"] = _ensure_strict_json_schema(items, path=(*path, "items"), root=root)
-
-
-
-
-
-
-
 
     for union_key in ("anyOf", "oneOf"):
         variants = json_schema.get(union_key)
@@ -100,7 +76,6 @@ def _ensure_strict_json_schema(
             else:
                 json_schema.pop(union_key, None)
 
-
     all_of = json_schema.get("allOf")
     if is_list(all_of):
         if len(all_of) == 1:
@@ -114,11 +89,8 @@ def _ensure_strict_json_schema(
                 for i, entry in enumerate(all_of)
             ]
 
-
     if "default" in json_schema:
         json_schema.pop("default", None)
-
-
 
         t = json_schema.get("type")
         if isinstance(t, str):
@@ -134,11 +106,6 @@ def _ensure_strict_json_schema(
     json_schema.pop("title", None)
     json_schema.pop("discriminator", None)
 
-
-
-
-
-
     ref = json_schema.get("$ref")
     if ref and has_more_than_n_keys(json_schema, 1):
         assert isinstance(ref, str), f"Received non-string $ref - {ref}"
@@ -149,18 +116,15 @@ def _ensure_strict_json_schema(
                 f"Expected `$ref: {ref}` to resolved to a dictionary but got {resolved}"
             )
 
-
         json_schema.update({**resolved, **json_schema})
         json_schema.pop("$ref")
         # Since the schema expanded from `$ref` might not have `additionalProperties: false` applied,  # noqa: E501
         # we call `_ensure_strict_json_schema` again to fix the inlined schema and ensure it's valid.  # noqa: E501
         return _ensure_strict_json_schema(json_schema, path=path, root=root)
 
-
     for union_key in ("anyOf", "oneOf"):
         variants = json_schema.get(union_key)
         if is_list(variants) and len(variants) == 2 and {"type": "null"} in variants:
-
             non_null = next(
                 (item for item in variants if item != {"type": "null"}),
                 None,
@@ -201,7 +165,6 @@ def resolve_ref(*, root: dict[str, object], ref: str) -> object:
 
 
 def is_dict(obj: object) -> TypeGuard[dict[str, object]]:
-
 
     return isinstance(obj, dict)
 

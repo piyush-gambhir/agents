@@ -9,9 +9,6 @@ from livekit.plugins.google import utils
 pytestmark = pytest.mark.unit
 
 
-
-
-
 async def test_json_def_replaced():
     class Location(BaseModel):
         lat: float
@@ -69,7 +66,6 @@ async def test_json_def_replaced():
     assert gemini_schema == expected_gemini_schema
 
 
-
 async def test_json_def_replaced_any_of():
     class Location(BaseModel):
         lat: float
@@ -81,8 +77,6 @@ async def test_json_def_replaced_any_of():
     json_schema = Locations.model_json_schema()
 
     gemini_schema = utils._GeminiJsonSchema(json_schema).simplify()
-
-
 
     expected_gemini_schema = {
         "properties": {
@@ -99,7 +93,6 @@ async def test_json_def_replaced_any_of():
         "type": types.Type.OBJECT,
     }
     assert gemini_schema == expected_gemini_schema
-
 
 
 async def test_json_def_recursive():
@@ -136,7 +129,6 @@ async def test_json_def_recursive():
         match=r"Recursive `\$ref`s in JSON Schema are not supported by Gemini",
     ):
         utils._GeminiJsonSchema(json_schema).simplify()
-
 
 
 async def test_json_def_date():

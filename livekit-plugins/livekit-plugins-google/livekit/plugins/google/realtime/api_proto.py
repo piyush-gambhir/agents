@@ -5,16 +5,8 @@ from typing import Literal
 
 from google.genai import types
 
-
-
-
-
-
-
 LiveAPIModels = Literal[
-
     "gemini-live-2.5-flash-native-audio",
-
     "gemini-3.1-flash-live-preview",
     "gemini-2.5-flash-native-audio-preview-12-2025",
 ]

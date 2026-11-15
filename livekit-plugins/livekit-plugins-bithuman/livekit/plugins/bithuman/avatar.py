@@ -63,24 +63,17 @@ def _is_valid_base64(s: str) -> bool:
     """
     import re
 
-
-
     s_clean = s.strip().replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "")
-
 
     if not s_clean:
         return False
 
-
-
     if len(s_clean) % 4 != 0:
         return False
-
 
     base64_pattern = re.compile(r"^[A-Za-z0-9+/]*={0,2}$")
     if not base64_pattern.match(s_clean):
         return False
-
 
     try:
         decoded = base64.b64decode(s_clean)
@@ -171,12 +164,10 @@ class AvatarSession(BaseAvatarSession):
         self._avatar_participant_identity = avatar_participant_identity or _AVATAR_AGENT_IDENTITY
         self._avatar_participant_name = avatar_participant_name or _AVATAR_AGENT_NAME
 
-
         self._mode = (
             "cloud" if utils.is_given(avatar_image) or utils.is_given(avatar_id) else "local"
         )
         self._model = model
-
 
         if self._mode == "local":
             if self._model_path is None:
@@ -215,7 +206,6 @@ class AvatarSession(BaseAvatarSession):
 
     @property
     def avatar_identity(self) -> str:
-
 
         if self._mode == "local" and self._room is not None:
             return self._room.local_participant.identity
@@ -318,22 +308,15 @@ class AvatarSession(BaseAvatarSession):
         job_ctx = get_job_context()
         local_participant_identity = job_ctx.local_participant_identity
 
-
         attributes: dict[str, str] = {
             ATTRIBUTE_PUBLISH_ON_BEHALF: local_participant_identity,
         }
 
-
         if self._api_secret is not None:
             attributes["api_secret"] = self._api_secret
 
-
         if utils.is_given(self._avatar_id):
             attributes["agent_id"] = self._avatar_id
-
-
-
-
 
         livekit_token = (
             api.AccessToken(api_key=livekit_api_key, api_secret=livekit_api_secret)
@@ -341,7 +324,6 @@ class AvatarSession(BaseAvatarSession):
             .with_identity(self._avatar_participant_identity)
             .with_name(self._avatar_participant_name)
             .with_grants(api.VideoGrants(room_join=True, room=room.name))
-
             .with_attributes(attributes)
             .to_jwt()
         )
@@ -360,19 +342,14 @@ class AvatarSession(BaseAvatarSession):
     ) -> None:
         assert self._api_url is not None, "api_url is not set"
 
-
-
         is_custom_endpoint = not self._is_default_api_url()
 
         if is_custom_endpoint and self._model == "expression":
-
-
             async_mode = self._parse_async_parameter_from_url()
             await self._send_formdata_request(
                 livekit_url, livekit_token, room_name, async_mode=async_mode
             )
         else:
-
             assert self._api_secret is not None, "api_secret is not set"
 
             await self._send_json_request(livekit_url, livekit_token, room_name)
@@ -394,7 +371,6 @@ class AvatarSession(BaseAvatarSession):
             default_domains = ["auth.api.bithuman.ai", "api.bithuman.ai"]
             return hostname in default_domains
         except Exception:
-
             default_domains = ["auth.api.bithuman.ai", "api.bithuman.ai"]
             return any(domain in self._api_url for domain in default_domains)
 
@@ -419,7 +395,6 @@ class AvatarSession(BaseAvatarSession):
             or self._model == "expression"
             else "cpu",
         }
-
 
         if isinstance(self._avatar_image, Image.Image):
             img_byte_arr = io.BytesIO()
@@ -466,7 +441,6 @@ class AvatarSession(BaseAvatarSession):
                 elif async_value == "false":
                     return False
         except Exception:
-
             pass
 
         return None
@@ -494,14 +468,10 @@ class AvatarSession(BaseAvatarSession):
         form_data.add_field("livekit_token", livekit_token)
         form_data.add_field("room_name", room_name)
 
-
-
         if async_mode is not None:
             form_data.add_field("async_mode", "true" if async_mode else "false")
 
-
         if isinstance(self._avatar_image, Image.Image):
-
             img_byte_arr = io.BytesIO()
             self._avatar_image.save(img_byte_arr, format="JPEG", quality=95)
             img_byte_arr.seek(0)
@@ -512,11 +482,9 @@ class AvatarSession(BaseAvatarSession):
                 content_type="image/jpeg",
             )
         elif isinstance(self._avatar_image, str):
-
             if self._avatar_image.startswith(("http://", "https://")):
                 form_data.add_field("avatar_image_url", self._avatar_image)
             elif _is_valid_base64(self._avatar_image):
-
                 try:
                     decoded_image = base64.b64decode(self._avatar_image)
                     img_byte_arr = io.BytesIO(decoded_image)
@@ -527,23 +495,17 @@ class AvatarSession(BaseAvatarSession):
                         content_type="image/jpeg",
                     )
                 except Exception as err:
-
                     raise BitHumanException(
                         f"Failed to decode base64 avatar image: {self._avatar_image[:50]}..."
                     ) from err
             else:
-
                 raise BitHumanException(
                     f"Invalid avatar image string: must be a URL (starting with http:// or https://) "
                     f"or valid base64 encoded data. Got: {self._avatar_image[:50]}..."
                 )
 
-
         if utils.is_given(self._avatar_id):
             form_data.add_field("avatar_id", self._avatar_id)
-
-
-
 
         auth_token = self._api_token or self._api_secret
         if auth_token is None:

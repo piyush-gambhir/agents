@@ -216,8 +216,6 @@ class AvatarSession(BaseAvatarSession):
 
     async def _end_runway_realtime_session(self, room: rtc.Room) -> None:
 
-
-
         if room.isconnected():
             try:
                 await room.local_participant.publish_data(
@@ -232,10 +230,6 @@ class AvatarSession(BaseAvatarSession):
                     "error ending Runway realtime session via data channel",
                     extra={"error": str(exc)},
                 )
-
-
-
-
 
         await self._cancel_runway_realtime_session()
 

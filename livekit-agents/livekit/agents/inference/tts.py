@@ -388,7 +388,6 @@ class TTS(tts.TTS):
         """
         sample_rate = sample_rate if is_given(sample_rate) else DEFAULT_SAMPLE_RATE
 
-
         if isinstance(model, str):
             parsed_model, parsed_voice = _parse_model_string(model)
             model = parsed_model

@@ -85,7 +85,6 @@ def to_chat_ctx(
     if current_role is not None and content:
         messages.append({"role": current_role, "content": content})
 
-
     if inject_dummy_user_message and (not messages or messages[0]["role"] != "user"):
         messages.insert(
             0,
@@ -94,8 +93,6 @@ def to_chat_ctx(
                 "content": [{"text": "(empty)", "type": "text"}],
             },
         )
-
-
 
     if inject_trailing_user_message and messages and messages[-1]["role"] == "assistant":
         messages.append({"role": "user", "content": [{"text": " ", "type": "text"}]})

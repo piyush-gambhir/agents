@@ -19,8 +19,6 @@ from livekit.plugins.langchain import LLMAdapter
 pytestmark = pytest.mark.unit
 
 
-
-
 class MessagesState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -28,9 +26,6 @@ class MessagesState(TypedDict):
 class CustomState(TypedDict):
     messages: Annotated[list, add_messages]
     custom_output: str
-
-
-
 
 
 def build_messages_graph():
@@ -85,9 +80,6 @@ def build_combined_graph():
     return graph.compile()
 
 
-
-
-
 async def collect_chunks(stream) -> list[str]:
     """Collect all content chunks from a stream."""
     chunks = []
@@ -95,9 +87,6 @@ async def collect_chunks(stream) -> list[str]:
         if chunk.delta and chunk.delta.content:
             chunks.append(chunk.delta.content)
     return chunks
-
-
-
 
 
 @pytest.mark.asyncio
@@ -110,7 +99,6 @@ async def test_messages_mode():
     chat_ctx.add_message(role="user", content="Hi")
     stream = adapter.chat(chat_ctx=chat_ctx)
     chunks = await collect_chunks(stream)
-
 
     assert len(chunks) > 0
     combined = "".join(chunks)
@@ -132,9 +120,6 @@ async def test_messages_mode_is_default():
     assert len(chunks) > 0
     combined = "".join(chunks)
     assert "Hello" in combined
-
-
-
 
 
 @pytest.mark.asyncio
@@ -163,11 +148,7 @@ async def test_custom_mode_dict():
     stream = adapter.chat(chat_ctx=chat_ctx)
     chunks = await collect_chunks(stream)
 
-
     assert "chunk3" in chunks
-
-
-
 
 
 @pytest.mark.asyncio
@@ -185,9 +166,6 @@ async def test_multi_mode():
 
     assert "LLM" in combined or "response" in combined
     assert "custom chunk" in combined
-
-
-
 
 
 def test_validation_rejects_unsupported_mode():
@@ -210,13 +188,9 @@ def test_validation_accepts_supported_modes():
     """Test that supported modes are accepted."""
     graph = build_messages_graph()
 
-
     LLMAdapter(graph, stream_mode="messages")
     LLMAdapter(graph, stream_mode="custom")
     LLMAdapter(graph, stream_mode=["messages", "custom"])
-
-
-
 
 
 @pytest.mark.asyncio

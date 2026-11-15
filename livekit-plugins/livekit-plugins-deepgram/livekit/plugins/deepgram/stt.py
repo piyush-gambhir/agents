@@ -89,7 +89,6 @@ class STT(stt.STT):
         no_delay: bool = True,
         endpointing_ms: int = 25,
         enable_diarization: bool = False,
-
         filler_words: bool = True,
         keywords: NotGivenOr[list[tuple[str, float]]] = NOT_GIVEN,
         keyterm: NotGivenOr[str | list[str]] = NOT_GIVEN,
@@ -102,7 +101,6 @@ class STT(stt.STT):
         numerals: bool = False,
         mip_opt_out: bool = False,
         vad_events: bool = True,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         """Create a new instance of Deepgram STT.
@@ -307,7 +305,6 @@ class STT(stt.STT):
         vad_events: NotGivenOr[bool] = NOT_GIVEN,
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(language):
@@ -423,9 +420,6 @@ class SpeechStream(stt.SpeechStream):
         self._request_id = ""
         self._reconnect_event = asyncio.Event()
 
-
-
-
         self._reported_duration: float = 0.0
 
     def update_options(
@@ -450,7 +444,6 @@ class SpeechStream(stt.SpeechStream):
         vad_events: NotGivenOr[bool] = NOT_GIVEN,
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(language):
@@ -504,8 +497,6 @@ class SpeechStream(stt.SpeechStream):
 
         async def keepalive_task(ws: aiohttp.ClientWebSocketResponse) -> None:
 
-
-
             try:
                 while True:
                     await ws.send_str(SpeechStream._KEEPALIVE_MSG)
@@ -517,7 +508,6 @@ class SpeechStream(stt.SpeechStream):
         @utils.log_exceptions(logger=logger)
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
-
 
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
@@ -544,7 +534,6 @@ class SpeechStream(stt.SpeechStream):
                         await ws.send_str(SpeechStream._FINALIZE_MSG)
                         has_ended = False
 
-
             closing_ws = True
             await ws.send_str(SpeechStream._CLOSE_MSG)
 
@@ -558,11 +547,8 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-
-
                     if closing_ws or self._session.closed:
                         return
-
 
                     raise APIStatusError(
                         message="deepgram connection closed unexpectedly",
@@ -599,7 +585,6 @@ class SpeechStream(stt.SpeechStream):
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-
                     for task in done:
                         if task != wait_reconnect_task:
                             task.result()
@@ -615,10 +600,6 @@ class SpeechStream(stt.SpeechStream):
             finally:
                 if ws is not None:
                     await ws.close()
-
-
-
-
 
                     if conn_start_time:
                         self._audio_duration_collector.flush()
@@ -695,19 +676,12 @@ class SpeechStream(stt.SpeechStream):
         assert self._opts.language is not None
 
         if data["type"] == "SpeechStarted":
-
-
-
-
             if self._speaking:
                 return
 
             self._speaking = True
             start_event = stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
             self._event_ch.send_nowait(start_event)
-
-
-
 
         elif data["type"] == "Results":
             metadata = data["metadata"]
@@ -722,8 +696,6 @@ class SpeechStream(stt.SpeechStream):
                 is_final=is_final_transcript,
                 start_time_offset=self.start_time_offset,
             )
-
-
 
             if len(alts) > 0 and alts[0].text:
                 if not self._speaking:
@@ -746,9 +718,6 @@ class SpeechStream(stt.SpeechStream):
                     )
                     self._event_ch.send_nowait(interim_event)
 
-
-
-
             if is_endpoint and self._speaking:
                 self._speaking = False
                 self._event_ch.send_nowait(stt.SpeechEvent(type=stt.SpeechEventType.END_OF_SPEECH))
@@ -770,7 +739,6 @@ def live_transcription_to_speech_data(
             speakers = [word["speaker"] for word in alt["words"] if "speaker" in word]
             speaker = Counter(speakers).most_common(1)[0][0] if speakers else None
         else:
-
             speaker = None
 
         sd = stt.SpeechData(
@@ -806,8 +774,6 @@ def prerecorded_transcription_to_speech_event(
     request_id = data["metadata"]["request_id"]
     channel: dict = data["results"]["channels"][0]
     dg_alts = channel["alternatives"]
-
-
 
     detected_language = LanguageCode(channel.get("detected_language", ""))
 

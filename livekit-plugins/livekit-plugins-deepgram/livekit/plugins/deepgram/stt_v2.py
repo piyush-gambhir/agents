@@ -77,7 +77,6 @@ class STTv2(stt.STT):
         http_session: aiohttp.ClientSession | None = None,
         base_url: str = "wss://api.deepgram.com/v2/listen",
         mip_opt_out: bool = False,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         """Create a new instance of Deepgram STT.
@@ -207,7 +206,6 @@ class STTv2(stt.STT):
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         language_hint: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         effective_eager = (
@@ -269,9 +267,7 @@ class STTv2(stt.STT):
 
 
 class SpeechStreamv2(stt.SpeechStream):
-
     _CLOSE_MSG: str = json.dumps({"type": "CloseStream"})
-
 
     def __init__(
         self,
@@ -310,7 +306,6 @@ class SpeechStreamv2(stt.SpeechStream):
         language_hint: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
         eager_eot_threshold: NotGivenOr[float] = NOT_GIVEN,
-
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(model):
@@ -344,21 +339,9 @@ class SpeechStreamv2(stt.SpeechStream):
     async def _run(self) -> None:
         closing_ws = False
 
-
-
-
-
-
-
-
-
-
-
-
         @utils.log_exceptions(logger=logger)
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
-
 
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
@@ -384,7 +367,6 @@ class SpeechStreamv2(stt.SpeechStream):
                         self._audio_duration_collector.flush()
                         has_ended = False
 
-
             closing_ws = True
             await ws.send_str(SpeechStreamv2._CLOSE_MSG)
 
@@ -398,11 +380,8 @@ class SpeechStreamv2(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-
-
                     if closing_ws or self._session.closed:
                         return
-
 
                     raise APIStatusError(
                         message="deepgram connection closed unexpectedly",
@@ -427,7 +406,6 @@ class SpeechStreamv2(stt.SpeechStream):
                 tasks = [
                     asyncio.create_task(send_task(ws)),
                     asyncio.create_task(recv_task(ws)),
-
                 ]
                 tasks_group = asyncio.gather(*tasks)
                 wait_reconnect_task = asyncio.create_task(self._reconnect_event.wait())
@@ -436,7 +414,6 @@ class SpeechStreamv2(stt.SpeechStream):
                         (tasks_group, wait_reconnect_task),
                         return_when=asyncio.FIRST_COMPLETED,
                     )
-
 
                     for task in done:
                         if task != wait_reconnect_task:
@@ -545,16 +522,12 @@ class SpeechStreamv2(stt.SpeechStream):
                 self._send_transcript_event(stt.SpeechEventType.INTERIM_TRANSCRIPT, data)
 
             elif event_type == "EagerEndOfTurn":
-
-
-
                 if not self._speaking:
                     return
 
                 self._send_transcript_event(stt.SpeechEventType.PREFLIGHT_TRANSCRIPT, data)
 
             elif event_type == "TurnResumed":
-
                 self._send_transcript_event(stt.SpeechEventType.INTERIM_TRANSCRIPT, data)
 
             elif event_type == "EndOfTurn":

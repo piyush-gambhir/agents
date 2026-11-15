@@ -61,14 +61,11 @@ class STTOptions:
     encoding: str = "pcm_s16le"
     language: LanguageCode = LanguageCode("en")
 
-
     enable_partial_transcripts: bool = True
     partial_transcript_interval_s: float = 1.0
     final_transcript_max_duration_s: int = 30
 
-
     show_word_timestamps: bool = True
-
 
     vad_threshold: float = 0.5
     vad_min_silence_duration_ms: int = 300
@@ -162,8 +159,6 @@ class STT(stt.STT):
             )
 
         self._api_key = api_key
-
-
 
         endpoint: str | None = None
         if model_endpoint:
@@ -277,7 +272,6 @@ class STT(stt.STT):
 class SpeechStream(stt.SpeechStream):
     """A streaming speech-to-text session connected to Baseten via WebSocket."""
 
-
     _CLOSE_MSG: str = json.dumps({"terminate_session": True})
 
     def __init__(
@@ -297,7 +291,6 @@ class SpeechStream(stt.SpeechStream):
         self._model_endpoint = model_endpoint
         self._session = http_session
         self._speech_duration: float = 0
-
 
         self._final_events: list[SpeechEvent] = []
         self._reconnect_event = asyncio.Event()
@@ -384,7 +377,6 @@ class SpeechStream(stt.SpeechStream):
                 try:
                     data = json.loads(msg.data)
 
-
                     msg_type = data.get("type")
                     if msg_type and msg_type not in ("transcription",):
                         logger.debug("Ignoring message type: %s", msg_type)
@@ -393,16 +385,12 @@ class SpeechStream(stt.SpeechStream):
                     is_final = data.get("is_final", True)
                     segments = data.get("segments", [])
 
-
-
                     text = (
                         data.get("transcript")
                         or " ".join(seg.get("text", "") for seg in segments).strip()
                     )
 
                     confidence = data.get("confidence", 0.0)
-
-
 
                     timed_words: list[TimedString] = []
                     for segment in segments:
@@ -525,8 +513,6 @@ class SpeechStream(stt.SpeechStream):
         }
 
         ws = await self._session.ws_connect(self._model_endpoint, headers=headers, ssl=ssl_context)
-
-
 
         metadata = {
             "whisper_params": {

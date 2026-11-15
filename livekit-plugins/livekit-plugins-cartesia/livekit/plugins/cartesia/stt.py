@@ -164,7 +164,6 @@ class STT(stt.STT):
 
         language_code = None if language is None else LanguageCode(language)
 
-
         if utils.is_given(model):
             resolved_model = model
         elif language_code is None or language_code.language == "en":
@@ -317,7 +316,6 @@ class STT(stt.STT):
             self._warn_on_unexpected_args(language=self._language)
 
         for stream in self._streams:
-
             stream.update_options(language=language)
 
     def _warn_on_unexpected_args(self, language: LanguageCode | None) -> None:

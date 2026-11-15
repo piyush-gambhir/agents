@@ -1,5 +1,3 @@
-
-
 import socket
 from collections.abc import Iterator
 from contextlib import closing, contextmanager

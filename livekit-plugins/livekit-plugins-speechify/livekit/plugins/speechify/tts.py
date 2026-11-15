@@ -283,9 +283,6 @@ def _get_headers(token: str, *, encoding: TTSEncoding | None = None) -> dict[str
         elif format == "aac":
             accept = "audio/aac"
 
-
-
-
         if accept:
             headers["Accept"] = accept
     headers[CALLER_HEADER] = "livekit"

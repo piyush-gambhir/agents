@@ -10,17 +10,6 @@ from livekit.agents import Agent, AgentServer, AgentSession, JobContext, RunCont
 from livekit.agents.llm import function_tool
 from livekit.plugins import silero
 
-
-
-
-
-
-
-
-
-
-
-
 logger = logging.getLogger("restaurant-example")
 logger.setLevel(logging.INFO)
 
@@ -76,9 +65,6 @@ class UserData:
 RunContext_T = RunContext[UserData]
 
 
-
-
-
 @function_tool()
 async def update_name(
     name: Annotated[str, Field(description="The customer's name")],
@@ -119,7 +105,6 @@ class BaseAgent(Agent):
         userdata: UserData = self.session.userdata
         chat_ctx = self.chat_ctx.copy()
 
-
         if isinstance(userdata.prev_agent, Agent):
             truncated_chat_ctx = userdata.prev_agent.chat_ctx.copy(
                 exclude_instructions=True,
@@ -130,7 +115,6 @@ class BaseAgent(Agent):
             existing_ids = {item.id for item in chat_ctx.items}
             items_copy = [item for item in truncated_chat_ctx.items if item.id not in existing_ids]
             chat_ctx.items.extend(items_copy)
-
 
         chat_ctx.add_message(
             role="system",
@@ -332,16 +316,12 @@ async def entrypoint(ctx: JobContext):
         tts=inference.TTS(model="cartesia/sonic-3"),
         vad=silero.VAD.load(),
         max_tool_steps=5,
-
-
     )
 
     await session.start(
         agent=userdata.agents["greeter"],
         room=ctx.room,
     )
-
-
 
 
 if __name__ == "__main__":

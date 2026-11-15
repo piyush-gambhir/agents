@@ -36,10 +36,8 @@ def _normalize_language(code: str) -> str:
     """
     lowered = code.strip().lower()
 
-
     if lowered in LANGUAGE_NAMES_TO_CODE:
         return LANGUAGE_NAMES_TO_CODE[lowered]
-
 
     if lowered in ISO_639_3_TO_1:
         mapped = ISO_639_3_TO_1[lowered]
@@ -48,11 +46,6 @@ def _normalize_language(code: str) -> str:
 
         return lowered
 
-
-
-
-
-
     parts = lowered.replace("_", "-").split("-")
     if len(parts) >= 2:
         lang = parts[0]
@@ -60,13 +53,10 @@ def _normalize_language(code: str) -> str:
         normalized_parts = [lang]
         for part in parts[1:]:
             if len(part) == 4:
-
                 normalized_parts.append(part.capitalize())
             else:
-
                 normalized_parts.append(part.upper())
         return "-".join(normalized_parts)
-
 
     return lowered
 

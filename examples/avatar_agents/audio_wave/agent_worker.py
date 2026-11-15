@@ -44,7 +44,6 @@ async def launch_avatar(ctx: JobContext, avatar_dispatcher_url: str, avatar_iden
     This function should be wrapped in a avatar plugin.
     """
 
-
     token = (
         api.AccessToken()
         .with_identity(avatar_identity)
@@ -83,12 +82,9 @@ async def entrypoint(ctx: JobContext):
     session.output.audio = DataStreamAudioOutput(
         ctx.room,
         destination_identity=AVATAR_IDENTITY,
-
         wait_remote_track=rtc.TrackKind.KIND_VIDEO,
-
         wait_playback_start=True,
     )
-
 
     await session.start(agent=agent, room=ctx.room)
 

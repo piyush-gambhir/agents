@@ -272,7 +272,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             async for text in self._input_ch:
                 if isinstance(text, str):
                     if input_stream is None:
-
                         input_stream = self._opts.tokenizer.stream()
                         segments_ch.send_nowait(input_stream)
                     input_stream.push_text(text)

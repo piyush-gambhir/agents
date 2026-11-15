@@ -86,7 +86,6 @@ async def test_no_audio() -> None:
             async for _ in stream:
                 pass
 
-
     fake1.update_options(fake_audio_duration=5.0)
 
     async def _input_task(stream: SynthesizeStream, text: str):
@@ -246,7 +245,6 @@ async def test_timeout():
 
     assert await asyncio.wait_for(fake1.synthesize_ch.recv(), 1.0)
     assert await asyncio.wait_for(fake2.synthesize_ch.recv(), 1.0)
-
 
     with pytest.raises(APIConnectionError):
         async with fallback_adapter.stream(

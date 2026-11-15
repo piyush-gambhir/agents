@@ -143,11 +143,8 @@ class TfidfLoopDetector:
 
         vectorizer = TfidfVectorizer()
 
-
         if len(self._transcribed_chunks) < 2:
             return False
-
-
 
         doc_matrix = vectorizer.fit_transform(self._transcribed_chunks)
         doc_similarity = cosine_similarity(doc_matrix)

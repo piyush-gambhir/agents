@@ -23,7 +23,6 @@ async def entrypoint(ctx: JobContext):
 
     logger.info(f"connected to the room {ctx.room.name}")
 
-
     while True:
         rtc_stats = await ctx.room.get_session_stats()
 
@@ -34,11 +33,6 @@ async def entrypoint(ctx: JobContext):
 
         for source, stats in all_stats:
             stats_kind = stats.WhichOneof("stats")
-
-
-
-
-
 
             logger.info(
                 f"RtcStats - {stats_kind} - {source}", extra={"stats": MessageToDict(stats)}

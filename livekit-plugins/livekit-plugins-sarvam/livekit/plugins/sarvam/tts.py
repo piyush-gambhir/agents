@@ -54,17 +54,6 @@ SARVAM_TTS_BASE_URL = "https://api.sarvam.ai/text-to-speech"
 SARVAM_TTS_WS_URL = "wss://api.sarvam.ai/text-to-speech/ws"
 
 
-
-
-
-
-
-
-
-
-
-
-
 _WS_HEARTBEAT_INTERVAL: float = 20.0
 _KEEPALIVE_INTERVAL: float = 30.0
 
@@ -91,8 +80,6 @@ _CODEC_TO_MIME: dict[str, str] = {
     "flac": "audio/flac",
     "aac": "audio/aac",
     "linear16": "audio/pcm",
-
-
     "mulaw": "audio/pcm",
     "alaw": "audio/pcm",
 }
@@ -157,7 +144,6 @@ def _decode_telephony(codec: str, data: bytes) -> bytes:
     return pcm.astype("<i2").tobytes()
 
 
-
 SarvamTTSLanguages = Literal[
     "bn-IN",
     "en-IN",
@@ -173,16 +159,13 @@ SarvamTTSLanguages = Literal[
 ]
 
 SarvamTTSSpeakers = Literal[
-
     "anushka",
     "manisha",
     "vidya",
     "arya",
-
     "abhilash",
     "karun",
     "hitesh",
-
     "shubh",
     "ritu",
     "rahul",
@@ -198,7 +181,6 @@ SarvamTTSSpeakers = Literal[
     "manan",
     "sumit",
     "priya",
-
     "aditya",
     "kabir",
     "neha",
@@ -207,10 +189,8 @@ SarvamTTSSpeakers = Literal[
     "aayan",
     "ashutosh",
     "advait",
-
     "amelia",
     "sophia",
-
     "suhani",
     "rupali",
     "tanya",
@@ -494,18 +474,15 @@ class TTS(tts.TTS):
                 "Sarvam API key is required. Provide it directly or set SARVAM_API_KEY env var."
             )
 
-
         if not target_language_code or not target_language_code.strip():
             raise ValueError("Target language code is required and cannot be empty")
         if not model or not model.strip():
             raise ValueError("Model is required and cannot be empty")
         if speaker is None:
-
             if model == "bulbul:v3-beta" or model == "bulbul:v3":
                 speaker = "shubh"
             else:
                 speaker = "anushka"
-
 
         if not -0.75 <= pitch <= 0.75:
             logger.warning(
@@ -537,14 +514,12 @@ class TTS(tts.TTS):
                 f"output_audio_codec must be one of {','.join(sorted(ALLOWED_OUTPUT_AUDIO_CODECS))}"
             )
 
-
         if not validate_model_speaker_compatibility(model, speaker):
             compatible_speakers = MODEL_SPEAKER_COMPATIBILITY.get(model, {}).get("all", [])
             raise ValueError(
                 f"Speaker '{speaker}' is not compatible with model '{model}'. "
                 f"Please choose a compatible speaker from: {', '.join(compatible_speakers)}"
             )
-
 
         word_tokenizer = tokenize.basic.SentenceTokenizer()
 
@@ -573,8 +548,6 @@ class TTS(tts.TTS):
         self._session = http_session
         self._streams = weakref.WeakSet[SynthesizeStream]()
 
-
-
         self._ws_keepalive_tasks: dict[int, asyncio.Task[None]] = {}
 
         self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
@@ -602,12 +575,6 @@ class TTS(tts.TTS):
                 session.ws_connect(
                     ws_url,
                     headers=headers,
-
-
-
-
-
-
                     heartbeat=_WS_HEARTBEAT_INTERVAL,
                 ),
                 timeout,
@@ -677,8 +644,6 @@ class TTS(tts.TTS):
                 try:
                     msg = await asyncio.wait_for(ws.receive(), timeout=_KEEPALIVE_INTERVAL)
                 except asyncio.TimeoutError:
-
-
                     if ws.closed:
                         return
                     try:
@@ -694,8 +659,6 @@ class TTS(tts.TTS):
                             self._pool.remove(ws)
                         return
                     continue
-
-
 
                 if msg.type in (
                     aiohttp.WSMsgType.CLOSE,
@@ -713,9 +676,6 @@ class TTS(tts.TTS):
                     with contextlib.suppress(Exception):
                         self._pool.remove(ws)
                     return
-
-
-
 
         except asyncio.CancelledError:
             pass
@@ -847,7 +807,6 @@ class TTS(tts.TTS):
                 )
             self._opts.output_audio_codec = output_audio_codec
 
-
     def synthesize(
         self, text: str, *, conn_options: APIConnectOptions | None = None
     ) -> ChunkedStream:
@@ -968,12 +927,10 @@ class SynthesizeStream(tts.SynthesizeStream):
         self._opts = replace(tts._opts)
         self._segments_ch = utils.aio.Chan[tokenize.SentenceStream]()
 
-
         self._connection_state = ConnectionState.DISCONNECTED
         self._session_id = id(self)
         self._client_request_id: str | None = None
         self._server_request_id: str | None = None
-
 
         self._send_task: asyncio.Task | None = None
         self._recv_task: asyncio.Task | None = None
@@ -1002,7 +959,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     if word_stream is None:
                         tokenizer_instance: tokenize.tokenizer.SentenceTokenizer
                         if self._opts.word_tokenizer is None:
-
                             tokenizer_instance = tokenize.basic.SentenceTokenizer()
                         else:
                             tokenizer_instance = self._opts.word_tokenizer
@@ -1102,12 +1058,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             except (ConnectionResetError, RuntimeError) as e:
                 err_str = str(e).lower()
                 if "closing" in err_str or "closed" in err_str:
-
-
-
-
-
-
                     logger.debug(
                         "Sarvam TTS WebSocket transport closed before send "
                         "completed; pool will replace this connection",
@@ -1192,11 +1142,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             except ConnectionResetError as e:
                 err_str = str(e).lower()
                 if "closing" in err_str or "closed" in err_str:
-
-
-
-
-
                     logger.debug(
                         "Sarvam TTS WebSocket transport closed during"
                         " receive; pool will replace this connection",
@@ -1217,11 +1162,6 @@ class SynthesizeStream(tts.SynthesizeStream):
 
         try:
             async with self._tts._pool.connection(timeout=self._conn_options.timeout) as ws:
-
-
-
-
-
                 await self._tts._stop_keepalive(ws)
                 keepalive_should_resume = False
 
@@ -1251,11 +1191,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                         self._send_task = None
                         self._recv_task = None
                 finally:
-
-
-
-
-
                     if keepalive_should_resume:
                         self._tts._start_keepalive(ws)
 
@@ -1291,9 +1226,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             msg_type = resp.get("type")
             self._maybe_set_server_request_id(resp)
             if self._server_request_id:
-
-
-
                 output_emitter._note_provider_request_id(self._server_request_id)
 
             if not msg_type:
@@ -1302,8 +1234,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                     extra={**self._build_log_context(), "data": resp},
                 )
                 return True
-
-
 
             if msg_type == "audio":
                 return await self._handle_audio_message(resp, output_emitter)
@@ -1323,7 +1253,6 @@ class SynthesizeStream(tts.SynthesizeStream):
             )
             return True
         except (APIStatusError, APIConnectionError):
-
             raise
         except Exception as e:
             logger.error(
@@ -1372,7 +1301,6 @@ class SynthesizeStream(tts.SynthesizeStream):
                 "raw_message": resp,
             },
         )
-
 
         recoverable_errors = ["rate_limit", "temporary_unavailable", "timeout"]
         is_recoverable = any(err in str(error_msg).lower() for err in recoverable_errors)

@@ -106,7 +106,6 @@ class Toolset:
             await asyncio.gather(*(toolset.aclose() for toolset in toolsets))
 
 
-
 class Function(TypedDict, total=False):
     name: Required[str]
 
@@ -225,7 +224,6 @@ class _BaseFunctionTool(Tool, Generic[_InfoT, _P, _R]):
         if obj is None:
             return self
 
-
         bound_tool = self.__class__(self._func, self._info, instance=obj)
         sig = inspect.signature(self._func)
 
@@ -323,7 +321,6 @@ def function_tool(
             raise ValueError("raw function name cannot be empty")
 
         if "parameters" not in raw_schema:
-
             raise ValueError("raw function description must contain a parameters key")
 
         schema = {**raw_schema}
@@ -389,7 +386,6 @@ def _wrap_with_confirm_duplicate(func: Callable[..., Any]) -> Callable[..., Any]
     )
     wrapper.__signature__ = sig.replace(parameters=[*sig.parameters.values(), extra])  # type: ignore[attr-defined]
 
-
     wrapper.__annotations__ = new_annotations
     wrapper.__annotate__ = lambda _format=1: dict(new_annotations)  # type: ignore[attr-defined]
     return wrapper
@@ -437,9 +433,8 @@ def _resolve_wrapped_tool(tool: Any) -> FunctionTool | RawFunctionTool | None:
         return tool
 
     resolved_tool: FunctionTool | RawFunctionTool | None = None
-    if (
-        hasattr(tool, "__wrapped__")
-        and isinstance(tool.__wrapped__, (FunctionTool, RawFunctionTool))
+    if hasattr(tool, "__wrapped__") and isinstance(
+        tool.__wrapped__, (FunctionTool, RawFunctionTool)
     ):
         wrapped = tool.__wrapped__
         resolved_tool = wrapped.__class__(tool, wrapped.info)  # type: ignore

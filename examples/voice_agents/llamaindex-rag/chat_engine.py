@@ -30,13 +30,11 @@ load_dotenv()
 THIS_DIR = Path(__file__).parent
 PERSIST_DIR = THIS_DIR / "chat-engine-storage"
 if not PERSIST_DIR.exists():
-
     documents = SimpleDirectoryReader(THIS_DIR / "data").load_data()
     index = VectorStoreIndex.from_documents(documents)
 
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:
-
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 

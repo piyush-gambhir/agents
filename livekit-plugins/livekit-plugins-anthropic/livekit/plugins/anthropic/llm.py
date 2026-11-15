@@ -37,7 +37,6 @@ from livekit.agents.utils import is_given
 from .models import ChatModels
 from .utils import CACHE_CONTROL_EPHEMERAL
 
-
 _NO_PREFILL_PATTERNS = ("claude-sonnet-4-6", "claude-opus-4-6")
 
 
@@ -210,7 +209,6 @@ class LLM(llm.LLM):
                         anthropic_tool_choice["disable_parallel_tool_use"] = not parallel_tool_calls
                     extra["tool_choice"] = anthropic_tool_choice
 
-
         inject_trailing = _model_disables_prefill(self._opts.model)
         anthropic_ctx, extra_data = chat_ctx.to_provider_format(
             format="anthropic", inject_trailing_user_message=inject_trailing
@@ -221,7 +219,6 @@ class LLM(llm.LLM):
                 anthropic.types.TextBlockParam(text=content, type="text")
                 for content in extra_data.system_messages
             ]
-
 
         if self._opts.caching == "ephemeral":
             if extra.get("system"):
@@ -290,7 +287,6 @@ class LLMStream(llm.LLMStream):
         super().__init__(llm, chat_ctx=chat_ctx, tools=tools, conn_options=conn_options)
         self._create_anthropic_stream = create_anthropic_stream
 
-
         self._tool_call_id: str | None = None
         self._fnc_name: str | None = None
         self._fnc_raw_arguments: str | None = None
@@ -311,7 +307,6 @@ class LLMStream(llm.LLMStream):
                     if chat_chunk is not None:
                         self._event_ch.send_nowait(chat_chunk)
                         retryable = False
-
 
                 prompt_token = (
                     self._input_tokens + self._cache_creation_tokens + self._cache_read_tokens
@@ -363,7 +358,6 @@ class LLMStream(llm.LLMStream):
                 text = delta.text
 
                 if self._tools is not None:
-
                     if text.startswith("<thinking>"):
                         self._ignoring_cot = True
                     elif self._ignoring_cot and "</thinking>" in text:

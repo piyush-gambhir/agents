@@ -11,7 +11,6 @@ import pytest
 pytestmark = pytest.mark.docs
 
 
-
 _SCRIPT_PATH = Path(__file__).resolve().parent.parent / ".github" / "convert_html_docs.py"
 _spec = importlib.util.spec_from_file_location("convert_html_docs", _SCRIPT_PATH)
 assert _spec and _spec.loader
@@ -297,8 +296,6 @@ class TestMapOutputPath:
         input_dir = tmp_path / "html"
         input_dir.mkdir()
 
-
-
         html_path = input_dir / "livekit" / "agents" / "vad.html"
         html_path.parent.mkdir(parents=True)
         html_path.touch()
@@ -310,19 +307,15 @@ class TestMapOutputPath:
         input_dir = tmp_path / "html"
         input_dir.mkdir()
 
-
         p1 = input_dir / "livekit" / "agents" / "index.html"
         p1.parent.mkdir(parents=True)
         p1.touch()
-
-
 
         p2 = input_dir / "livekit" / "agents.html"
         p2.touch()
 
         r1 = map_output_path(p1, input_dir)
         r2 = map_output_path(p2, input_dir)
-
 
         assert r1 == Path("livekit/agents.md")
         assert r2 == Path("livekit/agents.md")
@@ -683,9 +676,7 @@ class TestRealFiles:
             f"  {src} -> {href}" for src, href in result.broken[:20]
         )
 
-
         if result.external:
-
             ext_hrefs = {href for _, href in result.external}
             assert "../concepts/models.md" in ext_hrefs
 
@@ -733,7 +724,6 @@ class TestValidateLinks:
 
     def test_known_external_href_classified(self, tmp_path: Path) -> None:
         """The exact known Pydantic href is classified as external when missing."""
-
 
         sub = tmp_path / "sub"
         sub.mkdir()

@@ -173,8 +173,6 @@ class Serializable:
         function_state = state["function"]
         frame_state = state["frame"]
 
-
-
         key, filename, lineno, code_hash, args, kwargs = (
             function_state["key"],
             function_state["filename"],
@@ -200,7 +198,6 @@ class Serializable:
                 g = wrapped_coroutine.coroutine.__await__()
             else:
                 g = rfn.fn(*args, **kwargs)
-
 
             ext.set_frame_ip(g, frame_state["ip"])
             ext.set_frame_sp(g, frame_state["sp"])

@@ -27,10 +27,8 @@ class TestSpeakerIdGrouping:
         """Helper method to process a list of (text, speaker_id) fragments."""
         result = ""
         for text, speaker_id in fragments:
-
             if speaker_id and re.match(r"^__[A-Z0-9_]{2,}__$", speaker_id):
                 continue
-
 
             speech_data = stt.SpeechData(
                 text=self._format_text(text, speaker_id),
@@ -41,9 +39,7 @@ class TestSpeakerIdGrouping:
                 confidence=1.0,
             )
 
-
             processed = speech_data.text
-
 
             if processed:
                 if result:

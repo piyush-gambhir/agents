@@ -23,8 +23,6 @@ async def entrypoint(ctx: JobContext):
         encryption_type=rtc.EncryptionType.GCM,
     )
 
-
-
     await ctx.connect(encryption=e2ee_config)
 
 

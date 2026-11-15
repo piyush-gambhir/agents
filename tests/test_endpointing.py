@@ -162,8 +162,6 @@ class TestDynamicEndpointing:
 
         ep.on_end_of_speech(ended_at=100.5)
 
-
-
         assert ep._overlapping is False
         assert ep._agent_speech_started_at is None
         assert ep.min_delay == pytest.approx(0.3, rel=1e-5)
@@ -252,7 +250,6 @@ class TestDynamicEndpointing:
         """Interruption path should adjust stale utterance end timestamp before delay updates."""
         ep = DynamicEndpointing(min_delay=0.06, max_delay=1.0, alpha=1.0)
 
-
         ep.on_end_of_speech(ended_at=99.0)
         ep.on_start_of_speech(started_at=100.0)
 
@@ -276,7 +273,6 @@ class TestDynamicEndpointing:
         """update_options(alpha=...) should update both EMA filters without resetting learned state."""
         ep = DynamicEndpointing(min_delay=0.3, max_delay=1.0, alpha=0.5)
 
-
         ep.on_end_of_speech(ended_at=100.0)
         ep.on_start_of_speech(started_at=100.2)
         ep.on_end_of_speech(ended_at=101.0)
@@ -297,11 +293,9 @@ class TestDynamicEndpointing:
         assert ep._utterance_pause._min_val == 0.5
         assert ep._turn_pause._max_val == 2.0
 
-
         ep.on_end_of_speech(ended_at=100.0)
         ep.on_start_of_speech(started_at=100.2)
         assert ep.min_delay == pytest.approx(0.5, rel=1e-5)
-
 
         ep.on_end_of_speech(ended_at=101.0)
         ep.on_start_of_agent_speech(started_at=102.8)
@@ -322,7 +316,6 @@ class TestDynamicEndpointing:
 
         ep.on_end_of_speech(ended_at=101.8, should_ignore=True)
 
-
         assert ep.min_delay == prev_min
         assert ep.max_delay == prev_max
 
@@ -340,7 +333,6 @@ class TestDynamicEndpointing:
         ep.on_start_of_speech(started_at=100.4, overlapping=False)
         ep.on_end_of_speech(ended_at=100.6, should_ignore=True)
 
-
         expected = 0.5 * 0.4 + 0.5 * initial_min
         assert ep.min_delay == pytest.approx(expected, rel=1e-5)
 
@@ -354,8 +346,6 @@ class TestDynamicEndpointing:
         ep.on_start_of_speech(started_at=100.6, overlapping=True)
 
         ep.on_end_of_speech(ended_at=100.8, should_ignore=True)
-
-
 
         assert ep._utterance_ended_at == 100.8
         assert ep._speaking is False
@@ -372,7 +362,6 @@ class TestDynamicEndpointing:
         prev_min = ep.min_delay
         prev_max = ep.max_delay
         ep.on_end_of_speech(ended_at=101.5, should_ignore=True)
-
 
         assert ep.min_delay == prev_min
         assert ep.max_delay == prev_max
@@ -392,7 +381,6 @@ class TestDynamicEndpointing:
 
         assert ep._agent_speech_ended_at == 101.0
 
-
         assert ep._agent_speech_started_at == 100.0
         assert ep._overlapping is False
 
@@ -405,8 +393,6 @@ class TestDynamicEndpointing:
 
         ep.on_start_of_speech(started_at=101.8, overlapping=False)
         ep.on_end_of_speech(ended_at=102.0)
-
-
 
         assert ep.max_delay == pytest.approx(0.5 * 0.9 + 0.5 * 1.0, rel=1e-5)
 
@@ -423,23 +409,13 @@ class TestDynamicEndpointing:
     @pytest.mark.parametrize(
         "label, agent_speech, overlapping, should_ignore, within_grace, expect_min_change, expect_max_change",
         [
-
-
             ("no_agent/no_overlap/no_ignore", "none", False, False, False, True, False),
-
             ("no_agent/no_overlap/ignore", "none", False, True, False, True, False),
-
-
             ("agent_ended/no_overlap/no_ignore", "ended", False, False, False, False, True),
             ("agent_ended/no_overlap/ignore", "ended", False, True, False, False, True),
-
-
             ("agent_active/no_overlap/no_ignore", "active", False, False, False, False, True),
-
             ("agent_active/no_overlap/ignore", "active", False, True, False, False, True),
-
             ("agent_active/overlap/no_ignore", "active", True, False, False, True, False),
-
             (
                 "agent_active/overlap/ignore/outside_grace",
                 "active",
@@ -449,7 +425,6 @@ class TestDynamicEndpointing:
                 False,
                 False,
             ),
-
             ("agent_active/overlap/ignore/inside_grace", "active", True, True, True, True, False),
         ],
     )
@@ -466,10 +441,8 @@ class TestDynamicEndpointing:
         """Exhaustive test of all agent_speech × overlapping × should_ignore combinations."""
         ep = DynamicEndpointing(min_delay=0.3, max_delay=1.0, alpha=0.5)
 
-
         ep.on_start_of_speech(started_at=99.0)
         ep.on_end_of_speech(ended_at=100.0)
-
 
         if agent_speech == "ended":
             ep.on_start_of_agent_speech(started_at=100.5)
@@ -477,31 +450,18 @@ class TestDynamicEndpointing:
             user_start = 101.5
         elif agent_speech == "active":
             if within_grace:
-
-
-
-
                 ep.on_start_of_agent_speech(started_at=100.15)
                 user_start = 100.35
             elif overlapping and should_ignore:
-
-
                 ep.on_start_of_agent_speech(started_at=100.2)
                 user_start = 101.5
             elif overlapping:
-
-
-
-
                 ep.on_start_of_agent_speech(started_at=100.15)
                 user_start = 100.4
             else:
-
-
                 ep.on_start_of_agent_speech(started_at=100.9)
                 user_start = 101.8
         else:
-
             user_start = 100.4
 
         ep.on_start_of_speech(started_at=user_start, overlapping=overlapping)
@@ -523,7 +483,6 @@ class TestDynamicEndpointing:
             f"{prev_max} -> {ep.max_delay}"
         )
 
-
         assert ep._speaking is False, f"[{label}] _speaking should be False"
         assert ep._overlapping is False, f"[{label}] _overlapping should be False"
 
@@ -531,34 +490,23 @@ class TestDynamicEndpointing:
         """Simulate a realistic multi-turn conversation with backchannel ignored."""
         ep = DynamicEndpointing(min_delay=0.3, max_delay=1.0, alpha=0.5)
 
-
         ep.on_start_of_speech(started_at=100.0)
         ep.on_end_of_speech(ended_at=101.0)
 
-
         ep.on_start_of_agent_speech(started_at=101.5)
-
 
         ep.on_start_of_speech(started_at=102.5, overlapping=True)
         min_before_backchannel = ep.min_delay
         max_before_backchannel = ep.max_delay
         ep.on_end_of_speech(ended_at=102.8, should_ignore=True)
 
-
         assert ep.min_delay == min_before_backchannel
         assert ep.max_delay == max_before_backchannel
 
-
         ep.on_end_of_agent_speech(ended_at=103.0)
-
 
         ep.on_start_of_speech(started_at=103.5)
         ep.on_end_of_speech(ended_at=104.0)
-
-
-
-
-
 
         assert ep._speaking is False
         assert ep._agent_speech_started_at is None

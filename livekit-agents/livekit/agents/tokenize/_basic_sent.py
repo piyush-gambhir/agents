@@ -1,7 +1,6 @@
 import re
 
 
-
 def split_sentences(
     text: str, min_sentence_len: int = 20, retain_format: bool = False
 ) -> list[tuple[str, int, int]]:

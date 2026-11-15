@@ -50,7 +50,6 @@ class FakeAudioOutput(AudioOutput):
         self._flushed = False
         self._flush_handle: asyncio.TimerHandle | None = None
 
-
         self._started_at: float | None = None
         self._paused_at: float | None = None
         self._total_paused = 0.0

@@ -12,7 +12,6 @@ from livekit.plugins.cerebras.llm import _CerebrasClient
 pytestmark = pytest.mark.plugin("cerebras")
 
 
-
 CHAT_MODEL = "llama3.1-8b"
 TOOL_MODEL = "qwen-3-235b-a22b-instruct-2507"
 

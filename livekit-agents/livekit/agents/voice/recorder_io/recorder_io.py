@@ -24,8 +24,6 @@ if TYPE_CHECKING:
     from ..agent_session import AgentSession
 
 
-
-
 WRITE_INTERVAL = 2.5
 FFMPEG_STRICT_LEVEL = "experimental"
 
@@ -134,11 +132,9 @@ class RecorderIO:
         assert self._in_record is not None
         assert self._out_record is not None
 
-
         while True:
             await asyncio.sleep(WRITE_INTERVAL)
             if self._out_record.has_pending_data:
-
                 continue
 
             input_buf = self._in_record.take_buf(pad_since=self._out_record._last_speech_end_time)
@@ -154,7 +150,6 @@ class RecorderIO:
 
         container = av.open(self._output_path, mode="w", format="ogg")
 
-
         try:
             av.Codec("libopus", "w")
             codec_name = "libopus"
@@ -167,7 +162,6 @@ class RecorderIO:
             rate=self._sample_rate,
             layout="stereo",
         )
-
 
         if codec_name == "opus":
             stream.codec_context.options["strict"] = FFMPEG_STRICT_LEVEL
@@ -210,7 +204,6 @@ class RecorderIO:
 
                     if input_buf is None or output_buf is None:
                         break
-
 
                     if in_resampler is None and len(input_buf):
                         input_rate, num_channels = (
@@ -336,7 +329,6 @@ class RecorderAudioInput(io.AudioInput):
                 *frames,
             ]
 
-
         elif pad_since and self.__started_time is None and not self.__padded and not frames:
             logger.warning(
                 "input speech hasn't started yet, skipping silence padding, "
@@ -372,7 +364,6 @@ class RecorderAudioOutput(io.AudioOutput):
             label="RecorderIO",
             next_in_chain=audio_output,
             sample_rate=audio_output.sample_rate if audio_output else None,
-
             capabilities=io.AudioOutputCapabilities(pause=True),
         )
         self.__recording_io = recording_io
@@ -381,7 +372,6 @@ class RecorderAudioOutput(io.AudioOutput):
         self.__started_time: None | float = None
         self._last_speech_end_time: None | float = None
         self._last_speech_start_time: None | float = None
-
 
         self.__current_pause_start: float | None = None
         self.__pause_wall_times: list[tuple[float, float]] = []
@@ -493,11 +483,9 @@ class RecorderAudioOutput(io.AudioOutput):
                 frame, _ = _split_frame(frame, playback_position - acc_dur)
                 should_break = True
 
-
             while pause_events and pause_events[0][0] <= acc_dur:
                 pause_pos, pause_dur = pause_events.popleft()
                 buf.append(_create_silence_frame(pause_dur, sample_rate, num_channels))
-
 
             while pause_events and pause_events[0][0] < acc_dur + frame.duration:
                 pause_pos, pause_dur = pause_events.popleft()
@@ -574,9 +562,6 @@ def _split_frame(frame: rtc.AudioFrame, position: float) -> tuple[rtc.AudioFrame
         )
 
     samples_needed = min(int(position * frame.sample_rate), frame.samples_per_channel)
-
-
-
 
     split = samples_needed * frame.num_channels
     data = frame.data

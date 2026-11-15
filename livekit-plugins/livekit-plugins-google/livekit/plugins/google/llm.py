@@ -196,7 +196,6 @@ class LLM(llm.LLM):
                     "API key is required for Google API either via api_key or GOOGLE_API_KEY environment variable"  # noqa: E501
                 )
 
-
         if is_given(thinking_config):
             _thinking_budget = None
             _thinking_level = None
@@ -344,12 +343,10 @@ class LLM(llm.LLM):
         if is_given(self._opts.seed):
             extra["seed"] = self._opts.seed
 
-
         if is_given(self._opts.thinking_config):
             is_gemini_3 = _is_gemini_3_model(self._opts.model)
             is_gemini_3_flash = _is_gemini_3_flash_model(self._opts.model)
             thinking_cfg = self._opts.thinking_config
-
 
             _budget = None
             _level: str | types.ThinkingLevel | None = None
@@ -361,14 +358,12 @@ class LLM(llm.LLM):
                 _level = getattr(thinking_cfg, "thinking_level", None)
 
             if is_gemini_3:
-
                 if _budget is not None and _level is None:
                     logger.warning(
                         f"Model {self._opts.model} is Gemini 3 which does not support thinking_budget. "
                         "Please use thinking_level ('low' or 'high') instead. Ignoring thinking_budget."
                     )
                 if _level is None:
-
                     if is_gemini_3_flash:
                         _level = "minimal"
                     else:
@@ -377,17 +372,14 @@ class LLM(llm.LLM):
                 extra["thinking_config"] = {"thinking_level": _level}
 
             else:
-
                 if _level is not None and _budget is None:
                     raise ValueError(
                         f"Model {self._opts.model} does not support thinking_level. "
                         "Please use thinking_budget (int) instead for Gemini 2.5 and earlier models."
                     )
                 if _budget is not None:
-
                     extra["thinking_config"] = types.ThinkingConfig(thinking_budget=_budget)
                 else:
-
                     extra["thinking_config"] = self._opts.thinking_config
 
         if is_given(self._opts.automatic_function_calling_config):
@@ -440,7 +432,6 @@ class LLMStream(llm.LLMStream):
         request_id = utils.shortuuid()
 
         try:
-
             thought_sigs = (
                 self._llm._thought_signatures if _requires_thought_signatures(self._model) else None
             )
@@ -451,12 +442,6 @@ class LLMStream(llm.LLMStream):
             turns = [types.Content.model_validate(turn) for turn in turns_dict]
             tool_context = llm.ToolContext(self._tools)
             tools_config = create_tools_config(tool_context, _only_single_type=True)
-
-
-
-
-
-
 
             using_cache = "cached_content" in self._extra_kwargs
             if tools_config and not using_cache:
@@ -602,7 +587,6 @@ class LLMStream(llm.LLMStream):
                 name=part.function_call.name,
                 call_id=part.function_call.id or utils.shortuuid("function_call_"),
             )
-
 
             if (
                 _requires_thought_signatures(self._model)

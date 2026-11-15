@@ -27,13 +27,11 @@ load_dotenv()
 THIS_DIR = Path(__file__).parent
 PERSIST_DIR = THIS_DIR / "retrieval-engine-storage"
 if not PERSIST_DIR.exists():
-
     documents = SimpleDirectoryReader(THIS_DIR / "data").load_data()
     index = VectorStoreIndex.from_documents(documents)
 
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:
-
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 
@@ -72,19 +70,13 @@ class RetrievalAgent(Agent):
             node_content = node.get_content(metadata_mode=MetadataMode.LLM)
             instructions += f"\n\n{node_content}"
 
-
-
         system_msg = chat_ctx.items[0]
         if isinstance(system_msg, llm.ChatMessage) and system_msg.role == "system":
-
             system_msg.content.append(instructions)
         else:
             chat_ctx.items.insert(0, llm.ChatMessage(role="system", content=[instructions]))
         preview = instructions[:100].replace("\n", "\\n")
         print(f"update instructions: {preview}...")
-
-
-
 
         return Agent.default.llm_node(self, chat_ctx, tools, model_settings)
 

@@ -13,19 +13,11 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
-
-
 class WeatherAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
             instructions="You are a helpful assistant.",
             llm=openai.realtime.RealtimeModel(modalities=["text"]),
-
             tts=openai.TTS(voice="ash"),
         )
 

@@ -37,7 +37,6 @@ def to_chat_ctx(
         elif msg.type == "function_call_output":
             role = "user"
 
-
         if role != current_role:
             if current_content and current_role is not None:
                 messages.append({"role": current_role, "content": current_content})
@@ -75,10 +74,8 @@ def to_chat_ctx(
                 }
             )
 
-
     if current_role is not None and current_content:
         messages.append({"role": current_role, "content": current_content})
-
 
     if inject_dummy_user_message and (not messages or messages[0]["role"] != "user"):
         messages.insert(0, {"role": "user", "content": [{"text": "(empty)"}]})

@@ -388,7 +388,6 @@ class RecognizeStream(ABC):
     async def _main_task(self) -> None:
         max_retries = self._conn_options.max_retry
 
-
         last_start_time = time.time()
 
         while self._num_retries <= max_retries:
@@ -462,7 +461,6 @@ class RecognizeStream(ABC):
 
                 self._stt.emit("metrics_collected", stt_metrics)
             elif ev.type == SpeechEventType.FINAL_TRANSCRIPT:
-
                 self._num_retries = 0
 
     def push_frame(self, frame: rtc.AudioFrame) -> None:

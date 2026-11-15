@@ -24,14 +24,6 @@ logger = logging.getLogger("basic-agent")
 load_dotenv()
 
 
-
-
-
-
-
-
-
-
 server = AgentServer()
 
 
@@ -44,7 +36,6 @@ server.setup_fnc = prewarm
 
 class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
-
 
 
 def create_graph() -> StateGraph:
@@ -72,10 +63,8 @@ async def entrypoint(ctx: JobContext):
 
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
-
         stt=inference.STT("deepgram/nova-3", language="multi"),
         tts=inference.TTS("cartesia/sonic-3"),
-
         turn_detection=MultilingualModel(),
     )
 

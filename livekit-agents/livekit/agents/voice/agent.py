@@ -51,7 +51,6 @@ class Agent:
         tts: NotGivenOr[tts.TTS | TTSModels | str | None] = NOT_GIVEN,
         min_consecutive_speech_delay: NotGivenOr[float] = NOT_GIVEN,
         use_tts_aligned_transcript: NotGivenOr[bool] = NOT_GIVEN,
-
         turn_detection: NotGivenOr[TurnDetectionMode | None] = NOT_GIVEN,
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
         max_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
@@ -107,7 +106,6 @@ class Agent:
         self._min_endpointing_delay = endpointing.get("min_delay", NOT_GIVEN)
         self._max_endpointing_delay = endpointing.get("max_delay", NOT_GIVEN)
         self._turn_handling = turn_handling
-
 
         self._async_tool_options = (
             tool_handling.get("async_options", NOT_GIVEN) if is_given(tool_handling) else NOT_GIVEN
@@ -244,10 +242,6 @@ class Agent:
         await self._activity.update_chat_ctx(
             chat_ctx, exclude_invalid_function_calls=exclude_invalid_function_calls
         )
-
-
-
-
 
     async def on_enter(self) -> None:
         """Called when the task is entered"""
@@ -733,7 +727,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
         llm: NotGivenOr[llm.LLM | llm.RealtimeModel | None] = NOT_GIVEN,
         tts: NotGivenOr[tts.TTS | None] = NOT_GIVEN,
         preserve_function_call_history: bool = False,
-
         turn_detection: NotGivenOr[TurnDetectionMode | None] = NOT_GIVEN,
         allow_interruptions: NotGivenOr[bool] = NOT_GIVEN,
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
@@ -799,9 +792,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
         if speech_handle:
             speech_handle._maybe_run_final_output = result
 
-
-
-
     async def __await_impl(self) -> TaskResult_T:
         if self.__started:
             raise RuntimeError(f"{self.__class__.__name__} is not re-entrant, await only once")
@@ -824,8 +814,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
             if self.__fut.done():
                 return
 
-
-
             logger.error(
                 f"The asyncio.Task finished before {self.__class__.__name__} was completed."
             )
@@ -840,9 +828,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
 
         from .agent_activity import _AgentActivityContextVar, _SpeechHandleContextVar
 
-
-
-
         speech_handle = _SpeechHandleContextVar.get(None)
         old_activity = _AgentActivityContextVar.get()
         old_agent = old_activity.agent
@@ -855,8 +840,6 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                 raise RuntimeError(
                     f"{self.__class__.__name__} cannot be awaited inside a function tool that is already interrupted"
                 )
-
-
 
             old_allow_interruptions = speech_handle.allow_interruptions
             speech_handle.allow_interruptions = False
@@ -879,14 +862,10 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                 "using AgentTask inside a function tool may have unexpected behavior."
             )
 
-
         self.__inactive_ev.clear()
         suspended_handles: list[SpeechHandle | asyncio.Task[Any]] = []
         pending_on_enter_task: asyncio.Task[None] | None = None
         try:
-
-
-
             await session._update_activity(
                 self, previous_activity="pause", blocked_tasks=blocked_tasks, wait_on_enter=False
             )
@@ -902,16 +881,10 @@ class AgentTask(Agent, Generic[TaskResult_T]):
 
             if self._activity and (on_enter_task := self._activity._on_enter_task):
                 if run_state and not run_state.done():
-
-
                     run_state._watch_handle(on_enter_task)
                     pending_on_enter_task = on_enter_task
                 else:
-
                     await asyncio.shield(on_enter_task)
-
-
-
 
             if run_state and not run_state.done():
                 if speech_handle and run_state._unwatch_handle(speech_handle):
@@ -933,10 +906,7 @@ class AgentTask(Agent, Generic[TaskResult_T]):
                 with contextlib.suppress(RuntimeError):
                     speech_handle.allow_interruptions = old_allow_interruptions
 
-
             run_state = session._global_run_state
-
-
 
             if run_state and not run_state.done():
                 for handle in suspended_handles:

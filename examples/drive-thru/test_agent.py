@@ -30,7 +30,6 @@ async def test_item_ordering() -> None:
         _main_llm() as llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(user_input="Can I get a Big Mac, no meal?")
 
@@ -43,14 +42,12 @@ async def test_item_ordering() -> None:
         result.expect.next_event().is_message(role="assistant")
         result.expect.no_more_events()
 
-
         result = await sess.run(user_input="No actually I don't want it")
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(name="list_order_items")
         result.expect.next_event().is_function_call_output()
         result.expect.contains_function_call(name="remove_order_item")
         result.expect[-1].is_message(role="assistant")
-
 
         result = await sess.run(user_input="Can I get a McFlurry Oreo?")
         result.expect.skip_next_event_if(type="message", role="assistant")
@@ -71,7 +68,6 @@ async def test_meal_order() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(
             user_input="Can I get a large Combo McCrispy Original with mayonnaise?"
@@ -79,7 +75,6 @@ async def test_meal_order() -> None:
         msg_assert = result.expect.next_event().is_message(role="assistant")
         await msg_assert.judge(judge_llm, intent="should prompt the user to choose a drink")
         result.expect.no_more_events()
-
 
         result = await sess.run(user_input="a large coca cola")
         result.expect.skip_next_event_if(type="message", role="assistant")
@@ -107,7 +102,6 @@ async def test_failure() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-
         with mock_tools(
             DriveThruAgent, {"order_regular_item": lambda: RuntimeError("test failure")}
         ):
@@ -128,9 +122,6 @@ async def test_failure() -> None:
             )
 
 
-
-
-
 @pytest.mark.asyncio
 async def test_unavailable_item() -> None:
     userdata = await new_userdata()
@@ -144,7 +135,6 @@ async def test_unavailable_item() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(user_input="Can I get a large coca cola?")
         try:
@@ -184,7 +174,6 @@ async def test_ask_for_size() -> None:
             .judge(judge_llm, intent="should ask for the drink size")
         )
         result.expect.no_more_events()
-
 
         result = await sess.run(user_input="a small one")
         result.expect.skip_next_event_if(type="message", role="assistant")

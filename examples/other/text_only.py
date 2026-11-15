@@ -18,14 +18,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -40,7 +32,6 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
         llm=inference.LLM("openai/gpt-4.1-mini"),
-
     )
     await session.start(
         agent=MyAgent(),

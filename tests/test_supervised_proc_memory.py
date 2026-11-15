@@ -52,7 +52,6 @@ def _make_proc(*, memory_warn_mb: float = 500, memory_limit_mb: float = 0) -> _F
 async def test_memory_warning_is_rate_limited() -> None:
     proc = _make_proc()
 
-
     assert proc._should_emit_memory_warning(520.0, now=1000.0) is True
 
     assert proc._should_emit_memory_warning(521.0, now=1005.0) is False
@@ -73,14 +72,12 @@ async def test_memory_warning_reemits_on_significant_growth() -> None:
 async def test_memory_logging_extra_reports_baseline_and_growth() -> None:
     proc = _make_proc()
 
-
     extra = proc._memory_logging_extra(520.0)
     assert extra["memory_usage_mb"] == 520.0
     assert extra["memory_warn_mb"] == 500
     assert extra["has_running_job"] is False
     assert "uptime" in extra
     assert "baseline_memory_mb" not in extra
-
 
     proc._memory_baseline_mb = 300.0
     extra = proc._memory_logging_extra(520.0)
@@ -94,7 +91,6 @@ async def test_uptime_is_zero_before_start() -> None:
 
 
 def test_process_kind_renders_as_plain_string() -> None:
-
 
     assert f"{SupervisedProcKind.JOB} process" == "job process"
     assert f"{SupervisedProcKind.INFERENCE} process" == "inference process"

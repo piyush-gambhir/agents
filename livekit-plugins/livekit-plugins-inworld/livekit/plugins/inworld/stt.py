@@ -52,11 +52,6 @@ DEFAULT_API_URL = "https://api.inworld.ai/"
 WS_ENDPOINT = "stt/v1/transcribe:streamBidirectional"
 
 
-
-
-
-
-
 @dataclass
 class _STTOptions:
     model: str
@@ -423,9 +418,6 @@ class SpeechStream(stt.SpeechStream):
         text = t.get("transcript", "")
         is_final = t.get("isFinal", False)
         voice_profile = t.get("voiceProfile")
-
-
-
 
         if not text and not is_final:
             return

@@ -34,7 +34,6 @@ class BrowserSession:
 
         self._focus_identity: str | None = None
 
-
         self._agent_interrupted = asyncio.Event()
 
     @property
@@ -87,9 +86,7 @@ class BrowserSession:
 
         self._video_task = asyncio.create_task(self._video_loop(opts.framerate))
 
-
         self._input_task = asyncio.create_task(self._input_sender_loop())
-
 
         @self._room.local_participant.register_rpc_method("browser/request-focus")  # type: ignore[arg-type]
         async def _handle_request_focus(
@@ -100,7 +97,6 @@ class BrowserSession:
                 await self._page.send_focus_event(True)
                 await self._broadcast_focus()
                 return json.dumps({"granted": True})
-
 
             if self._focus_identity == "__agent__":
                 self._focus_identity = data.caller_identity
@@ -146,7 +142,6 @@ class BrowserSession:
             self._queue_input(self._page.go_forward())
             return json.dumps({"status": "ok"})
 
-
         @self._room.on("data_received")
         def _on_data_received(packet: rtc.DataPacket) -> None:
             if packet.topic != "browser-input":
@@ -163,7 +158,6 @@ class BrowserSession:
                 self._dispatch_input(evt)
 
         self._on_data_received = _on_data_received
-
 
         @self._room.on("participant_disconnected")
         def _on_participant_disconnected(participant: rtc.RemoteParticipant) -> None:

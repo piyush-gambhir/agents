@@ -108,11 +108,9 @@ class TestAMDClassifier:
         assert clf._silence_timer_trigger == "long_speech"
         assert clf._silence_timer is not None
 
-
         await asyncio.sleep(0.18)
         assert results == [], "pre-baked HUMAN must not fire after a transcript arrives"
         assert clf._silence_reached is False
-
 
         await asyncio.sleep(0.2)
         assert clf._silence_reached is True
@@ -145,8 +143,6 @@ class TestAMDClassifier:
 
         fired_at = time.time()
         assert clf._silence_reached
-
-
 
         assert fired_at - t_end < 0.3 + 0.15, (
             f"timer fired at {fired_at - t_end:.3f}s after t_end; "
@@ -192,7 +188,6 @@ class TestAMDClassifier:
         assert clf._silence_timer_trigger == "long_speech"
         handle_before = clf._silence_timer
         assert handle_before is not None
-
 
         clf.push_text("there")
         assert clf._silence_timer is handle_before
@@ -286,14 +281,12 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail greeting")
 
-
         await asyncio.sleep(0.4)
         assert clf._silence_reached is True
         assert clf._eot_reached is False
         assert clf._verdict_result is not None
         assert clf._verdict_result.is_machine
         assert results == [], "machine verdict must wait for EOT"
-
 
         clf.on_end_of_turn()
         assert len(results) == 1
@@ -313,7 +306,6 @@ class TestAMDClassifier:
         await asyncio.sleep(0.1)
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail greeting")
-
 
         await asyncio.sleep(0.05)
         clf.on_end_of_turn()
@@ -433,7 +425,6 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
 
-
         await asyncio.sleep(0.7)
         assert results == [], "detection_timeout must not force emit when waiting"
         assert clf._verdict_result is not None
@@ -481,12 +472,10 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         clf.push_text("voicemail")
 
-
         await asyncio.sleep(0.3)
         assert clf._silence_reached is True
         assert clf._eot_reached is False
         assert results == []
-
 
         await asyncio.wait_for(clf._verdict_ready.wait(), timeout=1.0)
         assert clf._eot_reached is True
@@ -519,7 +508,6 @@ class TestAMDClassifier:
         assert clf._eot_reached is True
         assert clf._verdict_result is None
 
-
         await asyncio.wait_for(clf._verdict_ready.wait(), timeout=1.0)
         assert len(results) == 1
         assert results[0].category == AMDCategory.UNCERTAIN
@@ -537,11 +525,9 @@ class TestAMDClassifier:
         clf.on_user_speech_ended(silence_duration=0.0)
         assert clf._eot_timer is not None
 
-
         clf.on_user_speech_started()
         assert clf._eot_timer is None
         assert clf._eot_reached is False
-
 
         await asyncio.sleep(0.4)
         assert clf._eot_reached is False

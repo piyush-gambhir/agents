@@ -210,7 +210,6 @@ class RTZROpenAPIClient:
         query_string = "&".join(f"{k}={v}" for k, v in config.items())
         url = f"{self._ws_base}/v1/transcribe:streaming?{query_string}"
 
-
         token = await self.get_token()
         ws_headers = {"Authorization": f"bearer {token}"}
         if headers:

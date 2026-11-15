@@ -62,12 +62,10 @@ LgType = SpeechLanguages | str
 LanguagesInput = LgType | list[LgType]
 
 
-
 _max_session_duration = 240
 
 
 _default_min_confidence = 0.65
-
 
 
 @dataclass
@@ -285,8 +283,6 @@ class STT(stt.STT):
 
     async def _create_client(self, timeout: float) -> SpeechAsyncClientV2 | SpeechAsyncClientV1:
 
-
-
         client_options = None
         client: SpeechAsyncClientV2 | SpeechAsyncClientV1 | None = None
         client_cls = SpeechAsyncClientV2 if self._config.version == 2 else SpeechAsyncClientV1
@@ -310,11 +306,8 @@ class STT(stt.STT):
 
     def _get_recognizer(self, client: SpeechAsyncClientV2) -> str:
 
-
-
         if self._project_id is not None:
             return f"projects/{self._project_id}/locations/{self._location}/recognizers/_"
-
 
         try:
             project_id = client.transport._credentials.project_id  # type: ignore
@@ -644,7 +637,6 @@ class SpeechStream(stt.SpeechStream):
         self,
     ) -> cloud_speech_v2.StreamingRecognitionConfig | cloud_speech_v1.StreamingRecognitionConfig:
         if self._config.version == 2:
-
             voice_activity_timeout = None
             if is_given(self._config.speech_start_timeout) or is_given(
                 self._config.speech_end_timeout
@@ -686,8 +678,6 @@ class SpeechStream(stt.SpeechStream):
                 ),
                 streaming_features=cloud_speech_v2.StreamingRecognitionFeatures(
                     interim_results=self._config.interim_results,
-
-
                     enable_voice_activity_events=self._config.enable_voice_activity_events
                     or (voice_activity_timeout is not None),
                     voice_activity_timeout=voice_activity_timeout,
@@ -743,8 +733,6 @@ class SpeechStream(stt.SpeechStream):
     async def _run(self) -> None:
         audio_pushed = False
 
-
-
         async def input_generator(
             client: SpeechAsyncClientV2 | SpeechAsyncClientV1, should_stop: asyncio.Event
         ) -> AsyncGenerator[
@@ -757,10 +745,6 @@ class SpeechStream(stt.SpeechStream):
                 yield self._build_init_request(client)
 
                 while True:
-
-
-
-
                     frame_task = asyncio.create_task(self._input_ch.recv())
                     done, _ = await asyncio.wait(
                         [frame_task, stop_task], return_when=asyncio.FIRST_COMPLETED
@@ -900,13 +884,9 @@ class SpeechStream(stt.SpeechStream):
                     finally:
                         should_stop.set()
 
-
-
-
                         with contextlib.suppress(Exception):
                             cast(StreamStreamCall, stream).cancel()
                         if not process_stream_task.done() and not wait_reconnect_task.done():
-
                             try:
                                 await asyncio.wait_for(process_stream_task, timeout=1.0)
                             except asyncio.TimeoutError:
@@ -928,7 +908,6 @@ class SpeechStream(stt.SpeechStream):
 
 
 def _duration_to_seconds(duration: Duration | timedelta) -> float:
-
 
     if isinstance(duration, timedelta):
         return duration.total_seconds()
@@ -958,13 +937,11 @@ def _recognize_response_to_speech_event(
 
     alternatives = []
 
-
     if resp.results:
         try:
             start_time = _get_start_time(resp.results[0].alternatives[0].words[0])
             end_time = _get_end_time(resp.results[-1].alternatives[0].words[-1])
         except IndexError:
-
             start_time = end_time = 0
 
         confidence /= len(resp.results)
@@ -1070,7 +1047,6 @@ def _get_audio_duration(
         - https://docs.cloud.google.com/python/docs/reference/speech/latest/google.cloud.speech_v1.types.StreamingRecognizeResponse
         - https://docs.cloud.google.com/speech-to-text/docs/reference/rest/v2/StreamingRecognitionResult
     """
-
 
     if isinstance(resp, cloud_speech_v2.StreamingRecognizeResponse):
         if resp.metadata.total_billed_duration:

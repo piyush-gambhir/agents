@@ -19,12 +19,10 @@ async def metrics(_request: aiohttp.web_request.Request) -> web.Response:
     def _get_metrics() -> bytes:
 
         if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
-
             registry = CollectorRegistry(auto_describe=True)
             multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
             return generate_latest(registry)
         else:
-
             return generate_latest()
 
     loop = asyncio.get_running_loop()

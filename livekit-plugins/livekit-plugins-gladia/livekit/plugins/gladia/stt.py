@@ -356,18 +356,15 @@ class STT(stt.STT):
         streaming_config = _build_streaming_config(config)
 
         try:
-
             session_response = await self._init_live_session(streaming_config, conn_options)
             session_id = session_response["id"]
             session_url = session_response["url"]
-
 
             receive_timeout = conn_options.timeout * 5
             async with self._ensure_session().ws_connect(
                 session_url,
                 timeout=aiohttp.ClientWSTimeout(ws_receive=receive_timeout, ws_close=10),
             ) as ws:
-
                 combined_frame = rtc.combine_audio_frames(buffer)
 
                 pcm_data = combined_frame.data.tobytes()
@@ -376,7 +373,6 @@ class STT(stt.STT):
                 chunk_size = (bytes_per_second * 150) // 1000
                 chunk_size = max(chunk_size, 1024)
 
-
                 for i in range(0, len(pcm_data), chunk_size):
                     chunk = pcm_data[i : i + chunk_size]
                     chunk_b64 = base64.b64encode(chunk).decode("utf-8")
@@ -384,15 +380,11 @@ class STT(stt.STT):
                         json.dumps({"type": "audio_chunk", "data": {"chunk": chunk_b64}})
                     )
 
-
                 await ws.send_str(json.dumps({"type": "stop_recording"}))
-
 
                 utterances = []
 
-
                 try:
-
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             data = json.loads(msg.data)
@@ -437,17 +429,14 @@ class STT(stt.STT):
                             f"Timeout waiting for Gladia final transcript ({receive_timeout}s)"
                         ) from None
 
-
                 return self._create_speech_event(
                     utterances, session_id, config.language_config.languages
                 )
 
         except asyncio.TimeoutError as e:
-
             logger.error(f"Timeout during Gladia connection/initialization: {e}")
             raise APITimeoutError("Timeout connecting to or initializing Gladia session") from e
         except aiohttp.ClientResponseError as e:
-
             logger.error(f"Gladia API status error during session init: {e.status} {e.message}")
             raise APIStatusError(
                 message=e.message,
@@ -456,14 +445,10 @@ class STT(stt.STT):
                 body=await e.response.text() if hasattr(e, "response") else None,
             ) from e
         except aiohttp.ClientError as e:
-
             logger.error(f"Gladia connection error: {e}")
             raise APIConnectionError(f"Gladia connection error: {e}") from e
         except Exception as e:
-
-            logger.exception(
-                f"Unexpected error during Gladia synchronous recognition: {e}"
-            )
+            logger.exception(f"Unexpected error during Gladia synchronous recognition: {e}")
             raise APIConnectionError(f"An unexpected error occurred: {e}") from e
 
     async def _init_live_session(self, config: dict, conn_options: APIConnectOptions) -> dict:
@@ -480,7 +465,6 @@ class STT(stt.STT):
                     sock_connect=conn_options.timeout,
                 ),
             ) as res:
-
                 if res.status not in (200, 201):
                     raise APIStatusError(
                         message=f"Failed to initialize Gladia session: {res.status}",
@@ -498,7 +482,6 @@ class STT(stt.STT):
     ) -> stt.SpeechEvent:
         """Create a SpeechEvent from Gladia's transcript data."""
         alternatives = []
-
 
         for utterance in utterances:
             text = utterance.get("text", "").strip()
@@ -865,14 +848,11 @@ class SpeechStream(stt.SpeechStream):
 
         while True:
             try:
-
                 session_info = await self._init_live_session()
                 session_url = session_info["url"]
                 self._request_id = session_info["id"]
 
-
                 backoff_time = 1.0
-
 
                 async with self._session.ws_connect(session_url) as ws:
                     self._ws = ws
@@ -939,7 +919,6 @@ class SpeechStream(stt.SpeechStream):
         if not self._ws:
             return
 
-
         samples_100ms = self._opts.sample_rate // 10
         audio_bstream = utils.audio.AudioByteStream(
             sample_rate=self._opts.sample_rate,
@@ -985,7 +964,6 @@ class SpeechStream(stt.SpeechStream):
                     self._audio_duration_collector.flush()
                     await self._ws.send_str(json.dumps({"type": "stop_recording"}))
                     has_ended = False
-
 
         if self._ws:
             await self._ws.send_str(json.dumps({"type": "stop_recording"}))
@@ -1055,8 +1033,6 @@ class SpeechStream(stt.SpeechStream):
                 )
 
                 if is_final:
-
-
                     if not self._opts.translation_config.enabled:
                         event = stt.SpeechEvent(
                             type=stt.SpeechEventType.FINAL_TRANSCRIPT,
@@ -1064,7 +1040,6 @@ class SpeechStream(stt.SpeechStream):
                             alternatives=[speech_data],
                         )
                         self._event_ch.send_nowait(event)
-
 
                         if self._speaking:
                             self._speaking = False
@@ -1075,9 +1050,7 @@ class SpeechStream(stt.SpeechStream):
                                 )
                             )
 
-
                 elif self._opts.interim_results:
-
                     event = stt.SpeechEvent(
                         type=stt.SpeechEventType.INTERIM_TRANSCRIPT,
                         request_id=self._request_id,
@@ -1086,11 +1059,8 @@ class SpeechStream(stt.SpeechStream):
                     self._event_ch.send_nowait(event)
 
         elif data["type"] == "translation":
-
-
             if self._opts.translation_config.enabled and "data" in data:
                 translation_data = data["data"]
-
 
                 translated_utterance = translation_data.get("translated_utterance", {})
                 if not translated_utterance:
@@ -1099,21 +1069,17 @@ class SpeechStream(stt.SpeechStream):
                     )
                     return
 
-
                 target_language = translation_data.get("target_language", "")
                 language = translated_utterance.get("language", target_language)
-
 
                 original_utterance = translation_data.get("utterance", {})
                 original_language = original_utterance.get("language", "")
                 original_text = original_utterance.get("text", "") or None
 
-
                 translated_text = translated_utterance.get("text", "").strip()
                 words = translated_utterance.get("words", [])
 
                 if translated_text and language:
-
                     speech_data = stt.SpeechData(
                         language=LanguageCode(language),
                         source_languages=[LanguageCode(original_language)]
@@ -1135,14 +1101,12 @@ class SpeechStream(stt.SpeechStream):
                         ],
                     )
 
-
                     event = stt.SpeechEvent(
                         type=stt.SpeechEventType.FINAL_TRANSCRIPT,
                         request_id=self._request_id,
                         alternatives=[speech_data],
                     )
                     self._event_ch.send_nowait(event)
-
 
                     if self._speaking:
                         self._speaking = False
@@ -1153,11 +1117,6 @@ class SpeechStream(stt.SpeechStream):
                         )
 
         elif data["type"] == "post_final_transcript":
-
-
-
-
-
             if self._speaking:
                 self._speaking = False
 

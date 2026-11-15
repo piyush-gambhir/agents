@@ -38,8 +38,6 @@ from .log import logger
 NUM_CHANNELS = 1
 
 
-
-
 _EndEventType = Literal["complete", "completed", "done", "end", "final"]
 _END_EVENT_TYPES: frozenset[str] = frozenset(get_args(_EndEventType))
 
@@ -53,9 +51,6 @@ def _is_end_event(resp: dict[str, object]) -> bool:
         return False
     raw = data.get("event_type") or data.get("event")
     return isinstance(raw, str) and raw.lower() in _END_EVENT_TYPES
-
-
-
 
 
 _EventKind = Literal["audio_chunk", "audio_end", "error", "ignore"]
@@ -206,8 +201,6 @@ class TTS(tts.TTS):
 
         voice = normalize_tts_voice(model, voice)
 
-
-
         self._opts = _TTSOptions(
             model_endpoint=resolved_model_endpoint,
             model=model,
@@ -241,7 +234,6 @@ class TTS(tts.TTS):
     async def _connect_ws(self, timeout: float) -> aiohttp.ClientWebSocketResponse:
         session = self._ensure_session()
 
-
         model_endpoint = self._opts.model_endpoint
         headers = {
             "Authorization": f"Bearer {self._opts.api_key}",
@@ -256,7 +248,6 @@ class TTS(tts.TTS):
             ),
             timeout,
         )
-
 
         init_payload = build_tts_init_payload(
             model=self._opts.model,
@@ -278,11 +269,7 @@ class TTS(tts.TTS):
 
     async def _close_ws(self, ws: aiohttp.ClientWebSocketResponse) -> None:
         try:
-
-
-
             await ws.send_str(SynthesizeStream._FLUSH_MSG)
-
 
             with contextlib.suppress(asyncio.TimeoutError):
                 await asyncio.wait_for(ws.receive(), timeout=5.0)
@@ -459,7 +446,6 @@ class ChunkedStream(tts.ChunkedStream):
 
 
 class SynthesizeStream(tts.SynthesizeStream):
-
     _FLUSH_MSG: str = json.dumps({"type": "flush"})
     _CANCEL_MSG: str = json.dumps({"type": "cancel"})
 
@@ -469,7 +455,6 @@ class SynthesizeStream(tts.SynthesizeStream):
         self._opts = replace(tts._opts)
 
     async def _run(self, output_emitter: tts.AudioEmitter) -> None:
-
 
         segments_ch = utils.aio.Chan[tokenize.WordStream]()
         request_id = utils.shortuuid()
@@ -533,19 +518,14 @@ class SynthesizeStream(tts.SynthesizeStream):
 
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             async for word in word_stream:
-
                 text_msg = {"type": "text", "text": f"{word.token} "}
                 self._mark_started()
                 await ws.send_str(json.dumps(text_msg))
                 input_sent_event.set()
 
             if is_rime_arcana:
-
-
                 await ws.send_str(self._CANCEL_MSG)
             else:
-
-
                 await ws.send_str(self._FLUSH_MSG)
             input_sent_event.set()
 
@@ -558,13 +538,10 @@ class SynthesizeStream(tts.SynthesizeStream):
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-
-
                     if is_rime_arcana:
                         output_emitter.end_segment()
                         break
                     raise APIStatusError("SLNG websocket connection closed unexpectedly")
-
 
                 if msg.type == aiohttp.WSMsgType.BINARY:
                     output_emitter.push(msg.data)
@@ -619,15 +596,12 @@ class SynthesizeStream(tts.SynthesizeStream):
                         if event.audio is not None:
                             output_emitter.push(event.audio)
                     elif event.kind == "audio_end":
-
                         output_emitter.end_segment()
                         break
                     elif event.kind == "error":
                         raise APIStatusError(f"SLNG TTS error: {event.error_message}")
 
         if is_rime_arcana:
-
-
             ws = await self._tts._connect_ws(timeout=self._conn_options.timeout)
             tasks = [
                 asyncio.create_task(send_task(ws)),

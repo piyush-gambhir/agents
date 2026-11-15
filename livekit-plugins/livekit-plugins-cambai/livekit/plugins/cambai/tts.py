@@ -180,7 +180,6 @@ class ChunkedStream(tts.ChunkedStream):
             f"model={self._opts.speech_model}, text_length={len(self._input_text)}"
         )
 
-
         if self._opts.output_format in ("pcm_s16le", "pcm_s32le"):
             mime_type = "audio/pcm"
         elif self._opts.output_format == "wav":
@@ -189,7 +188,6 @@ class ChunkedStream(tts.ChunkedStream):
             mime_type = "audio/flac"
         else:
             mime_type = "audio/aac"
-
 
         payload: dict = {
             "text": self._input_text,

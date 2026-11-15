@@ -64,14 +64,11 @@ class TTS(tts.TTS):
         voice: str | None = None,
         api_key: str | None = None,
         http_session: aiohttp.ClientSession | None = None,
-
         sample_rate: int = 24000,
-
         temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.5,
         max_tokens: int = 1000,
-
         language: str = "English",
         leading_silence: bool = True,
     ) -> None:

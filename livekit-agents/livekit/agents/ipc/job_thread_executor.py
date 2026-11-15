@@ -114,8 +114,6 @@ class ThreadJobExecutor:
 
     async def _start(self) -> None:
         async with self._lock:
-
-
             mp_pch, mp_cch = socket.socketpair()
             pch: duplex_unix._AsyncDuplex | None = None
             try:
@@ -323,7 +321,6 @@ class ThreadJobExecutor:
                 task = asyncio.create_task(self._do_inference_task(msg))
                 self._inference_tasks.add(task)
                 task.add_done_callback(self._inference_tasks.discard)
-
 
         if not self._shutdown_ack_fut.done():
             self._shutdown_ack_fut.set_result(None)

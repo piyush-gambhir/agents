@@ -46,7 +46,6 @@ from .langs import TTSLangs
 from .log import logger
 from .models import ArcanaVoices, DefaultCodaVoice, DefaultMistVoice, TTSModels
 
-
 ARCANA_MODEL_TIMEOUT = 60 * 4
 MIST_MODEL_TIMEOUT = 30
 RIME_BASE_URL = "https://users.rime.ai/v1/rime-tts"
@@ -161,14 +160,11 @@ class TTS(tts.TTS):
         model: TTSModels | str = "arcana",
         speaker: NotGivenOr[ArcanaVoices | str] = NOT_GIVEN,
         lang: TTSLangs | str = "eng",
-
         repetition_penalty: NotGivenOr[float] = NOT_GIVEN,
         temperature: NotGivenOr[float] = NOT_GIVEN,
         top_p: NotGivenOr[float] = NOT_GIVEN,
         max_tokens: NotGivenOr[int] = NOT_GIVEN,
-
         time_scale_factor: NotGivenOr[float] = NOT_GIVEN,
-
         sample_rate: int = 22050,
         speed_alpha: NotGivenOr[float] = NOT_GIVEN,
         reduce_latency: NotGivenOr[bool] = NOT_GIVEN,
@@ -181,7 +177,6 @@ class TTS(tts.TTS):
         tokenizer: NotGivenOr[tokenize.SentenceTokenizer] = NOT_GIVEN,
     ) -> None:
         if is_given(base_url):
-
             use_websocket = use_websocket or base_url.startswith(("ws://", "wss://"))
             resolved_base_url = base_url
         else:
@@ -345,15 +340,12 @@ class TTS(tts.TTS):
         model: NotGivenOr[TTSModels | str] = NOT_GIVEN,
         speaker: NotGivenOr[str] = NOT_GIVEN,
         lang: NotGivenOr[TTSLangs | str] = NOT_GIVEN,
-
         repetition_penalty: NotGivenOr[float] = NOT_GIVEN,
         temperature: NotGivenOr[float] = NOT_GIVEN,
         top_p: NotGivenOr[float] = NOT_GIVEN,
         max_tokens: NotGivenOr[int] = NOT_GIVEN,
         sample_rate: NotGivenOr[int] = NOT_GIVEN,
-
         time_scale_factor: NotGivenOr[float] = NOT_GIVEN,
-
         speed_alpha: NotGivenOr[float] = NOT_GIVEN,
         reduce_latency: NotGivenOr[bool] = NOT_GIVEN,
         pause_between_brackets: NotGivenOr[bool] = NOT_GIVEN,
@@ -362,7 +354,6 @@ class TTS(tts.TTS):
     ) -> None:
         effective_model = model if is_given(model) else self._opts.model
         _check_time_scale_factor_supported(effective_model, time_scale_factor)
-
 
         prev_ws_url = self._ws_url() if self._use_websocket else None
         if is_given(base_url):

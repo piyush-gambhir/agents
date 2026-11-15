@@ -45,13 +45,11 @@ DEFAULT_IMAGE_ENCODE_OPTIONS = images.EncodeOptions(
 lk_google_debug = int(os.getenv("LK_GOOGLE_DEBUG", 0))
 
 
-
 KNOWN_VERTEXAI_MODELS: frozenset[str] = frozenset(
     {
         "gemini-live-2.5-flash-native-audio",
     }
 )
-
 
 
 KNOWN_GEMINI_API_MODELS: frozenset[str] = frozenset(
@@ -336,7 +334,6 @@ class RealtimeModel(llm.RealtimeModel):
                     "API key is required for Google API either via api_key or GOOGLE_API_KEY environment variable"  # noqa: E501
                 )
 
-
         _validate_model_api_match(model, use_vertexai)
 
         if "3.1" in model:
@@ -447,7 +444,6 @@ class RealtimeSession(llm.RealtimeSession):
         self._msg_ch = utils.aio.Chan[ClientEvents]()
         self._input_resampler: rtc.AudioResampler | None = None
 
-
         self._bstream = audio_utils.AudioByteStream(
             INPUT_AUDIO_SAMPLE_RATE,
             INPUT_AUDIO_CHANNELS,
@@ -552,7 +548,6 @@ class RealtimeSession(llm.RealtimeSession):
         ):
             self._opts.tool_response_scheduling = tool_response_scheduling
 
-
         if is_given(tool_choice):
             logger.warning("tool_choice is not supported by the Google Realtime API.")
 
@@ -565,13 +560,11 @@ class RealtimeSession(llm.RealtimeSession):
 
             async with self._session_lock:
                 if not self._active_session:
-
                     self._mark_restart_needed()
                     return
 
             if not self._realtime_model.capabilities.mutable_instructions:
                 return
-
 
             logger.debug("Updating instructions mid-session")
             self._send_client_event(
@@ -579,8 +572,6 @@ class RealtimeSession(llm.RealtimeSession):
                     turns=[
                         types.Content(
                             parts=[types.Part(text=instructions)],
-
-
                             role="model" if self._opts.vertexai else None,
                         )
                     ],
@@ -640,8 +631,6 @@ class RealtimeSession(llm.RealtimeSession):
                     )
             if tool_results:
                 self._send_client_event(tool_results)
-
-
 
         self._chat_ctx = chat_ctx
 
@@ -722,7 +711,6 @@ class RealtimeSession(llm.RealtimeSession):
                 "generate_reply called while another generation is pending, cancelling previous."
             )
 
-
             old_fut = self._pending_generation_fut
             self._pending_generation_fut = None
             old_fut.cancel("Superseded by new generate_reply call")
@@ -737,8 +725,6 @@ class RealtimeSession(llm.RealtimeSession):
                 )
             )
             self._in_user_activity = False
-
-
 
         turns = []
         if is_given(instructions):
@@ -764,7 +750,6 @@ class RealtimeSession(llm.RealtimeSession):
             if is_current:
                 self._pending_generation_fut = None
             if f.cancelled() and is_current:
-
                 self.interrupt()
 
         fut.add_done_callback(_on_fut_done)
@@ -784,7 +769,6 @@ class RealtimeSession(llm.RealtimeSession):
             )
 
     def interrupt(self) -> None:
-
 
         if (
             self._opts.realtime_input_config
@@ -830,7 +814,6 @@ class RealtimeSession(llm.RealtimeSession):
         max_retries = self._opts.conn_options.max_retry
 
         while not self._msg_ch.closed:
-
             await self._close_active_session()
 
             self._session_should_close.clear()
@@ -845,7 +828,6 @@ class RealtimeSession(llm.RealtimeSession):
                     self._report_connection_acquired(time.perf_counter() - t0)
                     async with self._session_lock:
                         self._active_session = session
-
 
                         system_msg_count = sum(
                             1
@@ -874,7 +856,6 @@ class RealtimeSession(llm.RealtimeSession):
                                 turns=turns,  # type: ignore
                                 turn_complete=False,
                             )
-
 
                     send_task = asyncio.create_task(
                         self._send_task(session), name="gemini-realtime-send"
@@ -905,7 +886,6 @@ class RealtimeSession(llm.RealtimeSession):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-
                 hint = _get_1008_error_hint(str(e))
                 if hint:
                     logger.error(f"Gemini Realtime API error: {e}{hint}", exc_info=e)
@@ -913,8 +893,6 @@ class RealtimeSession(llm.RealtimeSession):
                     logger.error(f"Gemini Realtime API error: {e}", exc_info=e)
 
                 if not self._msg_ch.closed:
-
-
                     if not session or max_retries == 0:
                         self._emit_error(e, recoverable=False)
                         error_msg = "Failed to connect to Gemini Live"
@@ -1018,18 +996,12 @@ class RealtimeSession(llm.RealtimeSession):
 
                     if not self._current_generation or self._current_generation._done:
                         if (sc := response.server_content) and sc.interrupted:
-
-
-
-
-
                             if not self._pending_generation_fut:
                                 self._handle_input_speech_started()
 
                             sc.interrupted = None
                             sc_copy = sc.model_dump(exclude_none=True)
                             if not sc_copy:
-
                                 response.server_content = None
                                 if lk_google_debug:
                                     logger.debug("ignoring empty server content")
@@ -1061,7 +1033,6 @@ class RealtimeSession(llm.RealtimeSession):
 
                     if self._num_retries > 0:
                         self._num_retries = 0
-
 
         except Exception as e:
             if not self._session_should_close.is_set():
@@ -1175,8 +1146,6 @@ class RealtimeSession(llm.RealtimeSession):
             self._pending_generation_fut.set_result(generation_event)
             self._pending_generation_fut = None
         else:
-
-
             self._handle_input_speech_started()
 
         self.emit("generation_created", generation_event)
@@ -1190,7 +1159,6 @@ class RealtimeSession(llm.RealtimeSession):
         if model_turn := server_content.model_turn:
             for part in model_turn.parts or []:
                 if part.thought:
-
                     continue
                 if part.text:
                     current_gen.push_text(part.text)
@@ -1215,8 +1183,6 @@ class RealtimeSession(llm.RealtimeSession):
             text = input_transcription.text
             if text:
                 if current_gen.input_transcription == "":
-
-
                     text = text.lstrip()
                 current_gen.input_transcription += text
                 self.emit(
@@ -1237,7 +1203,6 @@ class RealtimeSession(llm.RealtimeSession):
             current_gen._completed_timestamp = time.time()
 
         if server_content.interrupted and not self._pending_generation_fut:
-
             self._handle_input_speech_started()
 
         if server_content.turn_complete:
@@ -1247,12 +1212,9 @@ class RealtimeSession(llm.RealtimeSession):
         if not self._current_generation or self._current_generation._done:
             return
 
-
         self._handle_input_speech_stopped()
 
         gen = self._current_generation
-
-
 
         if gen.input_transcription:
             self.emit(
@@ -1263,8 +1225,6 @@ class RealtimeSession(llm.RealtimeSession):
                     is_final=True,
                 ),
             )
-
-
 
             self._chat_ctx.add_message(
                 role="user",
@@ -1281,7 +1241,6 @@ class RealtimeSession(llm.RealtimeSession):
 
         if not gen.text_ch.closed:
             if self._opts.output_audio_transcription is None:
-
                 gen.text_ch.send_nowait("")
             gen.text_ch.close()
         if not gen.audio_ch.closed:
@@ -1410,7 +1369,6 @@ class RealtimeSession(llm.RealtimeSession):
     def _resample_audio(self, frame: rtc.AudioFrame) -> Iterator[rtc.AudioFrame]:
         if self._input_resampler:
             if frame.sample_rate != self._input_resampler._input_rate:
-
                 self._input_resampler = None
 
         if self._input_resampler is None and (
@@ -1424,7 +1382,6 @@ class RealtimeSession(llm.RealtimeSession):
             )
 
         if self._input_resampler:
-
             yield from self._input_resampler.push(frame)
         else:
             yield frame
@@ -1450,12 +1407,7 @@ class RealtimeSession(llm.RealtimeSession):
                 sc.output_transcription and sc.output_transcription and sc.output_transcription.text
             )
             or (sc.input_transcription and sc.input_transcription and sc.input_transcription.text)
-
-
         ):
-
-
-
             return True
 
         return False

@@ -13,15 +13,6 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, silero  # noqa: F401
 
-
-
-
-
-
-
-
-
-
 logger = logging.getLogger("raw-function-description")
 
 load_dotenv()
@@ -68,13 +59,7 @@ server = AgentServer()
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    session = AgentSession(
-
-
-
-
-        llm=openai.realtime.RealtimeModel()
-    )
+    session = AgentSession(llm=openai.realtime.RealtimeModel())
     await session.start(RawFunctionAgent(), room=ctx.room)
 
 

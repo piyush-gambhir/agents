@@ -198,10 +198,8 @@ async def test_scheduler_dwell_resets_on_agent_state_change() -> None:
         max_steps=None,
     )
 
-
     await asyncio.sleep(0.05)
     session.emit_agent_state("speaking")
-
 
     await asyncio.sleep(0.08)
     fire_count_before = len(session.say_calls)
@@ -255,7 +253,6 @@ async def test_scheduler_invokes_callable_source_lazily() -> None:
         interval=None,
         max_steps=None,
     )
-
 
     assert invocations == []
     await asyncio.sleep(0.15)
@@ -424,7 +421,6 @@ async def test_ctx_update_resets_pending_filler_dwell() -> None:
 
     async with ctx.with_filler("ping", delay=0.1, interval=None):
         await asyncio.sleep(0.05)
-
 
         await ctx.update("first")
         await ctx.update("second")

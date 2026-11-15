@@ -11,9 +11,6 @@ T_co = TypeVar("T_co", covariant=True)
 T_contra = TypeVar("T_contra", contravariant=True)
 
 
-
-
-
 class ChanClosed(Exception):
     pass
 
@@ -126,7 +123,6 @@ class Chan(Generic[T]):
                 raise ChanEmpty
         item = self._queue.popleft()
 
-
         self._wakeup_next(self._puts)
         return item
 
@@ -145,15 +141,9 @@ class Chan(Generic[T]):
         while self._gets:
             self._wakeup_next(self._gets)
 
-
-
-
     @property
     def closed(self) -> bool:
         return self._closed
-
-
-
 
     def qsize(self) -> int:
         """the number of elements queued (unread) in the channel buffer"""

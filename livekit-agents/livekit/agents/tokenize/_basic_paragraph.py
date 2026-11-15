@@ -9,12 +9,10 @@ def split_paragraphs(text: str) -> list[tuple[str, int, int]]:
 
     pattern = r"\n\s*\n"
 
-
     splits = list(re.finditer(pattern, text))
 
     paragraphs: list[tuple[str, int, int]] = []
     start = 0
-
 
     if not splits:
         stripped = text.strip()
@@ -24,7 +22,6 @@ def split_paragraphs(text: str) -> list[tuple[str, int, int]]:
         start_index = text.index(stripped)
         return [(stripped, start_index, start_index + len(stripped))]
 
-
     for split in splits:
         end = split.start()
         paragraph = text[start:end].strip()
@@ -33,7 +30,6 @@ def split_paragraphs(text: str) -> list[tuple[str, int, int]]:
             para_end = para_start + len(paragraph)
             paragraphs.append((paragraph, para_start, para_end))
         start = split.end()
-
 
     last_paragraph = text[start:].strip()
     if last_paragraph:

@@ -13,7 +13,6 @@ from ..log import logger
 from ..types import FlushSentinel, TimedString as TimedString
 from .agent import ModelSettings
 
-
 STTNode = Callable[
     [AsyncIterable[rtc.AudioFrame], ModelSettings],
     AsyncIterable[stt.SpeechEvent | str]
@@ -308,7 +307,6 @@ class TextOutput(ABC):
         return f"{self.__class__.__name__}(label={self.label!r}, next={self.next_in_chain!r})"
 
 
-
 class VideoOutput(ABC):
     def __init__(self, *, label: str, next_in_chain: VideoOutput | None) -> None:
         self.__label = label
@@ -352,7 +350,6 @@ class AgentInput:
         self._video_changed = video_changed
         self._audio_changed = audio_changed
         self._audio_enabled_cb = audio_enabled_cb
-
 
         self._audio_enabled = True
         self._video_enabled = True

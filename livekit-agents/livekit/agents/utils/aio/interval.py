@@ -10,7 +10,6 @@ def _finish_fut(fut: asyncio.Future[Any]) -> None:
     fut.set_result(None)
 
 
-
 class Interval:
     def __init__(self, interval: float) -> None:
         self._interval = interval

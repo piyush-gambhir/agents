@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from livekit import rtc
 from livekit.agents import AgentServer, JobContext, cli
 
-
 load_dotenv()
 
 WIDTH = 640
@@ -32,10 +31,8 @@ async def entrypoint(job: JobContext):
         while True:
             await asyncio.sleep(0.1)
 
-
             r, g, b = (random.randint(0, 255) for _ in range(3))
             color = bytes([r, g, b, 255])
-
 
             argb_frame[:] = color * WIDTH * HEIGHT
             frame = rtc.VideoFrame(WIDTH, HEIGHT, rtc.VideoBufferType.RGBA, argb_frame)

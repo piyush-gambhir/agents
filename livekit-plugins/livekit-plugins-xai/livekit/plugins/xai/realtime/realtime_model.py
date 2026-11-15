@@ -122,7 +122,6 @@ class RealtimeSession(openai.realtime.RealtimeSession):
     def _create_tools_update_event(self, tools: list[llm.Tool]) -> dict[str, Any]:
         event = super()._create_tools_update_event(tools)
 
-
         xai_tools: list[dict[str, Any]] = []
         for tool in tools:
             if isinstance(tool, XAITool):
@@ -140,7 +139,6 @@ class RealtimeSession(openai.realtime.RealtimeSession):
 
     def _handle_conversion_item_added(self, event: ConversationItemAdded) -> None:
 
-
         if event.previous_item_id is None:
             event.previous_item_id = (
                 self._remote_chat_ctx._tail.item.id if self._remote_chat_ctx._tail else None
@@ -150,7 +148,6 @@ class RealtimeSession(openai.realtime.RealtimeSession):
 
     def _handle_conversion_item_deleted(self, event: ConversationItemDeletedEvent) -> None:
 
-
         if event.item_id == "" and self._item_delete_future:
             event.item_id = list(self._item_delete_future.keys())[0]
 
@@ -159,7 +156,6 @@ class RealtimeSession(openai.realtime.RealtimeSession):
     def _handle_conversion_item_input_audio_transcription_completed(
         self, event: ConversationItemInputAudioTranscriptionCompletedEvent
     ) -> None:
-
 
         if remote_item := self._remote_chat_ctx.get(event.item_id):
             if (

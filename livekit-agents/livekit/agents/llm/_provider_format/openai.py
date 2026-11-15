@@ -23,7 +23,6 @@ def to_chat_ctx(
         if not group.message and not group.tool_calls and not group.tool_outputs:
             continue
 
-
         msg = _to_chat_item(group.message) if group.message else {"role": "assistant"}
         tool_calls = []
         for tool_call in group.tool_calls:
@@ -39,7 +38,6 @@ def to_chat_ctx(
         if tool_calls:
             msg["tool_calls"] = tool_calls  # type: ignore[assignment]
         messages.append(msg)
-
 
         for tool_output in group.tool_outputs:
             messages.append(_to_chat_item(tool_output))
@@ -60,8 +58,6 @@ def _to_chat_item(msg: llm.ChatItem) -> dict[str, Any]:
                 list_content.append(_to_image_content(content))
 
         if not list_content:
-
-
             result: dict[str, Any] = {"role": msg.role, "content": text_content}
         else:
             if text_content:
@@ -184,9 +180,6 @@ def _to_responses_chat_item(msg: llm.ChatItem) -> dict[str, Any]:
             if text_content:
                 list_content.append({"type": "input_text", "text": text_content})
             item = {"role": msg.role, "content": list_content}
-
-
-
 
         if msg.role == "assistant":
             phase = msg.extra.get("openai", {}).get("phase")

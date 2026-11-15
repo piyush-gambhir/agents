@@ -16,7 +16,6 @@ from .tts import (
     TTSCapabilities,
 )
 
-
 DEFAULT_STREAM_ADAPTER_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )

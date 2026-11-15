@@ -203,8 +203,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             self._main_task(), name="PersonaplexSession._main_task"
         )
 
-
-
     @property
     def chat_ctx(self) -> llm.ChatContext:
         return self._chat_ctx.copy()
@@ -212,8 +210,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     @property
     def tools(self) -> llm.ToolContext:
         return self._tools
-
-
 
     @utils.log_exceptions(logger=logger)
     def push_audio(self, frame: rtc.AudioFrame) -> None:
@@ -226,8 +222,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
     def push_video(self, frame: rtc.VideoFrame) -> None:
         pass
-
-
 
     def generate_reply(
         self,
@@ -263,8 +257,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     ) -> None:
         logger.debug("truncate is not supported by PersonaPlex.")
 
-
-
     async def update_instructions(self, instructions: str) -> None:
         if self._opts.text_prompt != instructions:
             self._opts.text_prompt = instructions
@@ -279,8 +271,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
     def update_options(self, *, tool_choice: NotGivenOr[llm.ToolChoice | None] = NOT_GIVEN) -> None:
         pass
-
-
 
     async def aclose(self) -> None:
         if self._closed:
@@ -298,8 +288,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
         if self._current_generation and not self._current_generation._done:
             self._finalize_generation(interrupted=True)
-
-
 
     def _mark_restart_needed(self) -> None:
         if not self._session_should_close.is_set():
@@ -334,7 +322,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         while not self._closed:
             self._session_should_close.clear()
             self._handshake_event.clear()
-
 
             self._opus_writer = sphn.OpusStreamWriter(SAMPLE_RATE)
             self._opus_reader = sphn.OpusStreamReader(SAMPLE_RATE)
@@ -391,11 +378,9 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             except Exception as e:
                 logger.error(f"PersonaPlex WebSocket error: {e}", exc_info=True)
 
-
                 if self._current_generation and not self._current_generation._done:
                     self._finalize_generation(interrupted=True)
                 self._cancel_silence_timer()
-
 
                 old_ch = self._msg_ch
                 old_ch.close()
@@ -430,10 +415,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
     @utils.log_exceptions(logger=logger)
     async def _send_task(self, ws_conn: aiohttp.ClientWebSocketResponse) -> None:
-
-
-
-
 
         await self._handshake_event.wait()
 
@@ -488,8 +469,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                 if self._closing:
                     return
 
-
-
                 if ws_conn.close_code in (1000, None):
                     logger.debug("PersonaPlex server closed connection normally")
                     if self._current_generation and not self._current_generation._done:
@@ -503,26 +482,21 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                     message=f"PersonaPlex WebSocket error: {ws_conn.exception()}"
                 )
 
-
-
     def _encode_and_send(self, audio_frame: rtc.AudioFrame) -> None:
         """Encode a PCM audio frame to Opus and queue for sending."""
         if not audio_frame.data or len(audio_frame.data) == 0:
             return
 
         try:
-
             pcm_int16 = np.frombuffer(audio_frame.data, dtype=np.int16)
             if pcm_int16.size == 0:
                 return
 
             pcm_float = pcm_int16.astype(np.float32) / 32768.0
 
-
             opus_bytes = self._opus_writer.append_pcm(pcm_float)
 
             if opus_bytes:
-
                 message = bytes([MSG_AUDIO]) + opus_bytes
                 with contextlib.suppress(utils.aio.channel.ChanClosed):
                     self._msg_ch.send_nowait(message)
@@ -532,16 +506,13 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def _handle_audio_data(self, opus_payload: bytes) -> None:
         """Decode Opus audio from server and push to generation."""
         try:
-
             pcm_float = self._opus_reader.append_bytes(opus_payload)
 
             if pcm_float is None or len(pcm_float) == 0:
                 return
 
-
             pcm_int16 = np.clip(pcm_float * 32768.0, -32768, 32767).astype(np.int16)
             pcm_bytes = pcm_int16.tobytes()
-
 
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation()
@@ -561,7 +532,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             with contextlib.suppress(utils.aio.channel.ChanClosed):
                 gen.audio_ch.send_nowait(frame)
 
-
             self._reset_silence_timer()
 
         except Exception as e:
@@ -570,7 +540,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def _handle_text_token(self, payload: bytes) -> None:
         """Handle text token from server."""
         try:
-
             if len(payload) == 1 and payload[0] in _SPECIAL_TOKENS:
                 return
 
@@ -578,7 +547,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
             if not text:
                 return
-
 
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation()
@@ -592,8 +560,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
         except Exception as e:
             logger.error(f"Error processing text token: {e}")
-
-
 
     def _start_new_generation(self) -> None:
         if self._current_generation and not self._current_generation._done:
@@ -648,7 +614,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         gen.message_ch.close()
 
         self._cancel_silence_timer()
-
 
         if gen.output_text:
             self._chat_ctx.add_message(
@@ -708,8 +673,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         self.emit("metrics_collected", metrics)
         self._current_generation = None
 
-
-
     def _reset_silence_timer(self) -> None:
         self._cancel_silence_timer()
         loop = asyncio.get_running_loop()
@@ -725,8 +688,6 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         if self._current_generation and not self._current_generation._done:
             logger.debug("Silence detected, finalizing generation")
             self._finalize_generation(interrupted=False)
-
-
 
     def _resample_audio(self, frame: rtc.AudioFrame) -> Iterator[rtc.AudioFrame]:
         if self._input_resampler:

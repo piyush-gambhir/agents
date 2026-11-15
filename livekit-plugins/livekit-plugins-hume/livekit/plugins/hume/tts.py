@@ -152,8 +152,6 @@ class TTS(tts.TTS):
 
         has_voice = voice is not None
 
-
-
         if not is_given(instant_mode):
             resolved_instant_mode = has_voice
         elif instant_mode and not has_voice:
@@ -271,7 +269,6 @@ class ChunkedStream(tts.ChunkedStream):
                 headers={**DEFAULT_HEADERS, API_AUTH_HEADER: self._opts.api_key},
                 json=payload,
                 timeout=aiohttp.ClientTimeout(total=None, sock_connect=self._conn_options.timeout),
-
                 read_bufsize=10 * 1024 * 1024,
             ) as resp:
                 resp.raise_for_status()

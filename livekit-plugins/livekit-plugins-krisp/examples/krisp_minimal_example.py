@@ -33,7 +33,6 @@ async def test_krisp_filter():
     logger.info("=" * 60)
 
     try:
-
         logger.info("\n1. Creating Krisp frame processor...")
         krisp_processor = KrispVivaFilterFrameProcessor(
             noise_suppression_level=100,
@@ -42,21 +41,17 @@ async def test_krisp_filter():
         )
         logger.info("✅ Krisp frame processor created successfully")
 
-
         logger.info("\n2. Creating test audio frame...")
         sample_rate = 16000
         frame_duration_ms = 10
         num_samples = int(sample_rate * frame_duration_ms / 1000)
-
 
         t = np.linspace(0, frame_duration_ms / 1000, num_samples)
         sine_wave = np.sin(2 * np.pi * 440 * t)
         noise = np.random.normal(0, 0.1, num_samples)
         audio_signal = (sine_wave + noise) * 0.5
 
-
         audio_int16 = (audio_signal * 32767).astype(np.int16)
-
 
         test_frame = rtc.AudioFrame(
             data=audio_int16.tobytes(),
@@ -66,11 +61,9 @@ async def test_krisp_filter():
         )
         logger.info(f"✅ Test frame created: {num_samples} samples @ {sample_rate}Hz")
 
-
         logger.info("\n3. Processing frame through Krisp frame processor...")
         filtered_frame = krisp_processor.process(test_frame)
         logger.info("✅ Frame processed successfully")
-
 
         logger.info("\n4. Verifying output...")
         logger.info(f"   Input samples:  {test_frame.samples_per_channel}")
@@ -83,13 +76,11 @@ async def test_krisp_filter():
         else:
             logger.error("❌ Output frame size mismatch!")
 
-
         logger.info("\n5. Processing multiple frames...")
         for i in range(10):
             _ = krisp_processor.process(test_frame)
             logger.info(f"   Frame {i + 1}/10 processed")
         logger.info("✅ Multiple frames processed successfully")
-
 
         logger.info("\n6. Cleaning up...")
         krisp_processor.close()

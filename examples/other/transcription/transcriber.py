@@ -22,10 +22,6 @@ load_dotenv()
 logger = logging.getLogger("transcriber")
 
 
-
-
-
-
 class Transcriber(Agent):
     def __init__(self):
         super().__init__(
@@ -49,7 +45,6 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
     session = AgentSession(
-
         vad=silero.VAD.load(min_silence_duration=0.3),
     )
 
@@ -62,7 +57,6 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             text_output=True,
-
             audio_output=False,
         ),
     )

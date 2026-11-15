@@ -91,8 +91,6 @@ class ProcPool(utils.EventEmitter[EventTypes]):
         self._main_atask = asyncio.create_task(self._main_task())
 
         if self._default_num_idle_processes > 0:
-
-
             try:
                 await asyncio.wait_for(
                     self._idle_ready.wait(),
@@ -116,7 +114,6 @@ class ProcPool(utils.EventEmitter[EventTypes]):
                 self._warmed_proc_queue.empty()
                 and len(self._spawn_tasks) < self._jobs_waiting_for_process
             ):
-
                 task = asyncio.create_task(self._proc_spawn_task())
                 self._spawn_tasks.add(task)
                 task.add_done_callback(self._spawn_tasks.discard)
@@ -126,7 +123,6 @@ class ProcPool(utils.EventEmitter[EventTypes]):
                     "no warmed process available for job, waiting for one to be created",
                     extra={"job_id": job_id},
                 )
-
 
             while True:
                 if not self._warmed_proc_queue.empty():

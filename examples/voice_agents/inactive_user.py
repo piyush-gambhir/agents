@@ -52,7 +52,6 @@ async def entrypoint(ctx: JobContext):
             inactivity_task = asyncio.create_task(user_presence_task())
             return
 
-
         if inactivity_task is not None:
             inactivity_task.cancel()
 

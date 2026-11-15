@@ -942,7 +942,6 @@ class ChatMessageAssert:
         if not any(excluded_model in llm_v.model for excluded_model in excluded_models_temperature):
             extra_kwargs["temperature"] = 0.0
 
-
         async for chunk in llm_v.chat(
             chat_ctx=chat_ctx,
             tools=[check_intent],
@@ -1023,7 +1022,6 @@ class AgentHandoffAssert:
 
     def event(self) -> AgentHandoffEvent:
         return self._event
-
 
 
 if TYPE_CHECKING:

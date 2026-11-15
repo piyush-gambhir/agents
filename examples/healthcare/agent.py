@@ -571,7 +571,6 @@ class HealthcareAgent(Agent):
         if event.task_id == "get_name_task":
             self._pending_name = event.result.first_name + " " + event.result.last_name
             if self.session.userdata.profile:
-
                 self.session.userdata.profile = {}
 
         if event.task_id == "get_dob_task":

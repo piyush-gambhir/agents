@@ -123,10 +123,6 @@ class AudioConfig(NamedTuple):
     fade_out: float = 0.0
 
 
-
-
-
-
 _AUDIO_SOURCE_BUFFER_MS = 400
 _TRACK_NAME = "background_audio"
 
@@ -222,7 +218,6 @@ class BackgroundAudioPlayer:
                 return None
 
         if isinstance(source, AudioConfig):
-
             return source._replace(source=self._normalize_builtin_audio(source.source))
         return AudioConfig(self._normalize_builtin_audio(source))
 
@@ -354,9 +349,6 @@ class BackgroundAudioPlayer:
                 self._agent_session.off("agent_state_changed", self._agent_state_changed)
 
             with contextlib.suppress(Exception):
-
-
-
                 current = self._find_publication_by_name(_TRACK_NAME)
                 if current is not None:
                     await self._room.local_participant.unpublish_track(current.sid)
@@ -410,9 +402,6 @@ class BackgroundAudioPlayer:
                     if stop_t is not None and (t - stop_t) >= int(fade_out * frame.sample_rate):
                         break
             finally:
-
-
-
                 play_handle._mark_playout_done()
 
         gen = _gen_wrapper()
@@ -427,7 +416,6 @@ class BackgroundAudioPlayer:
             if play_handle._stop_fut.done():
                 stopped = True
                 with contextlib.suppress(RuntimeError):
-
                     await gen.aclose()
 
     @log_exceptions(logger=logger)
@@ -471,9 +459,6 @@ class PlayHandle:
 
         with contextlib.suppress(asyncio.InvalidStateError):
             self._stop_fut.set_result(None)
-
-
-
 
             if self._fade_out <= 0:
                 self._mark_playout_done()

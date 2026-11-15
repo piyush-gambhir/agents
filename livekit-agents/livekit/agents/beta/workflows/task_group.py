@@ -60,9 +60,7 @@ class TaskGroup(AgentTask[TaskGroupResult]):
             return_exceptions (bool): Whether or not to directly propagate an error. When set to True, the exception is added to the results dictionary and the sequence continues. Defaults to False.
             on_task_completed (Callable[]): A callable that executes upon each task completion. The callback takes in a single argument of a TaskCompletedEvent.
         """
-        super().__init__(
-            instructions="*empty*", chat_ctx=chat_ctx, llm=NOT_GIVEN
-        )
+        super().__init__(instructions="*empty*", chat_ctx=chat_ctx, llm=NOT_GIVEN)
 
         self._summarize_chat_ctx = summarize_chat_ctx
         self._return_exceptions = return_exceptions
@@ -111,8 +109,6 @@ class TaskGroup(AgentTask[TaskGroupResult]):
                 self._visited_tasks.add(task_id)
                 res = await self._current_task
 
-
-
                 self._chat_ctx.merge(
                     self._current_task.chat_ctx.copy(),
                     exclude_instructions=True,
@@ -145,9 +141,6 @@ class TaskGroup(AgentTask[TaskGroupResult]):
                     "llm must be a LLM instance to summarize the chat_ctx"
                 )
 
-
-
-
                 summarized_chat_ctx = await self.chat_ctx.copy(
                     exclude_instructions=False,
                     exclude_handoff=False,
@@ -166,7 +159,6 @@ class TaskGroup(AgentTask[TaskGroupResult]):
     def _build_out_of_scope_tool(self, *, active_task_id: str) -> FunctionTool | None:
         if not self._visited_tasks:
             return None
-
 
         task_ids = self._visited_tasks.copy()
         task_ids.discard(active_task_id)

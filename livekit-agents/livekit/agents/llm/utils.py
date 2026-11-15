@@ -52,14 +52,12 @@ def _compute_lcs(old_ids: list[str], new_ids: list[str]) -> list[str]:
     n, m = len(old_ids), len(new_ids)
     dp = [[0] * (m + 1) for _ in range(n + 1)]
 
-
     for i in range(1, n + 1):
         for j in range(1, m + 1):
             if old_ids[i - 1] == new_ids[j - 1]:
                 dp[i][j] = dp[i - 1][j - 1] + 1
             else:
                 dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
-
 
     lcs_ids = []
     i, j = n, m
@@ -79,17 +77,12 @@ def _compute_lcs(old_ids: list[str], new_ids: list[str]) -> list[str]:
 @dataclass
 class DiffOps:
     to_remove: list[str]
-    to_create: list[
-        tuple[str | None, str]
-    ]
-    to_update: list[
-        tuple[str | None, str]
-    ]
+    to_create: list[tuple[str | None, str]]
+    to_update: list[tuple[str | None, str]]
 
 
 def compute_chat_ctx_diff(old_ctx: ChatContext, new_ctx: ChatContext) -> DiffOps:
     """Computes the minimal list of create/remove operations to transform old_ctx into new_ctx."""
-
 
     old_ids = [m.id for m in old_ctx.items]
     new_ids = [m.id for m in new_ctx.items]
@@ -106,12 +99,10 @@ def compute_chat_ctx_diff(old_ctx: ChatContext, new_ctx: ChatContext) -> DiffOps
         if new_msg.id not in lcs_ids:
             to_create.append((prev_id, new_msg.id))
         else:
-
             old_msg = old_ctx_by_id[new_msg.id]
             if new_msg.type == "message" and old_msg.type == "message":
                 if new_msg.text_content != old_msg.text_content:
                     to_update.append((prev_id, new_msg.id))
-
 
         prev_id = new_msg.id
 
@@ -259,22 +250,15 @@ def is_typed_dict(cls: type | Any) -> bool:
     return isinstance(cls, type) and issubclass(cls, dict) and hasattr(cls, "__annotations__")
 
 
-
-
-
-
 def to_response_format_param(
     response_format: type | dict[str, Any],
 ) -> tuple[str, type[BaseModel] | TypeAdapter[Any]]:
     if isinstance(response_format, dict):
-
         if response_format.get("type", "") not in ("text", "json_schema", "json_object"):
             raise TypeError("Unsupported response_format type")
 
-
         raise TypeError("Unsupported response_format type")
         return response_format
-
 
     if is_typed_dict(response_format):
         response_format = create_model(
@@ -285,9 +269,7 @@ def to_response_format_param(
     if inspect.isclass(response_format) and issubclass(response_format, BaseModel):
         name = response_format.__name__
         json_schema_type = response_format
-    elif inspect.isclass(response_format) and hasattr(
-        response_format, "__pydantic_config__"
-    ):
+    elif inspect.isclass(response_format) and hasattr(response_format, "__pydantic_config__"):
         name = response_format.__name__
         json_schema_type = TypeAdapter(response_format)
     else:
@@ -325,7 +307,6 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
     signature = inspect.signature(func)
     type_hints = get_type_hints(func, include_extras=True)
 
-
     fields: dict[str, Any] = {}
 
     for param_name, param in signature.parameters.items():
@@ -338,7 +319,6 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
         field_info: FieldInfo | None = None
         field_attrs: dict[str, Any] = {}
 
-
         if get_origin(type_hint) is Annotated:
             annotated_args = get_args(type_hint)
             type_hint = annotated_args[0]
@@ -346,11 +326,8 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
                 (x for x in annotated_args[1:] if isinstance(x, FieldInfo)), None
             )
             if annotated_field and hasattr(annotated_field, "asdict"):
-
                 field_dict = annotated_field.asdict()
                 field_attrs = field_dict["attributes"]
-
-
 
                 if field_dict["metadata"]:
                     type_hint = Annotated[(type_hint, *field_dict["metadata"])]
@@ -379,12 +356,6 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
     return create_model(model_name, **fields)
 
 
-
-
-
-
-
-
 _TEMPLATE_TOKEN_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"<\|[^<>|]{0,40}\|>"),
     re.compile(r"<\|[^<>a-zA-Z0-9_]{0,10}"),
@@ -407,7 +378,6 @@ def _strip_template_tokens(value: Any) -> Any:
     if isinstance(value, list):
         cleaned = [_strip_template_tokens(v) for v in value]
 
-
         return [v for v in cleaned if v not in ("", None)]
     if isinstance(value, dict):
         return {k: _strip_template_tokens(v) for k, v in value.items()}
@@ -429,12 +399,9 @@ def parse_function_arguments(json_arguments: str) -> dict[str, Any]:
     except ValueError as strict_err:
         repaired = json_repair.loads(json_arguments)
         if repaired == "":
-
             raise ValueError(
                 f"could not parse function arguments as JSON: {strict_err}: {json_arguments[:200]}"
             ) from strict_err
-
-
 
         cleaned = _strip_template_tokens(repaired)
         logger.warning(
@@ -446,8 +413,6 @@ def parse_function_arguments(json_arguments: str) -> dict[str, Any]:
             },
         )
         args_dict = cleaned
-
-
 
     while isinstance(args_dict, str):
         try:
@@ -486,7 +451,6 @@ def prepare_function_arguments(
     ``fnc_call.arguments`` BEFORE validation runs.
     """
 
-
     if isinstance(json_arguments, dict):
         args_dict = json_arguments
     else:
@@ -499,13 +463,10 @@ def prepare_function_arguments(
             )
             raise ToolError(f"Error parsing arguments for `{fnc.info.name}`: {e}") from e
 
-
-
         if fnc_call is not None:
             canonical = json.dumps(args_dict, default=str)
             if canonical != json_arguments:
                 fnc_call.arguments = canonical
-
 
     try:
         return _prepare_function_arguments(fnc=fnc, args_dict=args_dict, call_ctx=call_ctx)
@@ -537,11 +498,6 @@ def _prepare_function_arguments(
     if isinstance(fnc, FunctionTool):
         model_type = function_arguments_to_pydantic_model(fnc)
 
-
-
-
-
-
         for param_name, param in signature.parameters.items():
             type_hint = type_hints[param_name]
             if param_name in args_dict and args_dict[param_name] is None:
@@ -557,14 +513,11 @@ def _prepare_function_arguments(
         model = model_type.model_validate(args_dict)
         raw_fields = _shallow_model_dump(model)
     elif isinstance(fnc, RawFunctionTool):
-
-
         raw_fields = {
             "raw_arguments": args_dict,
         }
     else:
         raise ValueError(f"Unsupported function tool type: {type(fnc)}")
-
 
     context_dict = {}
     for param_name, _ in signature.parameters.items():
@@ -782,7 +735,6 @@ async def execute_function_call(
                 extra={"call_id": tool_call.call_id, "arguments": tool_call.arguments},
             )
         out = make_function_call_output(fnc_call=fnc_call, output=None, exception=e)
-
 
     if call_ctx is not None and call_ctx._updates:
         out.fnc_call_updates = list(call_ctx._updates)

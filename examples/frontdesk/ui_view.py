@@ -25,7 +25,6 @@ from livekit.agents import JobContext
 logger = logging.getLogger("frontdesk.ui")
 
 
-
 _VIEW_METHOD = "set_appointment_status"
 
 
@@ -62,8 +61,6 @@ class UIView:
             self._push("")
             return
 
-
-
         if range_days <= 14:
             window = "Next 2 weeks"
         elif range_days <= 30:
@@ -80,8 +77,6 @@ class UIView:
         self._push(
             f"**Booked: {local.strftime('%A, %B %d, %Y')}**\n\nat [[{local.strftime('%H:%M %Z')}]]"
         )
-
-
 
     def _push(self, payload: str) -> None:
         for p in list(self._ctx.room.remote_participants.values()):

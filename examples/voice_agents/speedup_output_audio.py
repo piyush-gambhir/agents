@@ -32,8 +32,6 @@ logging.getLogger("numba").setLevel(logging.WARNING)
 load_dotenv()
 
 
-
-
 class MyAgent(Agent):
     def __init__(self, *, speed_factor: float = 1.2) -> None:
         super().__init__(
@@ -93,7 +91,6 @@ server = AgentServer()
 
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
-
 
     librosa.effects.time_stretch(np.random.randn(16000).astype(np.float32), rate=1.2)
 

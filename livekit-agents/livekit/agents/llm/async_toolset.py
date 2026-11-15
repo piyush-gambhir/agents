@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from ..voice.events import RunContext as AsyncRunContext  # noqa: F401
 
 
-
-
 __all__ = ["AsyncRunContext", "AsyncToolset"]
 
 
@@ -60,7 +58,6 @@ class AsyncToolset(Toolset):
         id: str,
         tools: Sequence[Tool] | None = None,
         tool_handling: ToolHandlingOptions | None = None,
-
         on_duplicate_call: DuplicateMode | None = None,
     ) -> None:
         if on_duplicate_call is not None:

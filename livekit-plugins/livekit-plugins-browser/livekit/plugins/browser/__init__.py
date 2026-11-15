@@ -4,8 +4,6 @@ Support for Chromium Embedded Framework (CEF).
 """
 
 from livekit.agents import Plugin
-
-
 from livekit.browser import (  # type: ignore[import-untyped]
     AudioData,
     BrowserContext,

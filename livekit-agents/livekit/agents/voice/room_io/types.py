@@ -233,9 +233,6 @@ class RoomOptions:
         return opts
 
 
-
-
-
 @dataclass
 class RoomInputOptions:
     text_enabled: NotGivenOr[bool] = NOT_GIVEN

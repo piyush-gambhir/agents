@@ -24,17 +24,11 @@ load_dotenv()
 logger = logging.getLogger("translator")
 
 
-
-
-
-
 class Translator(Agent):
     def __init__(self):
         super().__init__(
             instructions="not-needed",
             stt=openai.STT(),
-
-
         )
         self._http_session = utils.http_context.http_session()
 
@@ -58,11 +52,9 @@ class Translator(Agent):
         user_transcript = new_message.text_content
         logger.info(f" -> {user_transcript}")
 
-
         translated = await self.translate_text(user_transcript)
         if translated:
             self.session.say(translated)
-
 
         raise StopResponse()
 
@@ -75,7 +67,6 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
     session = AgentSession(
-
         vad=silero.VAD.load(),
     )
 
@@ -88,9 +79,6 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             text_output=room_io.TextOutputOptions(sync_transcription=False),
-
-
-
             audio_output=True,
         ),
     )

@@ -51,7 +51,6 @@ def test_push_audio_substitutes_stt_frame_only_on_stt_path() -> None:
 
     ar.push_audio(real, stt_frame=silence)
 
-
     ar._stt_pipeline.audio_ch.send_nowait.assert_called_once_with(silence)
     ar._vad_ch.send_nowait.assert_called_once_with(real)
     ar._session.amd.push_audio.assert_called_once_with(real)
@@ -64,7 +63,6 @@ def test_push_audio_skips_optional_consumers_when_unset() -> None:
     ar._vad_ch = None  # type: ignore[attr-defined]
     ar._interruption_ch = None  # type: ignore[attr-defined]
     ar._session.amd = None
-
 
     ar.push_audio(_make_frame())
 

@@ -13,11 +13,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -30,7 +25,6 @@ class MyAgent(Agent):
     async def on_user_turn_completed(self, turn_ctx: ChatContext, new_message: ChatMessage) -> None:
 
         if not new_message.text_content:
-
             logger.info("ignore empty user turn")
             raise StopResponse()
 
@@ -38,7 +32,6 @@ class MyAgent(Agent):
 async def handle_request(request: JobRequest) -> None:
     await request.accept(
         identity="ptt-agent",
-
         attributes={"push-to-talk": "1"},
     )
 
@@ -53,14 +46,12 @@ async def entrypoint(ctx: JobContext):
     agent = MyAgent()
     await session.start(agent=agent, room=ctx.room)
 
-
     session.input.set_audio_enabled(False)
 
     @ctx.room.local_participant.register_rpc_method("start_turn")
     async def start_turn(data: rtc.RpcInvocationData):
         session.interrupt()
         session.clear_user_turn()
-
 
         session.room_io.set_participant(data.caller_identity)
         session.input.set_audio_enabled(True)
@@ -70,10 +61,7 @@ async def entrypoint(ctx: JobContext):
         session.input.set_audio_enabled(False)
         try:
             user_transcript = await session.commit_user_turn(
-
-
                 transcript_timeout=5.0,
-
                 stt_flush_duration=2.0,
             )
             logger.info(f"user transcript: {user_transcript}")

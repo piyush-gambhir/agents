@@ -253,7 +253,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                 transcript=result.transcript,
             )
 
-
         if self._session._activity:
             self._session._activity._resume_authorization()
 
@@ -296,8 +295,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
         exc_tb: TracebackType | None,
     ) -> None:
         await self.aclose()
-
-
 
     def push_audio(self, frame: rtc.AudioFrame) -> None:
         if not (self._classifier and self._classifier.listening):
@@ -343,10 +340,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
 
         self._session._amd = None
 
-
-
-
-
     async def _run(self, session: AgentSession) -> None:
         if self._classifier:
             logger.warning("AMD already running, skipping")
@@ -376,8 +369,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
 
         session._amd = self
 
-
-
         self._start_span()
         if session._activity:
             session._activity._pause_authorization()
@@ -405,7 +396,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
             if self._closed or not self._classifier:
                 return
 
-
             self._classifier.start_detection_timer()
 
             if self._participant_identity:
@@ -420,7 +410,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                     None,
                 )
             if publisher is None:
-
                 self._start_listening()
                 return
 
@@ -451,7 +440,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                 value=_SIP_CALL_STATUS_ACTIVE,
             )
         except RuntimeError as e:
-
             logger.debug(
                 "AMD: SIP answer wait failed; starting to listen", extra={"reason": str(e)}
             )
@@ -594,8 +582,6 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
             )
 
         return None
-
-
 
 
 def _warn_if_not_evaluated(

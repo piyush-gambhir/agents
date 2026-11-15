@@ -297,7 +297,6 @@ class LLMStream(llm.LLMStream):
             return chunks
 
         if isinstance(data, FunctionCallEvent):
-
             call_id = data.tool_call_id or shortuuid("tool_call_")
             if call_id not in pending_fnc_calls:
                 pending_fnc_calls[call_id] = _PendingFunctionCall(
@@ -307,7 +306,6 @@ class LLMStream(llm.LLMStream):
                 )
             pending_fnc_calls[call_id].arguments += data.arguments
             return chunks
-
 
         chunks.extend(self._flush_pending_fnc_calls(pending_fnc_calls))
 

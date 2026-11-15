@@ -221,7 +221,6 @@ __all__ = [
     "utils",
     "vad",
     "voice",
-
     "mock_tools",
     "EventAssert",
     "EventRangeAssert",

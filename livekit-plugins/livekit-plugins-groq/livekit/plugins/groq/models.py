@@ -1,7 +1,5 @@
 from typing import Literal
 
-
-
 STTModels = Literal[
     "whisper-large-v3",
     "whisper-large-v3-turbo",
@@ -23,14 +21,12 @@ TTSModels = Literal[
 ]
 
 TTSVoices = Literal[
-
     "autumn",
     "diana",
     "hannah",
     "austin",
     "daniel",
     "troy",
-
     "fahad",
     "sultan",
     "lulwa",

@@ -49,8 +49,6 @@ from ..voice.transcription import TranscriptSynchronizer
 from ..worker import AgentServer, ServerEnvOption, WorkerOptions
 from . import proto
 from .log import JsonFormatter, _merge_record_extra, _silence_noisy_loggers
-
-
 from .readchar import key, readkey
 
 TRACE_LOG_LEVEL = 5
@@ -72,35 +70,6 @@ class _ExitCli(BaseException):
     pass
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ConsoleMode = Literal["text", "audio"]
 
 SAMPLE_RATE = 24000
@@ -115,7 +84,6 @@ class ConsoleAudioInput(io.AudioInput):
 
     def push_frame(self, frame: rtc.AudioFrame) -> None:
         if not self._attached:
-
             return
         self._audio_ch.send_nowait(frame)
 
@@ -152,7 +120,6 @@ class ConsoleAudioOutput(io.AudioOutput):
 
         self._paused_at: float | None = None
         self._paused_duration: float = 0.0
-
 
         self._segment_id = 0
 
@@ -798,7 +765,6 @@ class FrequencyVisualizer:
             console_width = self.c.console.width
 
             if left_width + metrics_width + 4 <= console_width:
-
                 table = Table.grid(padding=0, expand=True)
                 table.add_column()
                 wide_table = Table.grid(
@@ -813,7 +779,6 @@ class FrequencyVisualizer:
                 wide_table.add_row(Group(label_seg), Group(bar), metrics_text)
                 table.add_row(wide_table)
             else:
-
                 right_metrics = metrics_text.copy()
                 right_metrics.justify = "right"
                 table.add_row(right_metrics)
@@ -835,7 +800,6 @@ class RichLoggingHandler(logging.Handler):
     def __init__(self, agents_console: AgentsConsole):
         super().__init__()
         self.c = agents_console
-
 
         self._last_time: Text | None = None
 
@@ -1005,8 +969,6 @@ def _configure_logger(c: AgentsConsole | None, log_level: int | str) -> None:
 
 
 class TextModeLogFilter(logging.Filter):
-
-
     _patterns = [
         re.compile(r"\bexecuting tool\b", re.IGNORECASE),
         re.compile(r"\btools execution completed\b", re.IGNORECASE),
@@ -1104,7 +1066,6 @@ def prompt(
 
             if ch == key.ENTER:
                 break
-
 
             if ch == "?" and not buffer:
                 show_shortcuts = not show_shortcuts
@@ -1268,7 +1229,6 @@ def _format_turn_metrics(
 ) -> Text | None:
     parts: list[tuple[str, str]] = []
 
-
     if user_metrics:
         if "end_of_turn_delay" in user_metrics:
             v = user_metrics["end_of_turn_delay"]
@@ -1278,7 +1238,6 @@ def _format_turn_metrics(
             v = user_metrics["on_user_turn_completed_delay"]
             parts.append(("turn_completed_cb: ", "dim"))
             parts.append((_format_duration_ms(v), "dim"))
-
 
     if assistant_metrics:
         if "llm_node_ttft" in assistant_metrics:
@@ -1512,13 +1471,7 @@ def _run_console(
 
     c.print(" ")
 
-
-
     try:
-
-
-
-
         c._validate_device_or_raise(input_device=input_device, output_device=output_device)
 
         exit_triggered = False
@@ -1545,7 +1498,6 @@ def _run_console(
 
         console_worker = _ConsoleWorker(server=server, shutdown_cb=_on_worker_shutdown)
         console_worker.start()
-
 
         try:
             c.wait_for_io_acquisition()

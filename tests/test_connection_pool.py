@@ -49,7 +49,6 @@ async def test_get_creates_new_connection_when_none_available():
 
     conn1 = await pool.get(timeout=10.0)
 
-
     conn2 = await pool.get(timeout=10.0)
     assert conn1 is not conn2, "Expected a new connection when no available connection exists."
 
@@ -63,7 +62,6 @@ async def test_remove_connection():
     pool.put(conn)
 
     pool.remove(conn)
-
 
     pool.put(conn)
     new_conn = await pool.get(timeout=10.0)

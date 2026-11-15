@@ -47,10 +47,8 @@ Re-call with confirm duplicate True to run a duplicate if needed,
 or if you want to cancel the existing one, call `lk_agents_cancel_task` with call_id."""
 
 
-
 REPLY_INSTRUCTIONS_AT_TAIL = """New results arrived from background tool calls (call_ids: {call_ids}).
 Summarize the results naturally. Do NOT repeat information you have already told the user."""
-
 
 
 REPLY_INSTRUCTIONS_MAYBE_COVERED = """New results arrived from background tool calls (call_ids: {call_ids}).
@@ -146,9 +144,6 @@ def _resolve_async_tool_options(
     if config is None:
         return AsyncToolOptions(**_ASYNC_TOOL_OPTIONS_DEFAULTS)
     return AsyncToolOptions(**{**_ASYNC_TOOL_OPTIONS_DEFAULTS, **config})
-
-
-
 
 
 _RunningTasks: weakref.WeakKeyDictionary[AgentSession, dict[str, _RunningTask]] = (
@@ -277,7 +272,6 @@ class _ToolExecutor:
         if call_id in self._running_tasks:
             raise ValueError(f"Task already running for call_id: {call_id}")
 
-
         first_update_fut = asyncio.Future[Any]()
         run_ctx._attach_executor(self, first_update_fut)
 
@@ -301,7 +295,6 @@ class _ToolExecutor:
                 output = e
 
             if not first_update_fut.done():
-
                 if isinstance(output, BaseException):
                     first_update_fut.set_exception(output)
                 else:
@@ -325,8 +318,6 @@ class _ToolExecutor:
             if output is None or isinstance(output, StopResponse):
                 return
 
-
-
             from .agent import Agent
 
             if isinstance(output, Agent):
@@ -336,7 +327,6 @@ class _ToolExecutor:
                     extra={"call_id": call_id, "function": fnc_name},
                 )
                 return
-
 
             pair = run_ctx._make_update_pair(output, call_id_suffix="_final")
             run_ctx._updates.append(pair)
@@ -453,8 +443,6 @@ class _ToolExecutor:
             self._pending_updates.clear()
             return
 
-
-
         updates = self._pending_updates[:]
         self._pending_updates.clear()
 
@@ -464,7 +452,6 @@ class _ToolExecutor:
 
         if not pending_items:
             return
-
 
         chat_ctx: NotGivenOr[ChatContext] = NOT_GIVEN
         items_to_insert = [
@@ -481,8 +468,6 @@ class _ToolExecutor:
             )
             chat_ctx = target_agent.chat_ctx.copy()
             chat_ctx.insert(items_to_insert)
-
-
 
         at_tail = (items := target_agent.chat_ctx.items) and items[-1].id == pending_items[-1].id
         template = (
@@ -517,7 +502,6 @@ class _ToolExecutor:
                     extra={"speech_id": speech.id, "interrupted": speech.interrupted},
                 )
 
-
         speech.add_done_callback(_on_speech_done)
 
     async def _check_duplicate(
@@ -540,7 +524,6 @@ class _ToolExecutor:
                 return None
 
             if on_duplicate == "replace":
-
                 non_cancellable = [
                     fnc_call
                     for fnc_call in running_fnc_calls

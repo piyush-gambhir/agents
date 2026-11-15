@@ -97,7 +97,6 @@ class STT(stt.STT):
         http_session: aiohttp.ClientSession | None = None,
         buffer_size_seconds: float = 0.05,
         base_url: str = "wss://streaming.assemblyai.com",
-
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ):
         """
@@ -152,9 +151,6 @@ class STT(stt.STT):
                 "The 'interruption_delay' parameter is only supported with the 'u3-rt-pro' model."
             )
 
-
-
-
         if not is_given(continuous_partials) and model == "u3-rt-pro":
             continuous_partials = True
 
@@ -168,7 +164,6 @@ class STT(stt.STT):
             )
         self._api_key = assemblyai_api_key
 
-
         if is_given(min_end_of_turn_silence_when_confident):
             logger.warning(
                 "'min_end_of_turn_silence_when_confident' is deprecated, "
@@ -176,8 +171,6 @@ class STT(stt.STT):
             )
             if not is_given(min_turn_silence):
                 min_turn_silence = min_end_of_turn_silence_when_confident
-
-
 
         if not is_given(min_turn_silence):
             min_turn_silence = 100
@@ -257,7 +250,6 @@ class STT(stt.STT):
         vad_threshold: NotGivenOr[float] = NOT_GIVEN,
         continuous_partials: NotGivenOr[bool] = NOT_GIVEN,
         interruption_delay: NotGivenOr[int] = NOT_GIVEN,
-
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ) -> None:
         if is_given(min_end_of_turn_silence_when_confident):
@@ -302,7 +294,6 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-
     _CLOSE_MSG: str = json.dumps({"type": "Terminate"})
 
     def __init__(
@@ -353,7 +344,6 @@ class SpeechStream(stt.SpeechStream):
         vad_threshold: NotGivenOr[float] = NOT_GIVEN,
         continuous_partials: NotGivenOr[bool] = NOT_GIVEN,
         interruption_delay: NotGivenOr[int] = NOT_GIVEN,
-
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ) -> None:
         if is_given(min_end_of_turn_silence_when_confident):
@@ -382,7 +372,6 @@ class SpeechStream(stt.SpeechStream):
             self._opts.continuous_partials = continuous_partials
         if is_given(interruption_delay):
             self._opts.interruption_delay = interruption_delay
-
 
         config_msg: dict = {"type": "UpdateConfiguration"}
         if is_given(prompt):
@@ -424,9 +413,6 @@ class SpeechStream(stt.SpeechStream):
                 samples_per_channel=samples_per_buffer,
             )
 
-
-
-
             async for data in self._input_ch:
                 if isinstance(data, self._FlushSentinel):
                     frames = audio_bstream.flush()
@@ -435,10 +421,6 @@ class SpeechStream(stt.SpeechStream):
 
                 for frame in frames:
                     if not anchored:
-
-
-
-
                         self.start_time = time.time()
                         anchored = True
                     self._speech_duration += frame.duration
@@ -461,15 +443,12 @@ class SpeechStream(stt.SpeechStream):
                         break
                     consecutive_timeouts += 1
 
-
                     if consecutive_timeouts % 3 == 0:
                         logger.warning(
                             "AssemblyAI no messages received for %ds session=%s",
                             consecutive_timeouts * 5,
                             self._session_id,
                         )
-
-
 
                         if self._last_frame_sent_at is not None:
                             send_idle_s = time.time() - self._last_frame_sent_at
@@ -635,11 +614,6 @@ class SpeechStream(stt.SpeechStream):
             return
 
         if message_type == "SpeechStarted":
-
-
-
-
-
             timestamp_ms = data.get("timestamp")
             speech_start_time: float | None = None
             if timestamp_ms is not None:
@@ -678,16 +652,12 @@ class SpeechStream(stt.SpeechStream):
         transcript = data.get("transcript", "")
         language = LanguageCode(data.get("language_code", "en"))
 
-
         speaker_label = data.get("speaker_label")
         speaker_id = speaker_label if speaker_label and speaker_label != "UNKNOWN" else None
-
-
 
         start_time: float = 0
         end_time: float = 0
         confidence: float = 0
-
 
         timed_words: list[TimedString] = [
             TimedString(
@@ -699,7 +669,6 @@ class SpeechStream(stt.SpeechStream):
             )
             for word in words
         ]
-
 
         if timed_words:
             interim_text = " ".join(word for word in timed_words)
@@ -731,8 +700,6 @@ class SpeechStream(stt.SpeechStream):
         if utterance:
             if self._last_preflight_start_time == 0.0:
                 self._last_preflight_start_time = start_time
-
-
 
             utterance_words = [
                 word

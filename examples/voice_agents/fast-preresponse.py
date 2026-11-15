@@ -47,17 +47,6 @@ class PreResponseAgent(Agent):
         fast_llm_ctx.items.insert(0, self._fast_llm_prompt)
         fast_llm_ctx.items.append(new_message)
 
-
-
-
-
-
-
-
-
-
-
-
         fast_llm_fut = asyncio.Future[str]()
 
         async def _fast_llm_reply() -> AsyncIterable[str]:

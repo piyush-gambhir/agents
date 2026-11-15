@@ -24,7 +24,6 @@ from .log import logger
 from .tts import API_BASE_URL, API_KEY_HEADER, TTS
 from .version import __version__
 
-
 GENDER_MAP = {0: "Not Specified", 1: "Male", 2: "Female", 9: "Not Applicable"}
 
 

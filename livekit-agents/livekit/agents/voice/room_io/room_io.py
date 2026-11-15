@@ -47,7 +47,6 @@ class RoomIO:
         *,
         participant: rtc.RemoteParticipant | str | None = None,
         options: NotGivenOr[RoomOptions] = NOT_GIVEN,
-
         input_options: NotGivenOr[RoomInputOptions] = NOT_GIVEN,
         output_options: NotGivenOr[RoomOutputOptions] = NOT_GIVEN,
     ) -> None:
@@ -56,7 +55,6 @@ class RoomIO:
         )
 
         self._agent_session, self._room = agent_session, room
-
 
         self._participant_identity = (
             participant.identity if isinstance(participant, rtc.RemoteParticipant) else participant
@@ -126,7 +124,6 @@ class RoomIO:
                 pre_connect_audio_handler=self._pre_connect_audio_handler,
             )
 
-
         output_audio_options = self._options.get_audio_output_options()
         if output_audio_options:
             self._audio_output = _ParticipantAudioOutput(
@@ -159,8 +156,6 @@ class RoomIO:
                 json_format=output_text_options.json_format,
             )
 
-
-
             if output_text_options.sync_transcription is not False and (
                 audio_output := self._audio_output or self._agent_session.output.audio
             ):
@@ -170,7 +165,6 @@ class RoomIO:
                     speed=output_text_options.transcription_speed_factor,
                 )
 
-
         self._room.on("participant_connected", self._on_participant_connected)
         self._room.on("connection_state_changed", self._on_connection_state_changed)
         self._room.on("participant_disconnected", self._on_participant_disconnected)
@@ -178,7 +172,6 @@ class RoomIO:
             self._on_connection_state_changed(rtc.ConnectionState.CONN_CONNECTED)
 
         self._init_atask = asyncio.create_task(self._init_task())
-
 
         if self.audio_input:
             self._agent_session.input.audio = self.audio_input
@@ -255,7 +248,6 @@ class RoomIO:
                 )
                 self._tasks.add(task)
 
-
         await utils.aio.cancel_and_wait(*self._tasks)
         self._tasks.clear()
 
@@ -304,15 +296,12 @@ class RoomIO:
             self._participant_identity is not None
             and self._participant_identity != participant_identity
         ):
-
             self._participant_available_fut = asyncio.Future[rtc.RemoteParticipant]()
-
 
             for participant in self._room.remote_participants.values():
                 if participant.identity == participant_identity:
                     self._participant_available_fut.set_result(participant)
                     break
-
 
         self._participant_identity = participant_identity
         if self._audio_input:
@@ -338,13 +327,11 @@ class RoomIO:
     async def _init_task(self) -> None:
         await self._room_connected_fut
 
-
         for participant in self._room.remote_participants.values():
             self._on_participant_connected(participant)
 
         participant = await self._participant_available_fut
         self.set_participant(participant.identity)
-
 
         if participant.attributes.get(ATTRIBUTE_SIMULATOR) == "true":
             logger.info(
@@ -357,12 +344,10 @@ class RoomIO:
                 self._audio_input = None
                 self._agent_session.input.audio = None
 
-
             if self._audio_output:
                 await self._audio_output.aclose()
                 self._audio_output = None
                 self._agent_session.output.audio = None
-
 
         if self._agent_tr_output:
             self._agent_tr_output.set_participant(self._room.local_participant.identity)
@@ -402,7 +387,6 @@ class RoomIO:
 
         accepted_kinds = self._options.participant_kinds or DEFAULT_PARTICIPANT_KINDS
         if participant.kind not in accepted_kinds:
-
             return
 
         self._participant_available_fut.set_result(participant)

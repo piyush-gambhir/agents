@@ -167,12 +167,9 @@ Userdata_T = TypeVar("Userdata_T")
 Run_T = TypeVar("Run_T")
 
 
-
-
 @runtime_checkable
 class _VideoSampler(Protocol):
     def __call__(self, frame: rtc.VideoFrame, session: AgentSession) -> bool: ...
-
 
 
 class VoiceActivityVideoSampler:
@@ -228,25 +225,20 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         llm: NotGivenOr[llm.LLM | llm.RealtimeModel | LLMModels | str] = NOT_GIVEN,
         tts: NotGivenOr[tts.TTS | TTSModels | str] = NOT_GIVEN,
         turn_handling: NotGivenOr[TurnHandlingOptions] = NOT_GIVEN,
-
         tools: NotGivenOr[list[llm.Tool | llm.Toolset]] = NOT_GIVEN,
         tool_handling: NotGivenOr[ToolHandlingOptions] = NOT_GIVEN,
         max_tool_steps: int = 3,
-
         use_tts_aligned_transcript: NotGivenOr[bool] = NOT_GIVEN,
         tts_text_transforms: NotGivenOr[Sequence[TextTransforms] | None] = NOT_GIVEN,
         min_consecutive_speech_delay: float = 0.0,
-
         userdata: NotGivenOr[Userdata_T] = NOT_GIVEN,
         video_sampler: NotGivenOr[_VideoSampler | None] = NOT_GIVEN,
         aec_warmup_duration: float | None = 3.0,
         ivr_detection: bool = False,
         user_away_timeout: float | None = 15.0,
         session_close_transcript_timeout: float = 2.0,
-
         conn_options: NotGivenOr[SessionConnectOptions] = NOT_GIVEN,
         loop: asyncio.AbstractEventLoop | None = None,
-
         preemptive_generation: NotGivenOr[bool] = NOT_GIVEN,
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
         max_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
@@ -340,7 +332,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
         turn_handling = (
             _migrate_turn_handling(
-
                 min_endpointing_delay=(
                     min_endpointing_delay if is_given(min_endpointing_delay) else 0.5
                 ),
@@ -366,7 +357,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         preemptive_gen = _resolve_preemptive_generation(turn_handling.get("preemptive_generation"))
         user_turn_limit = _resolve_user_turn_limit(turn_handling.get("user_turn_limit"))
         raw_turn_detection = turn_handling.get("turn_detection", None)
-
 
         self._chat_ctx = ChatContext.empty()
         self._opts = AgentSessionOptions(
@@ -422,14 +412,11 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
             tool_handling.get("async_options") if is_given(tool_handling) else None
         )
 
-
         self._llm_error_counts = 0
         self._tts_error_counts = 0
 
-
         self._aec_warmup_remaining = aec_warmup_duration or 0.0
         self._aec_warmup_timer: asyncio.TimerHandle | None = None
-
 
         self._input = io.AgentInput(
             self._on_video_input_changed,
@@ -448,7 +435,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self._activity_lock = asyncio.Lock()
         self._lock = asyncio.Lock()
 
-
         self._room_io: room_io.RoomIO | None = None
         self._recorder_io: RecorderIO | None = None
         self._session_host: SessionHost | None = None
@@ -465,13 +451,9 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self._closing: bool = False
         self._job_context_cb_registered: bool = False
 
-
-
         self._user_turn_claims: int = 0
         self._user_turn_released: asyncio.Event = asyncio.Event()
         self._user_turn_released.set()
-
-
 
         self._idle_holds: int = 0
         self._idle_released: asyncio.Event = asyncio.Event()
@@ -480,7 +462,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self._global_run_state: RunResult | None = None
 
         self._early_assistant_metrics: MetricsReport | None = None
-
 
         self._user_speaking_span: trace.Span | None = None
         self._agent_speaking_span: trace.Span | None = None
@@ -492,7 +473,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self._recording_options: RecordingOptions = _RECORDING_ALL_OFF.copy()
         self._started_at: float | None = None
         self._usage_collector = ModelUsageCollector()
-
 
         self._ivr_activity: IVRActivity | None = None
         self._amd: AMD | None = None
@@ -606,7 +586,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         room: NotGivenOr[rtc.Room] = NOT_GIVEN,
         room_options: NotGivenOr[room_io.RoomOptions] = NOT_GIVEN,
         record: bool | RecordingOptions = True,
-
         room_input_options: NotGivenOr[room_io.RoomInputOptions] = NOT_GIVEN,
         room_output_options: NotGivenOr[room_io.RoomOutputOptions] = NOT_GIVEN,
     ) -> RunResult: ...
@@ -620,7 +599,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         room: NotGivenOr[rtc.Room] = NOT_GIVEN,
         room_options: NotGivenOr[room_io.RoomOptions] = NOT_GIVEN,
         record: bool | RecordingOptions = True,
-
         room_input_options: NotGivenOr[room_io.RoomInputOptions] = NOT_GIVEN,
         room_output_options: NotGivenOr[room_io.RoomOutputOptions] = NOT_GIVEN,
     ) -> None: ...
@@ -633,7 +611,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         room: NotGivenOr[rtc.Room] = NOT_GIVEN,
         room_options: NotGivenOr[room_io.RoomOptions] = NOT_GIVEN,
         record: NotGivenOr[bool | RecordingOptions] = NOT_GIVEN,
-
         room_input_options: NotGivenOr[room_io.RoomInputOptions] = NOT_GIVEN,
         room_output_options: NotGivenOr[room_io.RoomOutputOptions] = NOT_GIVEN,
     ) -> RunResult | None:
@@ -655,18 +632,15 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
             self._started_at = time.time()
 
-
             record_is_given = is_given(record)
             job_ctx = get_job_context(required=False)
             if not is_given(record):
-
                 record = job_ctx.job.enable_recording if job_ctx else False
 
             self._recording_options = _resolve_recording_options(record)  # type: ignore[arg-type]
 
             is_primary = True
             if job_ctx:
-
                 if job_ctx._primary_agent_session is None or job_ctx._primary_agent_session is self:
                     job_ctx._primary_agent_session = self
                 else:
@@ -679,13 +653,11 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                                 "use session.start(record=False)."
                             )
                         else:
-
                             self._recording_options = _resolve_recording_options(False)
 
                 job_ctx.init_recording(self._recording_options)
 
             self._session_span = current_span = tracer.start_span("agent_session")
-
 
             if self._session_ctx_token is not None:
                 otel_context.detach(self._session_ctx_token)
@@ -751,7 +723,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 await self._room_io.start()
 
                 if is_primary:
-
                     transport = RoomSessionTransport(room)
                     self._session_host = SessionHost(transport)
                     self._session_host.register_session(self)
@@ -763,7 +734,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                         self._session_host.register_text_input(text_input_opts.text_input_cb)
 
             if job_ctx:
-
                 if self.input.audio and self.output.audio:
                     if self._recording_options["audio"] or (c.enabled and c.record):
                         self._recorder_io = RecorderIO(agent_session=self)
@@ -787,9 +757,7 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 current_span.set_attribute(trace_types.ATTR_JOB_ID, job_ctx.job.id)
                 current_span.set_attribute(trace_types.ATTR_AGENT_NAME, job_ctx.job.agent_name)
                 if self._room_io:
-
                     tasks.append(asyncio.create_task(job_ctx.connect(), name="_job_ctx_connect"))
-
 
                 if not self._job_context_cb_registered:
                     job_ctx.add_shutdown_callback(
@@ -805,7 +773,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 run_state = RunResult(output_type=None)
                 self._global_run_state = run_state
 
-
             tasks.append(
                 asyncio.create_task(self._update_activity(self._agent, wait_on_enter=False))
             )
@@ -817,8 +784,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
             if self._session_host is not None:
                 await self._session_host.start()
-
-
 
             if self.input.audio is not None:
                 self._forward_audio_atask = asyncio.create_task(
@@ -839,7 +804,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                         self._set_user_away_timer()
 
                 self._room_io.subscribed_fut.add_done_callback(on_room_io_subscribed)
-
 
             def _collect_source(
                 inp: io.AudioInput | io.VideoInput | None,
@@ -937,7 +901,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         ) = None,
     ) -> None:
         if self._root_span_context:
-
             otel_context.attach(self._root_span_context)
 
         async with self._lock:
@@ -954,7 +917,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
             activity = self._activity
             while activity and isinstance(agent_task := activity.agent, AgentTask):
-
                 agent_task.cancel()
                 await agent_task._wait_for_inactive()
 
@@ -966,17 +928,13 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
             if activity is not None:
                 if not drain:
                     try:
-
                         await activity.interrupt(force=True)
                     except RuntimeError:
-
                         pass
                 await activity.drain()
 
-
                 if activity.current_speech:
                     await activity.current_speech
-
 
                 self.input.audio = None
                 self.input.video = None
@@ -987,7 +945,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                     reason != CloseReason.ERROR
                     and (audio_recognition := activity._audio_recognition) is not None
                 ):
-
                     audio_recognition.commit_user_turn(
                         audio_detached=True,
                         transcript_timeout=self._opts.session_close_transcript_timeout,
@@ -1039,7 +996,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 await self._session_host.aclose()
                 self._session_host = None
 
-
             if self._room_io:
                 await self._room_io.aclose()
                 self._room_io = None
@@ -1054,7 +1010,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         *,
         endpointing_opts: NotGivenOr[EndpointingOptions] = NOT_GIVEN,
         turn_detection: NotGivenOr[TurnDetectionMode | None] = NOT_GIVEN,
-
         min_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
         max_endpointing_delay: NotGivenOr[float] = NOT_GIVEN,
     ) -> None:
@@ -1150,7 +1105,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         if activity is None:
             raise RuntimeError("AgentSession is closing, cannot use say()")
 
-
         use_span: AbstractContextManager[trace.Span | None] = nullcontext()
         if trace.get_current_span() is trace.INVALID_SPAN and self._session_span is not None:
             use_span = trace.use_span(self._session_span, end_on_exit=False)
@@ -1212,7 +1166,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
         if activity is None:
             raise RuntimeError("AgentSession is closing, cannot use generate_reply()")
-
 
         use_span: AbstractContextManager[trace.Span | None] = nullcontext()
         if trace.get_current_span() is trace.INVALID_SPAN and self._session_span is not None:
@@ -1318,8 +1271,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self._agent = agent
 
         if self._started:
-
-
             if self._activity is not None:
                 self._activity._new_turns_blocked = True
 
@@ -1353,7 +1304,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 await activity.wait_for_idle()
                 return activity
             except ActivityClosedError:
-
                 if self._activity is activity:
                     raise
                 continue
@@ -1385,13 +1335,11 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         wait_on_enter: bool = True,
     ) -> None:
         async with self._activity_lock:
-
             self._agent = agent
 
             if new_activity == "start":
                 previous_agent = self._activity.agent if self._activity else None
                 if agent._activity is not None and (
-
                     agent is not previous_agent or previous_activity != "close"
                 ):
                     raise RuntimeError("cannot start agent: an activity is already running")
@@ -1404,8 +1352,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                 self._next_activity = agent._activity
 
             if self._root_span_context is not None:
-
-
                 otel_context.attach(self._root_span_context)
 
             reuse_resources: _ReusableResources | None = None
@@ -1422,7 +1368,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                         )
 
                 if self._closing and new_activity == "start":
-
                     logger.warning(
                         f"session is closing, skipping {new_activity} activity of {self._next_activity.agent.id}",
                     )
@@ -1462,7 +1407,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                     await reuse_resources.cleanup()
                 raise
 
-
         if wait_on_enter:
             assert self._activity._on_enter_task is not None
             await asyncio.shield(self._activity._on_enter_task)
@@ -1480,7 +1424,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         """:meta private: internal — emit a debug/trace payload to the debugger/recorder."""
         st = Struct()
         ParseDict(payload, st)
-
 
         super().emit("debug_message", agent_pb.DebugMessage(payload=st))
 
@@ -1548,7 +1491,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
             and room_io.subscribed_fut
             and not room_io.subscribed_fut.done()
         ):
-
             return
 
         self._user_away_timer = self._loop.call_later(
@@ -1596,10 +1538,8 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                     )
 
         elif self._agent_speaking_span is not None:
-
             self._agent_speaking_span.end()
             self._agent_speaking_span = None
-
 
         if (
             state == "speaking"
@@ -1632,7 +1572,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
         self, state: UserState, *, last_speaking_time: float | None = None
     ) -> None:
 
-
         if self._user_turn_claims > 0 and state != "speaking":
             return
 
@@ -1653,10 +1592,7 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
                     self._user_speaking_span, self._room_io.linked_participant
                 )
 
-
         elif self._user_speaking_span is not None:
-
-
             self._user_speaking_span.end(end_time=last_speaking_time_ns)
             self._user_speaking_span = None
 
@@ -1686,7 +1622,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
     def _user_input_transcribed(self, ev: UserInputTranscribedEvent) -> None:
         if self.user_state == "away" and ev.is_final:
-
             self._update_user_state("listening")
 
         self.emit("user_input_transcribed", ev)
@@ -1718,8 +1653,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
     @property
     def interruption_detection(self) -> NotGivenOr[Literal["adaptive", "vad"]]:
         return self._interruption_detection
-
-
 
     def _on_video_input_changed(self) -> None:
         if not self._started:
@@ -1760,8 +1693,6 @@ class AgentSession(rtc.EventEmitter[EventTypes], Generic[Userdata_T]):
 
     def _on_text_output_changed(self) -> None:
         pass
-
-
 
     async def __aenter__(self) -> AgentSession:
         return self

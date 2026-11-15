@@ -1,4 +1,3 @@
-
 import argparse
 import asyncio
 import logging
@@ -31,7 +30,6 @@ async def call_ivr_system(phone_number: str, user_request: str) -> None:
     if not OUTBOUND_TRUNK_ID or not OUTBOUND_TRUNK_ID.startswith("ST_"):
         logger.error("SIP_OUTBOUND_TRUNK_ID is not set or invalid")
         return
-
 
     masked_number = (
         f"{'*' * (len(phone_number) - 4)}{phone_number[-4:]}" if len(phone_number) > 4 else "****"

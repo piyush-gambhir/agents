@@ -204,8 +204,6 @@ class SpeechStream(stt.RecognizeStream):
             for frame in audio_bstream.flush():
                 await ws.send_bytes(frame.data.tobytes())
 
-
-
             closing_ws = True
 
         @utils.log_exceptions(logger=logger)

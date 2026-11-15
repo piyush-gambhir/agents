@@ -12,7 +12,6 @@ from typing import Any
 
 from ..plugin import Plugin
 
-
 NOISY_LOGGERS = [
     "httpx",
     "httpcore",
@@ -34,8 +33,6 @@ def _silence_noisy_loggers() -> None:
         logger = logging.getLogger(noisy_logger)
         if logger.level == logging.NOTSET:
             logger.setLevel(logging.WARN)
-
-
 
 
 _RESERVED_ATTRS: tuple[str, ...] = (
@@ -97,7 +94,6 @@ class JsonFormatter(logging.Formatter):
                 return "".join(traceback.format_tb(o)).strip()
             elif type(o) is Exception or isinstance(o, Exception) or type(o) is type:
                 return str(o)
-
 
             try:
                 return super().default(o)
@@ -206,9 +202,7 @@ def setup_logging(log_level: str, devmode: bool, console: bool) -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     if devmode:
-
         if console:
-
             colored_formatter = ColoredFormatter(
                 "\r%(asctime)s - %(esc_levelcolor)s%(levelname)-4s%(esc_reset)s %(name)s - %(message)s %(esc_gray)s%(extra)s"  # noqa: E501
             )
@@ -219,7 +213,6 @@ def setup_logging(log_level: str, devmode: bool, console: bool) -> None:
 
         handler.setFormatter(colored_formatter)
     else:
-
         json_formatter = JsonFormatter()
         handler.setFormatter(json_formatter)
 

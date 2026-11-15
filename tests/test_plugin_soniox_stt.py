@@ -29,10 +29,6 @@ from livekit.agents.stt import SpeechData, SpeechEventType
 pytestmark = pytest.mark.plugin("soniox")
 
 
-
-
-
-
 def test_speech_data_target_languages_coerces_strings_to_language_code():
     sd = SpeechData(
         language="en",
@@ -59,11 +55,6 @@ def test_speech_data_target_languages_preserves_existing_language_code_instances
 
     assert sd.target_languages is not None
     assert sd.target_languages[0] is code
-
-
-
-
-
 
 
 def test_token_accumulator_coalesces_consecutive_same_language_runs():
@@ -95,11 +86,6 @@ def test_token_accumulator_lang_segments_empty_initially():
     assert accumulator._lang_segments == []
 
 
-
-
-
-
-
 def test_lang_segments_to_fields_empty_returns_none_pair():
     from livekit.plugins.soniox.stt import _lang_segments_to_fields
 
@@ -116,11 +102,6 @@ def test_lang_segments_to_fields_coerces_to_language_code():
     assert texts == ["Hello, ", "hola."]
     assert langs is not None
     assert all(isinstance(lang, LanguageCode) for lang in langs)
-
-
-
-
-
 
 
 class _FakeWSMessage:
@@ -225,9 +206,6 @@ def _nonfinal_token(text: str, language: str, translation_status: str | None = N
 END_TOKEN_FINAL: dict[str, Any] = {"text": "<end>", "is_final": True}
 
 
-
-
-
 async def test_final_transcript_two_way_code_switched():
     """The issue's canonical example: 'No hablo español but I speak English' →
     'I don't speak Spanish, pero hablo inglés.' produces per-run source and
@@ -273,9 +251,6 @@ async def test_final_transcript_two_way_code_switched():
     assert "".join(sd.target_texts) == sd.text
 
 
-
-
-
 async def test_final_transcript_one_way_translation_single_target_run():
     """One-way translation produces a single-entry `target_languages` list."""
     from livekit.plugins.soniox.stt import TranslationConfig
@@ -305,9 +280,6 @@ async def test_final_transcript_one_way_translation_single_target_run():
     assert sd.target_texts == ["Hola mundo."]
 
 
-
-
-
 async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
     """A `translation_status: "none"` token sits in source-only; the resulting
     source and target lists legitimately have different lengths."""
@@ -335,9 +307,6 @@ async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
     final = next(e for e in events if e.type == SpeechEventType.FINAL_TRANSCRIPT)
     sd = final.alternatives[0]
 
-
-
-
     assert sd.source_languages == [
         LanguageCode("en"),
         LanguageCode("fr"),
@@ -349,17 +318,12 @@ async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
         "How are you?",
     ]
 
-
     assert sd.target_languages == [LanguageCode("de")]
     assert sd.target_texts == ["Guten Morgen. Wie geht's?"]
-
 
     assert sd.source_languages is not None
     assert sd.target_languages is not None
     assert len(sd.source_languages) != len(sd.target_languages)
-
-
-
 
 
 async def test_interim_transcript_merges_final_and_non_final_per_run():
@@ -447,9 +411,6 @@ async def test_recv_messages_raises_on_server_error_frame():
     assert exc_info.value.body is not None
 
 
-
-
-
 async def test_final_transcript_no_translation_single_language_populates_source():
     """Non-translation, single-language input: `source_*` is populated from the
     per-run breakdown (single entry), `target_*` is None. This matches the
@@ -503,9 +464,6 @@ async def test_final_transcript_no_translation_code_switched_populates_source_ru
     sd = final.alternatives[0]
 
     assert sd.text == "こんにちは、君の名前は何だ。 My name is Sam."
-
-
-
 
     assert sd.source_languages == [LanguageCode("ja"), LanguageCode("en")]
     assert sd.source_texts == [

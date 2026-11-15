@@ -583,9 +583,6 @@ class FakeDB:
         return sauces
 
 
-
-
-
 def map_by_sizes(
     items: list[MenuItem],
 ) -> tuple[dict[str, dict[ItemSize, MenuItem]], list[MenuItem]]:
@@ -629,7 +626,6 @@ def _drink_menu_instructions(items: list[MenuItem]) -> str:
             menu_lines.append(line)
 
     for item in leftovers:
-
         line = f"  - {item.name}: {item.calories} Cal, ${item.price:.2f} (id:{item.id}) - Not size-selectable`"
         if not item.available:
             line += " UNAVAILABLE"
@@ -680,7 +676,6 @@ def _sauce_menu_instructions(items: list[MenuItem]) -> str:
         menu_lines.append(line)
 
     return "# Sauces:\n" + "\n".join(menu_lines)
-
 
 
 def _regular_menu_instructions(items: list[MenuItem]) -> str:

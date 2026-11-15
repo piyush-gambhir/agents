@@ -12,7 +12,6 @@ class _RunnerMeta(Protocol):
 _RunnersDict = dict[str, type["_InferenceRunner"]]
 
 
-
 class _InferenceRunner(ABC, _RunnerMeta):
     registered_runners: _RunnersDict = {}
 

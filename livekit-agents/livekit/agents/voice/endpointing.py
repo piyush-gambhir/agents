@@ -143,8 +143,6 @@ class DynamicEndpointing(BaseEndpointing):
 
     def on_end_of_agent_speech(self, ended_at: float) -> None:
 
-
-
         if self._agent_speech_started_at is not None and (
             self._agent_speech_ended_at is None
             or self._agent_speech_ended_at < self._agent_speech_started_at
@@ -154,10 +152,7 @@ class DynamicEndpointing(BaseEndpointing):
 
     def on_start_of_speech(self, started_at: float, overlapping: bool = False) -> None:
         if self._overlapping:
-
             return
-
-
 
         if (
             self._utterance_started_at is not None
@@ -178,10 +173,6 @@ class DynamicEndpointing(BaseEndpointing):
 
     def on_end_of_speech(self, ended_at: float, should_ignore: bool = False) -> None:
         if should_ignore and self._overlapping:
-
-
-
-
             if (
                 self._utterance_started_at is not None
                 and self._agent_speech_started_at is not None
@@ -195,7 +186,6 @@ class DynamicEndpointing(BaseEndpointing):
                     _AGENT_SPEECH_LEADING_SILENCE_GRACE_PERIOD,
                 )
             else:
-
                 self._overlapping = False
                 self._speaking = False
                 self._utterance_started_at = None
@@ -205,7 +195,6 @@ class DynamicEndpointing(BaseEndpointing):
         if self._overlapping or (
             self._agent_speech_started_at is not None and self._agent_speech_ended_at is None
         ):
-
             turn_delay, interruption_delay = self.immediate_interruption_delay
             if (
                 (0 < interruption_delay <= self.min_delay)

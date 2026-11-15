@@ -140,8 +140,6 @@ class TTS(tts.TTS):
         ssml_gender = _gender_from_str(DEFAULT_GENDER if not is_given(gender) else gender)
 
         if not is_given(model_name):
-
-
             if not is_given(prompt) and (
                 is_given(voice_cloning_key)
                 or (is_given(voice_name) and "chirp" in voice_name.lower())

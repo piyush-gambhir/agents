@@ -510,7 +510,6 @@ def _validate_tts_voice_for_ref(ref: ModelRef, voice: str) -> list[str]:
                     f"allowed speakers: {allowed_speakers}"
                 )
 
-
     if not errors and not cleaned and not is_aura and not is_arcana:
         errors.append(f"tts_voice is empty for {model}; a voice identifier should be provided")
 

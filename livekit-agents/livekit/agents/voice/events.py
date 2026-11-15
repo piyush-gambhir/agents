@@ -43,7 +43,6 @@ Userdata_T = TypeVar("Userdata_T")
 
 
 class RunContext(Generic[Userdata_T]):
-
     def __init__(
         self,
         *,
@@ -58,9 +57,7 @@ class RunContext(Generic[Userdata_T]):
         self._initial_step_idx = speech_handle.num_steps - 1
         self._filler_schedulers: list[_FillerScheduler] = []
 
-
         self._updates: list[tuple[FunctionCall, FunctionCallOutput]] = []
-
 
         self._executor: _ToolExecutor | None = None
         self._first_update_fut: asyncio.Future[Any] | None = None
@@ -182,7 +179,6 @@ class RunContext(Generic[Userdata_T]):
                 resolved ``update`` template (or the module default when standalone).
         """
 
-
         for s in self._filler_schedulers:
             s.reset_dwell()
 
@@ -204,7 +200,6 @@ class RunContext(Generic[Userdata_T]):
                     "message": message,
                 },
             )
-
 
         update_step = len(self._updates)
         pair = self._make_update_pair(
@@ -325,7 +320,6 @@ class AgentFalseInterruptionEvent(BaseModel):
     resumed: bool
     """Whether the false interruption was resumed automatically."""
     created_at: float = Field(default_factory=time.time)
-
 
     message: ChatMessage | None = None
     extra_instructions: str | None = None

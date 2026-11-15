@@ -211,7 +211,6 @@ def _validate_mode_for_model(model: str, mode: str | None) -> str:
             raise ValueError(f"mode must be one of {', '.join(sorted(ALLOWED_MODES))}")
         return resolved
 
-
     if mode is not None:
         if mode not in ALLOWED_MODES:
             raise ValueError(f"mode must be one of {', '.join(sorted(ALLOWED_MODES))}")
@@ -357,8 +356,6 @@ def _extract_confidence(
     """
     value = payload.get("language_probability")
 
-
-
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
     if value is not None:
@@ -376,7 +373,6 @@ def _calculate_audio_duration(
     """Calculate audio duration from buffer."""
     try:
         if isinstance(buffer, list):
-
             total_samples = sum(frame.samples_per_channel for frame in buffer)
             if buffer and total_samples > 0:
                 sample_rate = buffer[0].sample_rate
@@ -384,7 +380,6 @@ def _calculate_audio_duration(
         elif hasattr(buffer, "duration"):
             return buffer.duration / 1000.0
         elif hasattr(buffer, "samples_per_channel") and hasattr(buffer, "sample_rate"):
-
             return buffer.samples_per_channel / buffer.sample_rate
     except Exception as e:
         logger.warning(f"Could not calculate audio duration: {e}")
@@ -512,7 +507,6 @@ class STT(stt.STT):
             capabilities=stt.STTCapabilities(
                 streaming=True,
                 interim_results=True,
-
                 aligned_transcript=False,
             )
         )
@@ -654,9 +648,6 @@ class STT(stt.STT):
         form_data = aiohttp.FormData()
         form_data.add_field("file", wav_bytes, filename="audio.wav", content_type="audio/wav")
 
-
-
-
         if opts_language:
             form_data.add_field("language_code", opts_language)
         if opts_model:
@@ -705,7 +696,6 @@ class STT(stt.STT):
                 start_time = 0.0
                 end_time = 0.0
 
-
                 timestamps_data = response_json.get("timestamps")
                 if timestamps_data and isinstance(timestamps_data, dict):
                     words_ts_start = timestamps_data.get("start_time_seconds")
@@ -714,7 +704,6 @@ class STT(stt.STT):
                         start_time = words_ts_start[0]
                     if isinstance(words_ts_end, list) and len(words_ts_end) > 0:
                         end_time = words_ts_end[-1]
-
 
                 if start_time == 0.0 and end_time == 0.0:
                     end_time = _calculate_audio_duration(buffer)
@@ -742,7 +731,6 @@ class STT(stt.STT):
             self._logger.error(f"Sarvam API client error: {e}")
             raise APIConnectionError(f"Sarvam API connection error: {e}") from e
         except (APIStatusError, APIConnectionError, APITimeoutError):
-
             raise
         except Exception as e:
             self._logger.error(f"Error during Sarvam STT processing: {e}")
@@ -777,7 +765,6 @@ class STT(stt.STT):
             model=model,
             mode=mode,
         )
-
 
         final_prompt = prompt if isinstance(prompt, str) else self._opts.prompt
 
@@ -841,7 +828,6 @@ class STT(stt.STT):
         )
         single_attempt_conn_options = self._single_attempt_conn_options(conn_options)
 
-
         stream_opts = SarvamSTTOptions(
             language=opts_language,
             api_key=self._api_key if self._api_key else "",
@@ -863,7 +849,6 @@ class STT(stt.STT):
             pre_speech_pad_frames=opts_pre_pad,
             num_initial_ignored_frames=opts_initial_ignored,
         )
-
 
         stream_session = aiohttp.ClientSession()
 
@@ -904,19 +889,14 @@ class SpeechStream(stt.SpeechStream):
         self._logger = logger.getChild(self.__class__.__name__)
         self._reconnect_event = asyncio.Event()
 
-
         self._connection_state = ConnectionState.DISCONNECTED
         self._connection_lock = asyncio.Lock()
         self._session_id = id(self)
         self._client_request_id = client_request_id
         self._server_request_id = server_request_id
 
-
-        self._ws: aiohttp.ClientWebSocketResponse | None = (
-            None
-        )
+        self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._should_flush = False
-
 
         self._audio_task: asyncio.Task | None = None
         self._message_task: asyncio.Task | None = None
@@ -977,7 +957,6 @@ class SpeechStream(stt.SpeechStream):
         async with self._connection_lock:
             self._connection_state = ConnectionState.DISCONNECTED
 
-
         tasks_to_cancel = []
         if self._audio_task and not self._audio_task.done():
             tasks_to_cancel.append(self._audio_task)
@@ -993,7 +972,6 @@ class SpeechStream(stt.SpeechStream):
                     extra=self._build_log_context(),
                 )
 
-
         try:
             if self._ws and not self._ws.closed:
                 await self._ws.close()
@@ -1003,12 +981,10 @@ class SpeechStream(stt.SpeechStream):
         finally:
             self._ws = None
 
-
         try:
             await super().aclose()
         except Exception as e:
             self._logger.warning(f"Error in parent cleanup: {e}", extra=self._build_log_context())
-
 
         try:
             if self._session and not self._session.closed:
@@ -1039,7 +1015,6 @@ class SpeechStream(stt.SpeechStream):
         self._opts.base_url, self._opts.streaming_url = _get_urls_for_model(model)
         if prompt is not None:
             self._opts.prompt = prompt
-
 
         self._opts.mode = _validate_mode_for_model(model, mode)
         _validate_language_for_model(model, self._opts.language)
@@ -1103,11 +1078,9 @@ class SpeechStream(stt.SpeechStream):
         async with self._connection_lock:
             self._connection_state = ConnectionState.CONNECTING
 
-
         if self._opts.streaming_url is None:
             raise ValueError("streaming_url cannot be None")
         ws_url = _build_websocket_url(self._opts.streaming_url, self._opts)
-
 
         headers = {
             "api-subscription-key": self._api_key,
@@ -1127,7 +1100,6 @@ class SpeechStream(stt.SpeechStream):
             self._conn_options.timeout,
         )
 
-
         self._ws = ws
 
         async with self._connection_lock:
@@ -1135,14 +1107,11 @@ class SpeechStream(stt.SpeechStream):
 
         self._logger.info("WebSocket connected successfully", extra=self._build_log_context())
 
-
         if _model_supports_prompt(self._opts.model) and self._opts.prompt:
             await self._send_initial_config(ws)
 
-
         self._audio_task = asyncio.create_task(self._process_audio(ws))
         self._message_task = asyncio.create_task(self._process_messages(ws))
-
 
         tasks = [self._audio_task, self._message_task]
         reconnect_task = asyncio.create_task(self._reconnect_event.wait())
@@ -1153,7 +1122,6 @@ class SpeechStream(stt.SpeechStream):
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
-
             if reconnect_task in done:
                 self._logger.info(
                     "Reconnection requested, closing current connection",
@@ -1161,7 +1129,6 @@ class SpeechStream(stt.SpeechStream):
                 )
                 self._reconnect_event.clear()
                 return
-
 
             if self._audio_task in done and self._message_task in pending:
                 audio_exc = self._audio_task.exception()
@@ -1189,10 +1156,8 @@ class SpeechStream(stt.SpeechStream):
                         "Timed out waiting for STT server response after audio input ended"
                     )
 
-
             if pending:
                 await utils.aio.cancel_and_wait(*pending)
-
 
             for task in done:
                 if task != reconnect_task:
@@ -1204,10 +1169,8 @@ class SpeechStream(stt.SpeechStream):
                             raise RuntimeError(f"Task failed with non-BaseException: {exc}")
 
         finally:
-
             all_tasks = tasks + [reconnect_task]
             await utils.aio.cancel_and_wait(*all_tasks)
-
 
             try:
                 if ws and not ws.closed:
@@ -1225,7 +1188,6 @@ class SpeechStream(stt.SpeechStream):
 
         import numpy as np
 
-
         audio_buffer: list[np.int16] = []
         chunk_size = self._chunk_size
         chunks_sent = 0
@@ -1239,19 +1201,14 @@ class SpeechStream(stt.SpeechStream):
             async for frame in self._input_ch:
                 if isinstance(frame, rtc.AudioFrame):
                     try:
-
                         audio_data = frame.data.tobytes()
                         audio_array = np.frombuffer(audio_data, dtype=np.int16)
                         audio_buffer.extend(audio_array)
 
-
                         while len(audio_buffer) >= chunk_size:
-
                             chunk_data = np.array(audio_buffer[:chunk_size], dtype=np.int16)
 
-
                             base64_audio = base64.b64encode(chunk_data.tobytes()).decode("utf-8")
-
 
                             audio_message = {
                                 "audio": {
@@ -1264,9 +1221,7 @@ class SpeechStream(stt.SpeechStream):
                             await ws.send_str(json.dumps(audio_message))
                             chunks_sent += 1
 
-
                             audio_buffer = audio_buffer[chunk_size:]
-
 
                             if chunks_sent % 100 == 0:
                                 self._logger.debug(
@@ -1283,14 +1238,12 @@ class SpeechStream(stt.SpeechStream):
                         raise
 
                 elif isinstance(frame, self._FlushSentinel):
-
                     self._logger.debug(
                         "Received FlushSentinel, sending end of stream",
                         extra=self._build_log_context(),
                     )
                     await ws.send_str(self._end_of_stream_msg)
                     break
-
 
                 if self._should_flush:
                     self._logger.debug(
@@ -1345,7 +1298,6 @@ class SpeechStream(stt.SpeechStream):
                         )
                         continue
                     except (APIStatusError, APIConnectionError):
-
                         raise
                     except Exception as e:
                         self._logger.error(
@@ -1413,7 +1365,6 @@ class SpeechStream(stt.SpeechStream):
                     )
 
         except (APIStatusError, APIConnectionError, APITimeoutError):
-
             raise
         except Exception as e:
             self._logger.error(
@@ -1458,7 +1409,6 @@ class SpeechStream(stt.SpeechStream):
                 extra={**self._build_log_context(), "data": data},
             )
         except (APIStatusError, APIConnectionError):
-
             raise
         except Exception as e:
             self._logger.error(
@@ -1475,7 +1425,6 @@ class SpeechStream(stt.SpeechStream):
         language = LanguageCode(transcript_data.get("language_code", ""))
         self._maybe_set_server_request_id(transcript_data)
 
-
         request_id = transcript_data.get("request_id") or self._server_request_id or ""
 
         if not transcript_text:
@@ -1483,11 +1432,7 @@ class SpeechStream(stt.SpeechStream):
             return
 
         try:
-
             metrics = transcript_data.get("metrics", {})
-
-
-
 
             usage_event = stt.SpeechEvent(
                 type=stt.SpeechEventType.RECOGNITION_USAGE,
@@ -1498,7 +1443,6 @@ class SpeechStream(stt.SpeechStream):
             )
             self._event_ch.send_nowait(usage_event)
 
-
             speech_data = stt.SpeechData(
                 language=language,
                 text=transcript_text,
@@ -1506,7 +1450,6 @@ class SpeechStream(stt.SpeechStream):
                 end_time=transcript_data.get("speech_end", 0.0),
                 confidence=_extract_confidence(transcript_data, self._logger),
             )
-
 
             speech_event = stt.SpeechEvent(
                 type=stt.SpeechEventType.FINAL_TRANSCRIPT,
@@ -1567,7 +1510,6 @@ class SpeechStream(stt.SpeechStream):
                     self._speaking = False
                     end_event = stt.SpeechEvent(type=stt.SpeechEventType.END_OF_SPEECH)
                     self._event_ch.send_nowait(end_event)
-
 
                     self._should_flush = True
                     self._logger.debug(

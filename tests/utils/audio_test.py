@@ -109,7 +109,6 @@ class SineToneSource:
             if delay > 0:
                 await asyncio.sleep(delay)
             else:
-
                 next_tick = asyncio.get_event_loop().time()
 
 

@@ -225,7 +225,6 @@ async def test_flush_mid_stream_preserves_decoder_state():
     duration_ms = 500
     wav = _make_wav(SR, NC, duration_ms)
 
-
     split = 100
     chunk1, chunk2 = wav[:split], wav[split:]
     assert chunk1[:4] == b"RIFF"
@@ -241,8 +240,6 @@ async def test_flush_mid_stream_preserves_decoder_state():
 
     expected_samples = SR * duration_ms // 1000
     total_samples = sum(ev.frame.samples_per_channel for ev in events)
-
-
 
     assert total_samples >= int(expected_samples * 0.95), (
         f"lost samples after mid-stream flush: got {total_samples}, expected ~{expected_samples}"

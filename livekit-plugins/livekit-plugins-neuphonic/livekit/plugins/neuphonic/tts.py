@@ -260,7 +260,6 @@ class ChunkedStream(tts.ChunkedStream):
                     total=30,
                     sock_connect=self._conn_options.timeout,
                 ),
-
                 read_bufsize=10 * 1024 * 1024,
             ) as resp:
                 resp.raise_for_status()

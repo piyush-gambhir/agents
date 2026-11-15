@@ -32,11 +32,6 @@ async def _detach_stt_if_reusable(old: MagicMock, new: MagicMock) -> object | No
     return resources.stt_pipeline
 
 
-
-
-
-
-
 async def test_reusable_same_class_same_stt() -> None:
     """Two plain Agent instances sharing the same STT object → reusable."""
     shared_stt = MagicMock()

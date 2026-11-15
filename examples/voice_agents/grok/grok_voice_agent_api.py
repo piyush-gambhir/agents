@@ -14,9 +14,6 @@ from livekit.agents import (
 from livekit.plugins import silero, xai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-
-
-
 logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
@@ -60,11 +57,7 @@ async def my_agent(ctx: JobContext):
         agent=Assistant(),
         room=ctx.room,
         room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-
-
-
-            ),
+            audio_input=room_io.AudioInputOptions(),
         ),
     )
 

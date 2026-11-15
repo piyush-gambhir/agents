@@ -95,13 +95,9 @@ async def dtmf_session(ctx: JobContext) -> None:
         llm=inference.LLM("openai/gpt-4.1"),
         stt=inference.STT("deepgram/nova-3"),
         tts=inference.TTS("rime/arcana"),
-
-
-
         ivr_detection=True,
         min_endpointing_delay=5,
     )
-
 
     user_request = (
         "Summarize jordan carter checking account, including balance and recent transactions. "

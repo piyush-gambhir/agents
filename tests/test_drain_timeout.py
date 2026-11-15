@@ -113,11 +113,9 @@ class TestDrainTimeout:
         """
         server = _make_server(drain_timeout=1)
 
-
         server._draining = False
         server._lock = asyncio.Lock()
         server._job_lifecycle_tasks = set[asyncio.Task[object]]()
-
 
         stuck_future: asyncio.Future[None] = asyncio.Future()
 
@@ -131,7 +129,6 @@ class TestDrainTimeout:
             processes = [StuckProc()]
 
         server._proc_pool = FakeProcPool()  # type: ignore[assignment]
-
 
         with patch.object(server, "_update_worker_status", new_callable=AsyncMock):
             with pytest.raises(asyncio.TimeoutError):

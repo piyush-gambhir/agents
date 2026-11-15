@@ -6,8 +6,6 @@ from typing import Any, Generic, Protocol, TypeVar, overload, runtime_checkable
 from typing_extensions import AsyncContextManager
 
 
-
-
 @runtime_checkable
 class _ACloseable(Protocol):
     async def aclose(self) -> None:
@@ -25,13 +23,6 @@ async def tee_peer(
     exception: list[BaseException | None],
 ) -> AsyncGenerator[T, None]:
 
-
-
-
-
-
-
-
     try:
         while True:
             if not buffer:
@@ -46,8 +37,6 @@ async def tee_peer(
                     except StopAsyncIteration:
                         break
                     except asyncio.CancelledError:
-
-
                         raise
                     except BaseException as e:
                         exception[0] = e

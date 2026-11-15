@@ -109,7 +109,6 @@ class ToolSearchToolset(Toolset):
             if not reload and self._initialized:
                 return self
 
-
             toolsets = [t for t in self._tools if isinstance(t, Toolset)]
             if toolsets:
                 await asyncio.gather(*(ts.setup() for ts in toolsets))
@@ -284,10 +283,8 @@ class BM25SearchStrategy:
                 tf[token] = tf.get(token, 0.0) + 1.0
             item.index_data = {"tokens": tokens, "tf": tf, "dl": len(tokens)}
 
-
         total_dl = sum(item.index_data["dl"] for item in items)
         self._avg_dl = total_dl / len(items) if items else 0.0
-
 
         n = len(items)
         df: dict[str, int] = {}
@@ -300,7 +297,6 @@ class BM25SearchStrategy:
 
         self._idf = {}
         for term, freq in df.items():
-
             self._idf[term] = math.log((n - freq + 0.5) / (freq + 0.5) + 1.0)
 
     def search(self, query: str, items: list[SearchItem], max_results: int) -> list[SearchItem]:
@@ -329,7 +325,6 @@ class BM25SearchStrategy:
         for k, v in item.parameters.items():
             param_tokens.extend(k.lower().replace("_", " ").split())
             param_tokens.extend(v.lower().split())
-
 
         return name_tokens * 3 + desc_tokens * 2 + param_tokens
 

@@ -33,9 +33,7 @@ class AvatarRunner:
         video_gen: VideoGenerator,
         options: AvatarOptions,
         _queue_size_ms: int = 100,
-
         _lazy_publish: bool = True,
-
     ) -> None:
         self._room = room
         self._video_gen = video_gen
@@ -51,7 +49,6 @@ class AvatarRunner:
         self._audio_publication: rtc.LocalTrackPublication | None = None
         self._video_publication: rtc.LocalTrackPublication | None = None
         self._lazy_publish = _lazy_publish
-
 
         self._audio_source = rtc.AudioSource(
             sample_rate=options.audio_sample_rate,
@@ -77,7 +74,6 @@ class AvatarRunner:
     async def start(self) -> None:
         """Start the worker"""
 
-
         await self._audio_recv.start()
         self._audio_recv.on("clear_buffer", self._on_clear_buffer)
 
@@ -87,7 +83,6 @@ class AvatarRunner:
 
         if not self._lazy_publish:
             await self._publish_track()
-
 
         self._read_audio_atask = asyncio.create_task(self._read_audio())
         self._forward_video_atask = asyncio.create_task(self._forward_video())
@@ -131,7 +126,6 @@ class AvatarRunner:
 
         async for frame in self._video_gen:
             if isinstance(frame, AudioSegmentEnd):
-
                 if self._audio_playing:
                     notify_task = self._audio_recv.notify_playback_finished(
                         playback_position=self._playback_position,
@@ -140,7 +134,6 @@ class AvatarRunner:
                     self._audio_playing = False
                     self._playback_position = 0.0
                     if asyncio.iscoroutine(notify_task):
-
                         task = asyncio.create_task(notify_task)
                         self._tasks.add(task)
                         task.add_done_callback(self._tasks.discard)

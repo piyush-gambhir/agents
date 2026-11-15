@@ -76,7 +76,6 @@ def create_session(
         **extra,
     )
 
-
     audio_input = FakeAudioInput()
     audio_output = FakeAudioOutput(can_pause=can_pause_audio)
     transcription_output = FakeTextOutput()
@@ -105,10 +104,8 @@ async def run_session(session: AgentSession, agent: Agent, *, drain_delay: float
 
     await session.start(agent)
 
-
     t_origin = time.time()
     audio_input.push(0.1)
-
 
     await stt.fake_user_speeches_done
 
@@ -153,7 +150,6 @@ class FakeActions:
             and self._items
             and isinstance(self._items[-1], FakeUserSpeech)
         ):
-
             input = self._items[-1].transcript
 
         if not utils.is_given(input):

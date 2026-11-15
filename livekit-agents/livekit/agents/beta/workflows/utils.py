@@ -34,7 +34,6 @@ def dtmf_event_to_code(event: DtmfEvent) -> int:
     elif event.value == "#":
         return 11
     elif event.value in ["A", "B", "C", "D"]:
-
         return ord(event.value) - ord("A") + 12
     else:
         raise ValueError(f"Invalid DTMF event: {event}")

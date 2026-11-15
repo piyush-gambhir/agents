@@ -44,8 +44,6 @@ server = AgentServer()
 @server.rtc_session()
 async def entrypoint(job: JobContext):
 
-
-
     tts_11labs = inference.TTS("elevenlabs/eleven_multilingual_v2", voice="hpp4J3VqNfWAUOO0d1Us")
 
     source = rtc.AudioSource(tts_11labs.sample_rate, tts_11labs.num_channels)

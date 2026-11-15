@@ -46,7 +46,6 @@ def run_app(server: AgentServer | WorkerOptions, *, jupyter_url: str | None = No
 
     server._job_executor_type = JobExecutorType.THREAD
 
-
     if jupyter_url:
 
         async def fetch_join_tokens(url: str) -> tuple[str, str, str]:
@@ -72,7 +71,6 @@ def run_app(server: AgentServer | WorkerOptions, *, jupyter_url: str | None = No
         ws_url = server._ws_url
         api_key = server._api_key
         api_secret = server._api_secret
-
 
         room_name = f"jupyter-room-{uuid.uuid4()}"
         user_token = (

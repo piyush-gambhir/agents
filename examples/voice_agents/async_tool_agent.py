@@ -84,13 +84,10 @@ class TravelAgent(Agent):
             date: Travel date (e.g. "2026-04-15").
         """
 
-
-
         await ctx.update(
             f"Searching flights from {origin} to {destination} on {date}. "
             "This will take a couple of minutes."
         )
-
 
         await asyncio.sleep(30)
 
@@ -102,13 +99,10 @@ class TravelAgent(Agent):
 
         logger.info("Found airlines and prices, booking the flight...")
 
-
-
         await ctx.update(
             f"Found {len(airlines)} options. Best price: ${prices[cheapest]} on {cheapest}. "
             "Confirming the booking now.",
         )
-
 
         if self._user_email is None:
             logger.info("Getting user's email address")
@@ -125,15 +119,11 @@ class TravelAgent(Agent):
         logger.info("Flight booked")
         confirmation = f"FL-{random.randint(100000, 999999)}"
 
-
-
         return (
             f"Flight booked! {cheapest} from {origin} to {destination} on {date}. "
             f"Price: ${prices[cheapest]}. Confirmation: {confirmation}. "
             f"The details will be sent to your email."
         )
-
-
 
     @llm.function_tool(flags=llm.ToolFlag.CANCELLABLE, on_duplicate="confirm")
     async def tour_guide(self, ctx: RunContext, destination: str, interests: str) -> str:
@@ -215,10 +205,8 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
         stt=inference.STT("deepgram/nova-3"),
-
         llm=inference.LLM("google/gemini-3.1-flash-lite"),
         tts=inference.TTS("cartesia/sonic-3", voice="e07c00bc-4134-4eae-9ea4-1a55fb45746b"),
-
         vad=silero.VAD.load(),
         turn_handling={"interruption": {"mode": "vad"}},
     )

@@ -13,10 +13,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
 server = AgentServer()
 
 
@@ -27,23 +23,11 @@ async def entrypoint(ctx: JobContext):
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],
         stt=deepgram.STT(),
-
         llm=openai.realtime.RealtimeModel(
             voice="alloy",
-
-
             turn_detection=None,
             input_audio_transcription=None,
         ),
-
-
-
-
-
-
-
-
-
     )
     await session.start(agent=Agent(instructions="You are a helpful assistant."), room=ctx.room)
 

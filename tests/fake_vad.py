@@ -71,7 +71,6 @@ class FakeVADStream(VADStream):
             self._send_vad_event(VADEventType.END_OF_SPEECH, fake_speech, current_time())
 
         async for _ in self._input_ch:
-
             pass
 
     def _send_vad_event(

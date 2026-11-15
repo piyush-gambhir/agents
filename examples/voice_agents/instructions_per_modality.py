@@ -29,7 +29,6 @@ The current date is {current_date}.
 """
 
 
-
 AUDIO_SPECIFIC = """
 The user is speaking — their input arrives as voice transcription and may be imperfect.
 When interpreting what the user said:

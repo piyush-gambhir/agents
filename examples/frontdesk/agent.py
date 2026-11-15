@@ -50,8 +50,6 @@ class Userdata:
     booked_times: list[str] = field(default_factory=list)
     slot_unavailable_count: int = 0
 
-
-
     ui: UIView | None = None
 
 
@@ -119,7 +117,6 @@ class FrontDeskAgent(Agent):
                 )
             except RuntimeError:
                 pass
-
 
             raise ToolError("This slot isn't available anymore") from None
 
@@ -205,13 +202,10 @@ server = AgentServer()
 
 async def on_session_end(ctx: JobContext) -> None:
 
-
-
     try:
         report = ctx.make_session_report()
     except RuntimeError:
         return
-
 
     chat = report.chat_history.copy(exclude_function_call=True, exclude_instructions=True)
     if len(chat.items) < 3:

@@ -7,7 +7,6 @@ from livekit.plugins import silero
 
 from . import utils
 
-
 pytestmark = pytest.mark.plugin("silero")
 
 SAMPLE_RATES = [16000, 44100]

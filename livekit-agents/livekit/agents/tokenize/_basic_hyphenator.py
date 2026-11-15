@@ -5,9 +5,6 @@ from functools import cache
 from typing import Any
 
 
-
-
-
 class Hyphenator:
     def __init__(self, patterns: str, exceptions: str = "") -> None:
         self.tree: dict[str | None, Any] = {}
@@ -16,18 +13,13 @@ class Hyphenator:
 
         self.exceptions = {}
         for ex in exceptions.split():
-
             points = [0] + [int(h == "-") for h in re.split(r"[a-z]", ex)]
             self.exceptions[ex.replace("-", "")] = points
 
     def _insert_pattern(self, pattern: str) -> None:
 
-
         chars = re.sub("[0-9]", "", pattern)
         points = [int(d or 0) for d in re.split("[.a-z]", pattern)]
-
-
-
 
         t = self.tree
         for c in chars:
@@ -63,7 +55,6 @@ class Hyphenator:
 
             points[1] = points[2] = points[-2] = points[-3] = 0
 
-
         pieces = [""]
         for c, p in zip(word, points[2:], strict=False):
             pieces[-1] += c
@@ -73,8 +64,6 @@ class Hyphenator:
 
 
 PATTERNS = (
-
-
     """
     .ach4 .ad4der .af1t .al3t .am5at .an5c .ang4 .ani5m .ant4 .an3te .anti5s
     .ar5s .ar4tie .ar4ty .as3c .as1p .as1s .aster5 .atom5 .au1d .av4i .awn4
@@ -452,15 +441,8 @@ PATTERNS = (
     z5a2b zar2 4zb 2ze ze4n ze4p z1er ze3ro zet4 2z1i z4il z4is 5zl 4zm 1zo
     zo4m zo5ol zte4 4z1z2 z4zy
     """
-
     # Copyright (C) 1990, 2004, 2005 Gerard D.C. Kuiken.
-
     # are permitted in any medium without royalty provided the copyright
-
-
-
-
-
     """
     .con5gr .de5riva .dri5v4 .eth1y6l1 .eu4ler .ev2 .ever5si5b .ga4s1om1
     .ge4ome .ge5ot1 .he3mo1 .he3p6a .he3roe .in5u2t .kil2n3i .ko6r1te1 .le6ices

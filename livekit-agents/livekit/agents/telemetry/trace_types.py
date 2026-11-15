@@ -69,14 +69,11 @@ ATTR_REALTIME_MODEL_METRICS = "lk.realtime_model_metrics"
 ATTR_E2E_LATENCY = "lk.e2e_latency"
 
 
-
 ATTR_GEN_AI_OPERATION_NAME = "gen_ai.operation.name"
 ATTR_GEN_AI_PROVIDER_NAME = "gen_ai.provider.name"
 ATTR_GEN_AI_REQUEST_MODEL = "gen_ai.request.model"
 ATTR_GEN_AI_USAGE_INPUT_TOKENS = "gen_ai.usage.input_tokens"
 ATTR_GEN_AI_USAGE_OUTPUT_TOKENS = "gen_ai.usage.output_tokens"
-
-
 
 
 ATTR_GEN_AI_USAGE_INPUT_TEXT_TOKENS = "gen_ai.usage.input_text_tokens"

@@ -149,7 +149,6 @@ class ChunkedStream(tts.ChunkedStream):
                     mime_type="audio/pcm",
                 )
 
-
                 buffer = b""
 
                 async for data, _ in resp.content.iter_chunks():
@@ -157,7 +156,6 @@ class ChunkedStream(tts.ChunkedStream):
                         continue
 
                     buffer += data
-
 
                     if len(buffer) >= 2:
                         complete_samples = len(buffer) // 2

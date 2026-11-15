@@ -12,11 +12,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self):
         super().__init__(
@@ -24,7 +19,6 @@ class MyAgent(Agent):
             stt="deepgram/nova-3:en",
             llm="openai/gpt-4.1-mini",
             tts="cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
-
             tools=[
                 EndCallTool(
                     end_instructions="thanks the user for calling and tell them goodbye",

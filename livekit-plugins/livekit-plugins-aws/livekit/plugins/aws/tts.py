@@ -43,7 +43,6 @@ DEFAULT_TEXT_TYPE: TTSTextType = "text"
 
 @dataclass
 class _TTSOptions:
-
     voice: str
     speech_engine: TTSSpeechEngine
     region: str | None

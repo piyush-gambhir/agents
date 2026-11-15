@@ -42,13 +42,10 @@ async def test_decode_and_transcribe():
     stt = inference.STT(model="deepgram/nova-3", http_session=session)
     stream = stt.stream()
 
-
     async for frame in decoder:
         stream.push_frame(frame)
 
-
     stream.end_input()
-
 
     final_text = ""
     async for event in stream:
@@ -61,7 +58,6 @@ async def test_decode_and_transcribe():
     await decoder.aclose()
     await stream.aclose()
     await session.close()
-
 
     expected_text = (
         "the people that are crazy enough to think they can change the world are the ones who do"
@@ -89,15 +85,12 @@ def test_stream_buffer():
                 break
             received_data.extend(data)
 
-
     with ThreadPoolExecutor(max_workers=2) as executor:
         reader_future = executor.submit(reader)
         writer_future = executor.submit(writer)
 
-
         writer_future.result()
         reader_future.result()
-
 
     expected_data = b"".join(data_chunks)
     assert bytes(received_data) == expected_data
@@ -136,11 +129,9 @@ def test_stream_buffer_large_chunks():
             received_size += len(chunk)
             output_hasher.update(chunk)
 
-
     with ThreadPoolExecutor(max_workers=2) as executor:
         reader_future = executor.submit(reader)
         writer_future = executor.submit(writer)
-
 
         writer_future.result()
         reader_future.result()
@@ -153,12 +144,9 @@ def test_stream_buffer_large_chunks():
 def test_stream_buffer_early_close():
     buffer = StreamBuffer()
 
-
     buffer.write(b"test data")
 
-
     buffer.close()
-
 
     assert buffer.read() == b""
 
@@ -228,7 +216,6 @@ def test_stream_buffer_end_input_with_pending_data():
     buffer = StreamBuffer()
     payload = os.urandom(2048)
 
-
     buffer.write(payload)
     buffer.end_input()
 
@@ -285,17 +272,10 @@ def test_stream_buffer_compaction():
     assert input_hasher.hexdigest() == output_hasher.hexdigest()
 
 
-
-
-
-
-
 def test_stream_buffer_compaction_boundary():
     """Compaction must not lose the tail bytes sitting between read_pos and write_pos."""
     buffer = StreamBuffer()
     threshold = StreamBuffer._COMPACT_THRESHOLD
-
-
 
     extra = b"HELLO_AFTER_COMPACT"
     big_block = os.urandom(threshold) + extra
@@ -303,13 +283,11 @@ def test_stream_buffer_compaction_boundary():
     buffer.write(big_block)
     buffer.end_input()
 
-
     drained = 0
     while drained < threshold:
         chunk = buffer.read(8192)
         assert chunk
         drained += len(chunk)
-
 
     remainder = bytearray()
     while True:
@@ -383,7 +361,6 @@ async def test_wav_inline_decoder():
         sample_rate=sample_rate, num_channels=num_channels, format="audio/wav"
     )
 
-
     chunk_size = 37
     for i in range(0, len(wav_bytes), chunk_size):
         decoder.push(wav_bytes[i : i + chunk_size])
@@ -419,7 +396,6 @@ async def test_wav_inline_decoder_with_resampling():
     async for frame in decoder:
         assert frame.sample_rate == out_rate
         total_samples += frame.samples_per_channel
-
 
     expected = num_samples * out_rate // src_rate
     assert abs(total_samples - expected) <= out_rate // 50

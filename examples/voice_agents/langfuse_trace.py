@@ -29,10 +29,6 @@ logger = logging.getLogger("langfuse-trace-example")
 load_dotenv()
 
 
-
-
-
-
 def setup_langfuse(
     metadata: dict[str, AttributeValue] | None = None,
     *,
@@ -137,12 +133,10 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
 
     trace_provider = setup_langfuse(
-
         metadata={
             "langfuse.session.id": ctx.room.name,
         }
     )
-
 
     async def flush_trace():
         trace_provider.force_flush()

@@ -10,13 +10,7 @@ from livekit.agents import Agent, AgentServer, AgentSession, JobContext, cli
 from livekit.agents.stt import MultiSpeakerAdapter
 from livekit.plugins import deepgram, openai, silero, speechmatics  # noqa: F401
 
-
-
 load_dotenv()
-
-
-
-
 
 
 MASTER_PROMPT = """
@@ -59,7 +53,6 @@ async def entrypoint(ctx: JobContext) -> None:
         tts=openai.TTS(),
         stt=MultiSpeakerAdapter(
             stt=speechmatics.STT(enable_diarization=True, end_of_utterance_silence_trigger=0.3),
-
             detect_primary_speaker=True,
             suppress_background_speaker=True,
             primary_format="<{speaker_id}>{text}</{speaker_id}>",
@@ -69,7 +62,6 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     await session.start(room=ctx.room, agent=Assistant())
-
 
     await session.generate_reply(
         instructions="Kick off with a friendly Hello and get the conversation started!"

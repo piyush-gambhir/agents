@@ -81,7 +81,6 @@ async def _capture_first_ws_create_packet(opts) -> dict:
         authorization="Basic test",
     )
 
-
     conn._ws = fake_ws
 
     await conn._outbound_queue.put(_CreateContextMsg(context_id="ctx-1", opts=opts))
@@ -144,7 +143,6 @@ def _patch_session_to_capture_post(tts, captured: dict[str, object]) -> None:
 
     class _FakePostCM:
         async def __aenter__(self):
-
 
             raise RuntimeError("short-circuit")
 

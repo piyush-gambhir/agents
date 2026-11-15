@@ -2,33 +2,20 @@ import re
 from collections.abc import AsyncIterable
 
 LINE_PATTERNS = [
-
     (re.compile(r"^#{1,6}\s+", re.MULTILINE), ""),
-
     (re.compile(r"^\s*[-+*]\s+", re.MULTILINE), ""),
-
     (re.compile(r"^\s*>\s+", re.MULTILINE), ""),
 ]
 
 INLINE_PATTERNS = [
-
     (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),
-
     (re.compile(r"\[([^\]]*)\]\([^)]*\)"), r"\1"),
-
-
     (re.compile(r"(?<![\w*])\*\*(?!\s)([^*\n]+?)(?<!\s)\*\*(?![\w*])"), r"\1"),
-
     (re.compile(r"(?<![\w*])\*(?!\s|\*)([^*\n]+?)(?<!\s)\*(?![\w*])"), r"\1"),
-
     (re.compile(r"(?<!\w)__([^_]+?)__(?!\w)"), r"\1"),
-
     (re.compile(r"(?<!\w)_([^_]+?)_(?!\w)"), r"\1"),
-
     (re.compile(r"`{3,4}[\S]*"), ""),
-
     (re.compile(r"`([^`]+?)`"), r"\1"),
-
     (re.compile(r"~~(?!\s)([^~]*?)(?<!\s)~~"), ""),
 ]
 INLINE_SPLIT_TOKENS = " ,.?!;，。？！；"
@@ -48,7 +35,6 @@ async def filter_markdown(text: AsyncIterable[str]) -> AsyncIterable[str]:
         if buffer.endswith(("#", "-", "+", "*", ">", "!", "`", "~", " ")):
             return True
 
-
         double_asterisks = buffer.count("**")
         if double_asterisks % 2 == 1:
             return True
@@ -57,7 +43,6 @@ async def filter_markdown(text: AsyncIterable[str]) -> AsyncIterable[str]:
         if single_asterisks % 2 == 1:
             return True
 
-
         double_underscores = buffer.count("__")
         if double_underscores % 2 == 1:
             return True
@@ -65,16 +50,13 @@ async def filter_markdown(text: AsyncIterable[str]) -> AsyncIterable[str]:
         if single_underscores % 2 == 1:
             return True
 
-
         backticks = buffer.count("`")
         if backticks % 2 == 1:
             return True
 
-
         double_tildes = buffer.count("~~")
         if double_tildes % 2 == 1:
             return True
-
 
         open_brackets = buffer.count("[")
         complete_links = len(COMPLETE_LINKS_PATTERN.findall(buffer))
@@ -114,7 +96,6 @@ async def filter_markdown(text: AsyncIterable[str]) -> AsyncIterable[str]:
             buffer_is_newline = True
             continue
 
-
         last_split_pos = 0
         for token in INLINE_SPLIT_TOKENS:
             last_split_pos = max(last_split_pos, buffer.rfind(token, last_split_pos))
@@ -131,7 +112,6 @@ async def filter_markdown(text: AsyncIterable[str]) -> AsyncIterable[str]:
 
     if buffer:
         yield process_complete_text(buffer, is_newline=buffer_is_newline)
-
 
 
 EMOJI_PATTERN = re.compile(

@@ -211,9 +211,7 @@ class OverlappingSpeechEvent(BaseModel):
         )
 
 
-
 _EMPTY_CACHE_ENTRY = InterruptionCacheEntry(created_at=0)
-
 
 
 class _AgentSpeechStartedSentinel:
@@ -243,8 +241,6 @@ class _OverlapSpeechEndedSentinel:
 
 class _FlushSentinel:
     pass
-
-
 
 
 InterruptionDataFrameType: TypeAlias = (
@@ -609,8 +605,6 @@ class InterruptionStreamBase(ABC):
                     self._accumulated_samples = 0
                     self._overlap_count += 1
 
-
-
                     if self._overlap_count == 1:
                         shift_size = max(
                             0,
@@ -686,9 +680,6 @@ class InterruptionStreamBase(ABC):
             self._model.emit("metrics_collected", metrics)
 
 
-
-
-
 class InterruptionResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     created_at: int
@@ -721,7 +712,6 @@ class InterruptionHttpStream(InterruptionStreamBase):
                     overlap_started_at := self._overlap_started_at
                 ) is None or not self._overlap_started:
                     continue
-
 
                 resp: InterruptionResponse = await self.predict(data)
                 created_at = resp.created_at
@@ -817,13 +807,6 @@ class InterruptionHttpStream(InterruptionStreamBase):
             raise APIError(f"error during interruption prediction: {e}") from e
 
 
-
-
-
-
-
-
-
 class InterruptionWSMessageType(str, Enum):
     SESSION_CREATE = "session.create"
     SESSION_CLOSE = "session.close"
@@ -902,8 +885,6 @@ AnyInterruptionWSMessage: TypeAlias = (
 InterruptionWSMessage: TypeAdapter[AnyInterruptionWSMessage] = TypeAdapter(
     Annotated[AnyInterruptionWSMessage, Field(discriminator="type")]
 )
-
-
 
 
 class InterruptionWebSocketStream(InterruptionStreamBase):
@@ -1165,9 +1146,6 @@ class InterruptionWebSocketStream(InterruptionStreamBase):
         return ws
 
 
-
-
-
 def _estimate_probability(
     probabilities: npt.NDArray[np.float32] | None, window_size: float = MIN_INTERRUPTION_DURATION
 ) -> float:
@@ -1181,6 +1159,5 @@ def _estimate_probability(
     n_th = math.ceil(window_size / 0.025)
     if len(probabilities) < n_th:
         return 0.0
-
 
     return float(np.partition(probabilities, -n_th)[-n_th])

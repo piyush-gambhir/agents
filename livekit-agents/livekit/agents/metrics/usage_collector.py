@@ -38,7 +38,6 @@ class UsageSummary:
             stacklevel=2,
         )
 
-
     @property
     def llm_input_tokens(self) -> int:
         return self.llm_prompt_tokens

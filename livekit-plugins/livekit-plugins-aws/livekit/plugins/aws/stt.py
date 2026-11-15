@@ -144,7 +144,6 @@ class STT(stt.STT):
                 "Set only one to True."
             )
 
-
         lang: LanguageCode | None = None
         if not identify_language and not identify_multiple_languages:
             lang = LanguageCode(language) if language else LanguageCode("en-US")
@@ -230,7 +229,6 @@ class SpeechStream(stt.SpeechStream):
             config_kwargs: dict[str, Any] = {"region": self._opts.region}
             if self._credentials:
 
-
                 class StaticCredsResolver:
                     def __init__(self, creds: Credentials):
                         self._identity = AWSCredentialsIdentity(
@@ -274,7 +272,6 @@ class SpeechStream(stt.SpeechStream):
                 "language_model_name": self._opts.language_model_name,
             }
 
-
             if self._opts.identify_language:
                 live_config["identify_language"] = True
                 if is_given(self._opts.language_options):
@@ -315,7 +312,6 @@ class SpeechStream(stt.SpeechStream):
                     input=StartStreamTranscriptionInput(**filtered_config)
                 )
 
-
                 _, output_stream = await stream.await_output()
 
                 async def input_generator(
@@ -330,7 +326,6 @@ class SpeechStream(stt.SpeechStream):
                                     )
                                 )
                     finally:
-
                         try:
                             await audio_stream.send(
                                 AudioStreamAudioEvent(value=AudioEvent(audio_chunk=b""))
@@ -354,7 +349,6 @@ class SpeechStream(stt.SpeechStream):
                             and "complete signal was sent without the preceding empty frame"
                             in e.message
                         ):
-
                             logger.warning(
                                 "AWS Transcribe stream closed with empty frame error (this is usually harmless)"
                             )
@@ -375,24 +369,18 @@ class SpeechStream(stt.SpeechStream):
                 await asyncio.shield(gather_future)
             except BadRequestException as e:
                 if e.message and e.message.startswith("Your request timed out"):
-
-
-
                     logger.info("restarting transcribe session")
                     continue
                 else:
                     raise e
             finally:
                 if tasks:
-
                     await utils.aio.gracefully_cancel(tasks[0])
-
 
                     try:
                         await asyncio.wait_for(tasks[1], timeout=3.0)
                     except (asyncio.TimeoutError, asyncio.CancelledError):
                         await utils.aio.gracefully_cancel(tasks[1])
-
 
                 with contextlib.suppress(Exception):
                     await gather_future
@@ -434,7 +422,6 @@ class SpeechStream(stt.SpeechStream):
             confidence = items[0].confidence or 0.0
 
         detected_lang = resp.language_code or self._opts.language or "en-US"
-
 
         source_languages: list[LanguageCode] | None = None
         if (

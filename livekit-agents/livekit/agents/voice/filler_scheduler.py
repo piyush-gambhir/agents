@@ -78,7 +78,6 @@ class _FillerScheduler:
                 except asyncio.TimeoutError:
                     pass
 
-
                 src = self._source
                 if callable(src):
                     step = len(self._created_speeches)

@@ -171,7 +171,6 @@ class _WavInlineDecoder:
         self._skip_remaining = 0
         self._chunk_size = 0
 
-
         self._bstream: AudioByteStream | None = None
         self._resampler: rtc.AudioResampler | None = None
         self._wave_channels = 0
@@ -198,7 +197,6 @@ class _WavInlineDecoder:
             elif self._state == _WavState.SKIP_CHUNK_DATA:
                 pos = self._consume_skip(buf, pos)
             elif self._state == _WavState.STREAMING:
-
                 self._push_pcm(bytes(buf[pos:]))
                 return
 
@@ -231,8 +229,6 @@ class _WavInlineDecoder:
         self._resampler = None
         self._wave_channels = 0
         self._wave_rate = 0
-
-
 
     def _consume_riff(self, buf: memoryview, pos: int) -> int:
         take = min(self._need - len(self._hdr_buf), len(buf) - pos)
@@ -306,8 +302,6 @@ class _WavInlineDecoder:
             self._state = _WavState.CHUNK_HEADER
         return pos
 
-
-
     def _init_streaming(self) -> None:
         if self._wave_rate == 0:
             raise ValueError("Invalid WAV file: data chunk before fmt chunk")
@@ -362,10 +356,8 @@ class AudioStreamDecoder:
         self._started = False
         self._loop = asyncio.get_event_loop()
 
-
         self._input_buf: StreamBuffer | None = None
         self._executor: ThreadPoolExecutor | None = None
-
 
         self._wav_decoder: _WavInlineDecoder | None = None
 
@@ -412,7 +404,6 @@ class AudioStreamDecoder:
         container: av.container.InputContainer | None = None
         resampler: av.AudioResampler | None = None
         try:
-
             container = av.open(
                 self._input_buf,
                 mode="r",
@@ -438,7 +429,6 @@ class AudioStreamDecoder:
 
             audio_stream = container.streams.audio[0]
 
-
             if self._sample_rate is not None or self._layout is not None:
                 resampler = av.AudioResampler(
                     format="s16", layout=self._layout, rate=self._sample_rate
@@ -455,7 +445,6 @@ class AudioStreamDecoder:
 
                 for f in frames:
                     self._emit_av_frame(f)
-
 
             if resampler and not self._closed:
                 for f in resampler.resample(None):

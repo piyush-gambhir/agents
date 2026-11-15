@@ -473,8 +473,6 @@ class SpeechStream(stt.SpeechStream):
                 if local_segment_id > max_segment_id:
                     del self._transcript_state[local_segment_id]
 
-
-
             sorted_segments = sorted(self._transcript_state.items(), key=lambda item: int(item[0]))
             full_transcript = " ".join([text for _, text in sorted_segments])
 

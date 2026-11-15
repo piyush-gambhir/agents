@@ -24,11 +24,7 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
         vad=silero.VAD.load(),
-
         llm=google.realtime.RealtimeModel(),
-
-
-
     )
 
     agent = Agent(
@@ -38,7 +34,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(
         agent=agent,
         room=ctx.room,
-
         room_options=room_io.RoomOptions(
             video_input=True,
         ),

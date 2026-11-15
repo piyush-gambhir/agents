@@ -33,15 +33,12 @@ async def entrypoint(ctx: JobContext):
 
     bithuman_avatar = bithuman.AvatarSession(
         avatar_image=Image.open(os.path.join(os.path.dirname(__file__), "avatar.jpg")),
-
-
     )
     await bithuman_avatar.start(session, room=ctx.room)
 
     await session.start(
         agent=Agent(instructions="Talk to me!"),
         room=ctx.room,
-
         room_options=room_io.RoomOptions(audio_output=False),
     )
 

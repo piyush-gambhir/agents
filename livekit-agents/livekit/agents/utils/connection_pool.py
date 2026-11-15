@@ -44,11 +44,9 @@ class ConnectionPool(Generic[T]):
         self._connect_timeout = connect_timeout
         self._connect_lock = asyncio.Lock()
 
-
         self._to_close: set[T] = set()
 
         self._prewarm_task: weakref.ref[asyncio.Task[None]] | None = None
-
 
         self.last_acquire_time: float = 0.0
         self.last_connection_reused: bool = False
@@ -102,7 +100,6 @@ class ConnectionPool(Generic[T]):
         async with self._connect_lock:
             await self._drain_to_close()
             now = time.time()
-
 
             while self._available:
                 conn = self._available.pop()

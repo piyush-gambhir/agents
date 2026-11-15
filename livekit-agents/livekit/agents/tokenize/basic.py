@@ -12,9 +12,6 @@ from . import (
     tokenizer,
 )
 
-
-
-
 __all__ = [
     "SentenceTokenizer",
     "WordTokenizer",

@@ -261,9 +261,6 @@ async def test_summarize():
         print(json.dumps(summary.to_dict(), indent=2))
 
 
-
-
-
 class _FixedSummaryLLM(FakeLLM):
     """FakeLLM that returns a fixed summary string for any input."""
 
@@ -362,11 +359,6 @@ async def test_summarize_head_tail_split_with_renderables():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=2)
 
-
-
-
-
-
     tail_msgs = [
         it
         for it in result.items
@@ -430,10 +422,8 @@ async def test_summarize_preserves_structural_items():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=1)
 
-
     system_msgs = [it for it in result.items if it.type == "message" and it.role == "system"]
     assert len(system_msgs) == 1
-
 
     handoffs = [it for it in result.items if it.type == "agent_handoff"]
     assert len(handoffs) == 1
@@ -455,13 +445,9 @@ async def test_summarize_skips_when_not_enough_messages():
     llm = _FixedSummaryLLM(CANNED_SUMMARY)
     result = await ctx._summarize(llm, keep_last_turns=1)
 
-
     assert len(result.items) == len(original_items)
     for a, b in zip(result.items, original_items, strict=True):
         assert a.id == b.id
-
-
-
 
 
 def _make_ctx(*roles: str):
@@ -543,12 +529,10 @@ def test_instructions_serialization():
     from livekit.agents.beta import Instructions
     from livekit.agents.llm import ChatContext, ChatMessage
 
-
     instr = Instructions("audio variant", text="text variant")
     msg = ChatMessage(role="system", content=[instr])
     assert isinstance(msg.content[0], Instructions)
     assert msg.content[0].text == "text variant"
-
 
     ctx = ChatContext([ChatMessage(role="system", content=[instr])])
     data = ctx.to_dict()
@@ -557,18 +541,15 @@ def test_instructions_serialization():
     assert serialized["audio"] == "audio variant"
     assert serialized["text"] == "text variant"
 
-
     restored = ChatContext.from_dict(ctx.to_dict())
     restored_content = restored.items[0].content[0]
     assert isinstance(restored_content, Instructions)
     assert restored_content.audio == "audio variant"
     assert restored_content.text == "text variant"
 
-
     plain_ctx = ChatContext([ChatMessage(role="user", content=["hello"])])
     plain_restored = ChatContext.from_dict(plain_ctx.to_dict())
     assert type(plain_restored.items[0].content[0]) is str
-
 
     audio_only = Instructions("audio only")
     audio_ctx = ChatContext([ChatMessage(role="system", content=[audio_only])])
@@ -583,7 +564,6 @@ def test_instructions_string_operations():
     """Instructions supports + and r+ operations, propagating both variants."""
     from livekit.agents.beta import Instructions
 
-
     a = Instructions("audio A", text="text A")
     b = Instructions("audio B", text="text B")
     result = a + b
@@ -591,23 +571,19 @@ def test_instructions_string_operations():
     assert result.audio == "audio Aaudio B"
     assert result.text == "text Atext B"
 
-
     instr = Instructions("audio", text="text")
     result = instr + " suffix"
     assert result.audio == "audio suffix"
     assert result.text == "text suffix"
 
-
     result = "prefix " + instr
     assert result.audio == "prefix audio"
     assert result.text == "prefix text"
-
 
     audio_only = Instructions("audio only")
     result = audio_only + " more"
     assert result._text_variant is None
     assert result.audio == "audio only more"
-
 
     a = Instructions("audio A", text="text A")
     b = Instructions("audio B")
@@ -624,33 +600,27 @@ def test_instructions_as_modality():
 
     instr = Instructions("audio instructions", text="text instructions")
 
-
     resolved = instr.as_modality("audio")
     assert str(resolved) == "audio instructions"
     assert resolved.audio == "audio instructions"
     assert resolved.text == "text instructions"
 
-
     resolved = instr.as_modality("text")
     assert str(resolved) == "text instructions"
-
 
     resolved_text = instr.as_modality("text")
     resolved_audio = resolved_text.as_modality("audio")
     assert str(resolved_audio) == "audio instructions"
 
-
     audio_only = Instructions("audio only")
     assert str(audio_only.as_modality("audio")) == "audio only"
     assert str(audio_only.as_modality("text")) == "audio only"
-
 
     ctx = ChatContext([ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instr])])
     apply_instructions_modality(ctx, modality="audio")
     assert str(ctx.items[0].content[0]) == "audio instructions"
     apply_instructions_modality(ctx, modality="text")
     assert str(ctx.items[0].content[0]) == "text instructions"
-
 
     base_ctx = ChatContext(
         [ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instr])]

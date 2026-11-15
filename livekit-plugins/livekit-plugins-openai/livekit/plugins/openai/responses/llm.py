@@ -153,8 +153,6 @@ class _LLMOptions:
 
 
 class LLM(llm.LLM):
-
-
     _provider_tool_type: type[llm.ProviderTool] = OpenAITool
 
     def __init__(
@@ -340,7 +338,6 @@ class LLM(llm.LLM):
             if ChatContext(items=chat_ctx.items[:n]).is_equivalent(
                 self._prev_chat_ctx
             ) and self._pending_tool_calls_completed(chat_ctx.items[n:]):
-
                 input_chat_ctx = ChatContext(items=chat_ctx.items[n:])
                 extra["previous_response_id"] = self._prev_resp_id
 
@@ -481,8 +478,6 @@ class LLMStream(llm.LLMStream):
 
     def _parse_ws_event(self, event: dict) -> ResponseStreamEvent | None:
 
-
-
         if (
             isinstance(event.get("response"), dict)
             and "prompt_cache_retention" in event["response"]
@@ -549,11 +544,6 @@ class LLMStream(llm.LLMStream):
 
     def _handle_response_completed(self, event: ResponseCompletedEvent) -> llm.ChatChunk | None:
         for item in event.response.output:
-
-
-
-
-
             if item.type not in ("message", "reasoning", "function_call", "function_call_output"):
                 logger.info(
                     "provider tool executed",
@@ -603,8 +593,6 @@ class LLMStream(llm.LLMStream):
             )
             self._pending_tool_calls.add(event.item.call_id)
         elif isinstance(event.item, ResponseOutputMessage) and event.item.phase is not None:
-
-
             chunk = llm.ChatChunk(
                 id=self._response_id,
                 delta=llm.ChoiceDelta(

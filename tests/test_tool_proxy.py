@@ -112,7 +112,6 @@ class TestToolProxyToolset:
         names = [t["name"] for t in parsed]
         assert "weather_tool" in names
 
-
         weather = next(t for t in parsed if t["name"] == "weather_tool")
         assert "Get weather for a city" in weather["description"]
         assert "parameters" in weather
@@ -223,7 +222,6 @@ class TestToolProxyToolset:
         error_msg = exc_info.value.message
         print(f"Missing arg error: {error_msg}")
 
-
         assert "city" in error_msg
         assert "type=missing" in error_msg
 
@@ -243,7 +241,6 @@ class TestToolProxyToolset:
 
         error_msg = exc_info.value.message
         print(f"Wrong type error: {error_msg}")
-
 
         assert "days" in error_msg
         assert "int_parsing" in error_msg
@@ -295,12 +292,10 @@ class TestToolProxyToolset:
         ts = ToolProxyToolset(id="proxy", tools=[OuterToolset()])
         await ts.setup()
 
-
         result = await ts._handle_search({"query": "weather stock"})
         parsed = [json.loads(schema) for schema in result.split("\n")]
         names = [t["name"] for t in parsed]
         assert "weather_tool" in names or "stock_tool" in names
-
 
         result = await ts._handle_call(
             _mock_ctx(), {"name": "weather_tool", "parameters": {"city": "Paris"}}

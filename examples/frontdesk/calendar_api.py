@@ -61,11 +61,9 @@ class FakeCalendar(Calendar):
             if current_day.weekday() >= 5:
                 continue
 
-
             day_start = datetime.datetime.combine(current_day, datetime.time(9, 0), tzinfo=self.tz)
             slots_in_day = [
-                day_start + datetime.timedelta(minutes=30 * i)
-                for i in range(int((17 - 9) * 2))
+                day_start + datetime.timedelta(minutes=30 * i) for i in range(int((17 - 9) * 2))
             ]
 
             num_slots = random.randint(3, 6)
@@ -87,8 +85,6 @@ class FakeCalendar(Calendar):
         self, *, start_time: datetime.datetime, end_time: datetime.datetime
     ) -> list[AvailableSlot]:
         return [slot for slot in self._slots if start_time <= slot.start_time < end_time]
-
-
 
 
 CAL_COM_EVENT_TYPE = "livekit-front-desk"

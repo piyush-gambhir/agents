@@ -90,17 +90,6 @@ async def test_vad_threshold_partial_update():
     assert stt._opts.max_turn_silence == 500
 
 
-
-
-
-
-
-
-
-
-
-
-
 def _make_stream_for_unit_test():
     """Construct a SpeechStream without triggering the _main_task WebSocket
     loop. Patches asyncio.create_task during __init__ so the stream doesn't
@@ -113,8 +102,6 @@ def _make_stream_for_unit_test():
     stt = STT(api_key="test-key")
 
     def _fake_create_task(coro, *args, **kwargs):
-
-
 
         coro.close()
         task = MagicMock()
@@ -138,11 +125,8 @@ async def test_speech_started_uses_start_time_anchor():
     speech_start_time."""
     stream = _make_stream_for_unit_test()
 
-
-
     anchor = 1_700_000_000.0
     stream.start_time = anchor
-
 
     stream._process_stream_event({"type": "SpeechStarted", "timestamp": 500})
 
@@ -171,7 +155,6 @@ async def test_speech_started_without_timestamp_leaves_field_none():
     to message-arrival time (pre-PR behavior)."""
     stream = _make_stream_for_unit_test()
 
-
     stream._process_stream_event({"type": "SpeechStarted"})
 
     ev = stream._event_ch.recv_nowait()
@@ -184,8 +167,6 @@ async def test_start_time_has_default_before_plugin_override():
     (time.time() seeded in __init__) is available for the SpeechStarted
     conversion to use."""
     stream = _make_stream_for_unit_test()
-
-
 
     assert time.time() - stream.start_time < 5.0
 
@@ -252,7 +233,6 @@ async def test_continuous_partials_explicit_false_overrides_livekit_default():
 async def test_continuous_partials_update_from_default():
     """Test continuous_partials can be updated via update_options away from LiveKit default."""
     from livekit.plugins.assemblyai import STT
-
 
     stt = STT(api_key="test-key", model="u3-rt-pro")
     assert stt._opts.continuous_partials is True

@@ -103,28 +103,12 @@ from .utils import (
     to_turn_detection,
 )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 SAMPLE_RATE = 24000
 NUM_CHANNELS = 1
 OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_VOICE = "marin"
 
 lk_oai_debug = int(os.getenv("LK_OPENAI_DEBUG", 0))
-
-
 
 
 _AZURE_EVENT_MAPPING: dict[str, str] = {
@@ -154,8 +138,6 @@ def _oai_session_to_azure(session: RealtimeSessionCreateRequest) -> AzureSession
     """
     mapped: dict[str, Any] = {}
 
-
-
     if session.output_modalities is not None:
         if "audio" in session.output_modalities:
             mapped["modalities"] = ["audio", "text"]
@@ -163,7 +145,6 @@ def _oai_session_to_azure(session: RealtimeSessionCreateRequest) -> AzureSession
             mapped["modalities"] = list(session.output_modalities)
         mapped["input_audio_format"] = "pcm16"
         mapped["output_audio_format"] = "pcm16"
-
 
     if session.audio is not None:
         inp = session.audio.input
@@ -184,7 +165,6 @@ def _oai_session_to_azure(session: RealtimeSessionCreateRequest) -> AzureSession
                 mapped["voice"] = out.voice
             if out.speed is not None:
                 mapped["speed"] = out.speed
-
 
     if session.model is not None:
         mapped["model"] = session.model
@@ -760,7 +740,6 @@ def process_base_url(
     path_stripped = parsed_url.path.rstrip("/")
     if is_azure:
         if path_stripped in ["", "/openai"]:
-
             path = path_stripped + ("/v1/realtime" if not api_version else "/realtime")
         elif path_stripped == "/openai/v1":
             path = "/openai/v1/realtime"
@@ -775,12 +754,10 @@ def process_base_url(
     if is_azure:
         query_params.pop("api-version", None)
         if api_version:
-
             query_params["api-version"] = [api_version]
             if azure_deployment:
                 query_params["deployment"] = [azure_deployment]
         else:
-
             if "model" not in query_params and azure_deployment:
                 query_params["model"] = [azure_deployment]
 
@@ -825,7 +802,6 @@ class RealtimeSession(
         self._item_delete_future: dict[str, asyncio.Future] = {}
         self._item_create_future: dict[str, asyncio.Future] = {}
 
-
         self._input_transcript_accumulators: dict[str, dict[int, str]] = {}
 
         self._current_generation: _ResponseGeneration | None = None
@@ -833,7 +809,6 @@ class RealtimeSession(
 
         self._update_chat_ctx_lock = asyncio.Lock()
         self._update_fnc_ctx_lock = asyncio.Lock()
-
 
         self._bstream = utils.audio.AudioByteStream(
             SAMPLE_RATE, NUM_CHANNELS, samples_per_channel=SAMPLE_RATE // 10
@@ -857,14 +832,11 @@ class RealtimeSession(
 
             events: list[RealtimeClientEvent | dict[str, Any]] = []
 
-
             events.append(self._create_session_update_event())
-
 
             tools = self._tools.flatten()
             if tools:
                 events.append(self._create_tools_update_event(tools))
-
 
             chat_ctx = self.chat_ctx.copy(
                 exclude_function_call=True,
@@ -880,7 +852,6 @@ class RealtimeSession(
 
             try:
                 for ev in events:
-
                     if isinstance(ev, BaseModel):
                         ev = ev.model_dump(
                             by_alias=True, exclude_unset=True, exclude_defaults=False
@@ -998,8 +969,6 @@ class RealtimeSession(
                             by_alias=True, exclude_unset=True, exclude_defaults=False
                         )
 
-
-
                     if self._opts.is_azure and self._opts.api_version:
                         _normalize_azure_client_event(msg)
 
@@ -1030,7 +999,6 @@ class RealtimeSession(
                     if closing:
                         return
 
-
                     raise APIConnectionError(
                         message=f"{self._realtime_model._provider_label} connection closed unexpectedly"
                     )
@@ -1040,15 +1008,11 @@ class RealtimeSession(
 
                 event = json.loads(msg.data)
 
-
-
-
                 if self._opts.is_azure:
                     event_type = event.get("type", "")
                     normalized = _AZURE_EVENT_MAPPING.get(event_type)
                     if normalized is not None:
                         event["type"] = normalized
-
 
                 # providers can have different event types that are not part of the OpenAI Realtime API  # noqa: E501
                 self.emit("openai_server_event_received", event)
@@ -1138,13 +1102,11 @@ class RealtimeSession(
         try:
             done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
-
             for task in done:
                 if task != wait_reconnect_task:
                     task.result()
 
             if wait_reconnect_task and wait_reconnect_task in done and self._current_generation:
-
                 await self._current_generation._done_fut
                 closing = True
 
@@ -1162,7 +1124,6 @@ class RealtimeSession(
         the RealtimeClientEvent union).
         """
         if self._opts.is_azure and self._opts.api_version:
-
             return AzureSessionUpdateEvent(
                 type="session.update",
                 session=_oai_session_to_azure(session),
@@ -1268,7 +1229,6 @@ class RealtimeSession(
 
         if is_given(reasoning):
             if self._opts.reasoning != reasoning:
-
                 session.reasoning = reasoning
                 has_changes = True
             self._opts.reasoning = reasoning
@@ -1346,8 +1306,6 @@ class RealtimeSession(
             try:
                 await asyncio.wait_for(asyncio.gather(*futs, return_exceptions=True), timeout=5.0)
             except asyncio.TimeoutError:
-
-
                 for ev in events:
                     if isinstance(ev, ConversationItemDeleteEvent):
                         self._item_delete_future.pop(ev.item_id, None)
@@ -1361,11 +1319,6 @@ class RealtimeSession(
     ) -> list[ConversationItemCreateEvent | ConversationItemDeleteEvent]:
         events: list[ConversationItemCreateEvent | ConversationItemDeleteEvent] = []
         remote_ctx = self._remote_chat_ctx.to_chat_ctx()
-
-
-
-
-
 
         remote_ids = {item.id for item in remote_ctx.items}
         chat_ctx = llm.ChatContext(
@@ -1405,9 +1358,6 @@ class RealtimeSession(
             return False
 
         for msg_id in diff_ops.to_remove:
-
-
-
             if _is_content_empty(msg_id):
                 continue
             _delete_item(msg_id)
@@ -1415,10 +1365,7 @@ class RealtimeSession(
         for previous_msg_id, msg_id in diff_ops.to_create:
             _create_item(previous_msg_id, msg_id)
 
-
         for previous_msg_id, msg_id in diff_ops.to_update:
-
-
             if _is_content_empty(msg_id):
                 continue
             _delete_item(msg_id)
@@ -1447,7 +1394,6 @@ class RealtimeSession(
             ]
             self._tools = llm.ToolContext(retained_tools)
 
-
     def _convert_tools_to_oai(self, tools: list[llm.Tool]) -> list[RealtimeFunctionTool]:
         oai_tools: list[RealtimeFunctionTool] = []
 
@@ -1455,7 +1401,6 @@ class RealtimeSession(
             if isinstance(tool, llm.FunctionTool):
                 tool_desc = llm.utils.build_legacy_openai_schema(tool, internally_tagged=True)
             elif isinstance(tool, llm.RawFunctionTool):
-
                 tool_desc = dict(tool.info.raw_schema)
                 tool_desc.pop("meta", None)
                 tool_desc["type"] = "function"
@@ -1554,8 +1499,6 @@ class RealtimeSession(
         self._response_created_futures[event_id] = fut
 
         if is_given(instructions) and self._instructions:
-
-
             instructions = f"{self._instructions}\n{instructions}"
 
         params = RealtimeResponseCreateParams(
@@ -1582,7 +1525,6 @@ class RealtimeSession(
             handle.cancel()
             self._response_created_futures.pop(event_id, None)
             if f.cancelled():
-
                 self.send_event(ResponseCancelEvent(type="response.cancel"))
 
         fut.add_done_callback(_on_fut_done)
@@ -1615,7 +1557,6 @@ class RealtimeSession(
                 )
             )
         elif utils.is_given(audio_transcript):
-
             chat_ctx = self.chat_ctx.copy(
                 exclude_handoff=True,
                 exclude_config_update=True,
@@ -1663,7 +1604,6 @@ class RealtimeSession(
     def _resample_audio(self, frame: rtc.AudioFrame) -> Iterator[rtc.AudioFrame]:
         if self._input_resampler:
             if frame.sample_rate != self._input_resampler._input_rate:
-
                 self._input_resampler = None
 
         if self._input_resampler is None and (
@@ -1676,7 +1616,6 @@ class RealtimeSession(
             )
 
         if self._input_resampler:
-
             yield from self._input_resampler.push(frame)
         else:
             yield frame
@@ -1863,7 +1802,6 @@ class RealtimeSession(
             extra={"error": event.error},
         )
 
-
         partial = self._clear_transcript_accumulator(event.item_id, event.content_index or 0)
         if partial is None:
             return
@@ -1881,7 +1819,6 @@ class RealtimeSession(
             item_generation.audio_ch.closed
             and self._current_generation._first_token_timestamp is None
         ):
-
             self._current_generation._first_token_timestamp = time.time()
 
         item_generation.text_ch.send_nowait(event.delta)
@@ -1940,7 +1877,6 @@ class RealtimeSession(
             item_generation.text_ch.close()
             item_generation.audio_ch.close()
             if not item_generation.modalities.done():
-
                 item_generation.modalities.set_result(self._opts.modalities)
 
     def _handle_function_call(self, item: RealtimeConversationItemFunctionCall) -> None:
@@ -1970,7 +1906,6 @@ class RealtimeSession(
         first_token_timestamp = self._current_generation._first_token_timestamp
 
         for generation in self._current_generation.messages.values():
-
             if not generation.text_ch.closed:
                 generation.text_ch.close()
             if not generation.audio_ch.closed:
@@ -1989,7 +1924,6 @@ class RealtimeSession(
         with contextlib.suppress(asyncio.InvalidStateError):
             self._current_generation._done_fut.set_result(None)
         self._current_generation = None
-
 
         usage = (
             event.response.usage.model_dump(exclude_defaults=True) if event.response.usage else {}
@@ -2062,8 +1996,6 @@ class RealtimeSession(
                     body=error_body,
                     retryable=True,
                 ),
-
-
                 recoverable=True,
             )
         elif event.response.status in {"cancelled", "incomplete"}:
@@ -2099,7 +2031,6 @@ class RealtimeSession(
         if (event_id := event.error.event_id) and (
             fut := self._response_created_futures.pop(event_id, None)
         ):
-
             if not fut.done():
                 fut.set_exception(llm.RealtimeError(event.error.message))
 

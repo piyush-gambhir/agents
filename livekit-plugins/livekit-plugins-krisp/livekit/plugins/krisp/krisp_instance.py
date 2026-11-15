@@ -32,7 +32,6 @@ try:
 
     KRISP_AUDIO_AVAILABLE = True
 
-
     KRISP_SAMPLE_RATES = {
         8000: krisp_audio.SamplingRate.Sr8000Hz,
         16000: krisp_audio.SamplingRate.Sr16000Hz,
@@ -121,7 +120,6 @@ class KrispSDKManager:
             Exception: If SDK initialization fails (propagated from krisp_audio)
         """
         with cls._lock:
-
             if cls._reference_count == 0:
                 try:
                     license_key = cls._get_license_key()
@@ -159,7 +157,6 @@ class KrispSDKManager:
             if cls._reference_count > 0:
                 cls._reference_count -= 1
                 logger.debug(f"Krisp SDK reference count: {cls._reference_count}")
-
 
                 if cls._reference_count == 0 and cls._initialized:
                     try:

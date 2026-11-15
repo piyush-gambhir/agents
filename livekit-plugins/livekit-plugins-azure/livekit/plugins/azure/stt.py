@@ -52,9 +52,7 @@ class STTOptions:
     segmentation_silence_timeout_ms: NotGivenOr[int]
     segmentation_max_time_ms: NotGivenOr[int]
     segmentation_strategy: NotGivenOr[str]
-    language: list[
-        str
-    ]
+    language: list[str]
     speech_endpoint: NotGivenOr[str] = NOT_GIVEN
     profanity: NotGivenOr[speechsdk.enums.ProfanityOption] = NOT_GIVEN
     phrase_list: NotGivenOr[list[str] | None] = NOT_GIVEN
@@ -324,7 +322,6 @@ class SpeechStream(stt.SpeechStream):
         if not detected_lg and self._opts.language:
             detected_lg = LanguageCode(self._opts.language[0])
 
-
         final_data = stt.SpeechData(
             language=detected_lg,
             confidence=1.0,
@@ -444,7 +441,6 @@ def _create_speech_recognizer(
     if is_given(config.profanity):
         speech_config.set_profanity(config.profanity)
 
-
     if config.explicit_punctuation:
         speech_config.set_service_property(
             "punctuation", "explicit", speechsdk.ServicePropertyChannel.UriQueryParameter
@@ -456,8 +452,6 @@ def _create_speech_recognizer(
 
     kwargs: dict[str, Any] = {}
     if config.language and len(config.language) > 1:
-
-
         speech_config.set_property(
             speechsdk.PropertyId.SpeechServiceConnection_LanguageIdMode, "Continuous"
         )
@@ -471,7 +465,6 @@ def _create_speech_recognizer(
     speech_recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config, **kwargs
     )
-
 
     if is_given(config.phrase_list) and isinstance(config.phrase_list, list) and config.phrase_list:
         phrase_list_grammar = speechsdk.PhraseListGrammar.from_recognizer(speech_recognizer)

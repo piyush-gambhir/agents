@@ -19,9 +19,6 @@ server = AgentServer()
 async def entrypoint(job: JobContext):
     logger.info("starting tts example agent")
 
-
-
-
     tts = inference.TTS("inworld/inworld-tts-1", voice="Alex")
 
     source = rtc.AudioSource(tts.sample_rate, tts.num_channels)
@@ -33,11 +30,9 @@ async def entrypoint(job: JobContext):
     publication = await job.room.local_participant.publish_track(track, options)
     await publication.wait_for_subscription()
 
-
     text = "Hello from Inworld. I hope you are having a spectacular and /ˈwʌn.dɚ.fəl/ day."
     logger.info(f'synthesizing (HTTP): "{text}"')
     async for audio in tts.synthesize(text):
-
         timed_strings = audio.frame.userdata.get(USERDATA_TIMED_TRANSCRIPT, [])
         for ts in timed_strings:
             start = (
@@ -52,7 +47,6 @@ async def entrypoint(job: JobContext):
 
     await asyncio.sleep(1)
 
-
     streamed_text = (
         "This is an example using WebSocket streaming for lower latency real-time synthesis."
     )
@@ -62,12 +56,10 @@ async def entrypoint(job: JobContext):
     stream.push_text(streamed_text)
     stream.end_input()
 
-
     playout_q: asyncio.Queue[rtc.AudioFrame | None] = asyncio.Queue()
 
     async def _synth_task():
         async for ev in stream:
-
             timed_strings = ev.frame.userdata.get(USERDATA_TIMED_TRANSCRIPT, [])
             for ts in timed_strings:
                 start = (

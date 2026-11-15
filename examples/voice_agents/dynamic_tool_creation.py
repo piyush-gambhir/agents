@@ -26,12 +26,6 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-
-
-
-
-
-
 class MyAgent(Agent):
     def __init__(self, instructions: str, tools: list[FunctionTool]) -> None:
         super().__init__(instructions=instructions, tools=tools)
@@ -42,7 +36,6 @@ class MyAgent(Agent):
 
         async def _get_weather(location: str) -> str:
             return f"The weather in {location} is sunny."
-
 
         tools.append(
             function_tool(
@@ -78,15 +71,11 @@ async def entrypoint(ctx: JobContext):
 
     courses = await _get_course_list_from_db()
 
-
     CourseType = Enum("CourseType", {c.replace(" ", "_"): c for c in courses})
 
     class CourseInfo(BaseModel):
         course: CourseType  # type: ignore
         location: Literal["online", "in-person"]
-
-
-
 
     async def _get_course_info(info: CourseInfo) -> str:
         logger.info(f"get_course_info called: {info}")
@@ -102,7 +91,6 @@ async def entrypoint(ctx: JobContext):
             )
         ],
     )
-
 
     async def _random_number() -> int:
         num = random.randint(0, 100)

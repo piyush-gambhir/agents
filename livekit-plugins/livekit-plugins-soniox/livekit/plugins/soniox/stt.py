@@ -43,7 +43,6 @@ from livekit.agents.types import (
 
 from .log import logger
 
-
 BASE_URL = "wss://stt-rt.soniox.com/transcribe-websocket"
 
 
@@ -247,7 +246,6 @@ class SpeechStream(stt.SpeechStream):
         else:
             context_value = context_raw
 
-
         config: dict[str, Any] = {
             "api_key": self._stt._api_key,
             "model": self._stt._params.model,
@@ -386,7 +384,6 @@ class SpeechStream(stt.SpeechStream):
 
         async for data in self._input_ch:
             if isinstance(data, rtc.AudioFrame):
-
                 pcm_data = data.data.tobytes()
                 self.audio_queue.put_nowait(pcm_data)
 
@@ -413,11 +410,7 @@ class SpeechStream(stt.SpeechStream):
     async def _recv_messages_task(self) -> None:
         """Receive transcription messages, handle tokens, errors, and dispatch events."""
 
-
-
-
         is_translation_mode = self._stt._params.translation is not None
-
 
         final = _TokenAccumulator()
         final_original = _TokenAccumulator()
@@ -426,13 +419,6 @@ class SpeechStream(stt.SpeechStream):
         def send_endpoint_transcript() -> None:
             nonlocal is_speaking
             if final.text:
-
-
-
-
-
-
-
                 src_segs, tgt_segs = (
                     (final_original._lang_segments, final._lang_segments)
                     if is_translation_mode
@@ -460,10 +446,8 @@ class SpeechStream(stt.SpeechStream):
                     )
                 )
 
-
                 final.reset()
                 final_original.reset()
-
 
                 is_speaking = False
             else:
@@ -496,12 +480,9 @@ class SpeechStream(stt.SpeechStream):
                     non_final_original = _TokenAccumulator()
                     total_audio_proc_ms = content.get("total_audio_proc_ms", 0)
 
-
-
                     for token in tokens:
                         is_translated = token.get("translation_status") == "translation"
                         if is_translation_mode and not is_end_token(token) and not is_translated:
-
                             if token["is_final"]:
                                 final_original.update(token)
                             else:
@@ -518,18 +499,12 @@ class SpeechStream(stt.SpeechStream):
                         else:
                             non_final.update(token)
 
-
                     if final.text or non_final.text:
                         if not is_speaking:
                             is_speaking = True
                             self._event_ch.send_nowait(
                                 stt.SpeechEvent(type=SpeechEventType.START_OF_SPEECH)
                             )
-
-
-
-
-
 
                         merged_originals = _merge_lang_segments(
                             final_original._lang_segments,
@@ -549,10 +524,6 @@ class SpeechStream(stt.SpeechStream):
                         interim_tgt_langs, interim_tgt_texts = _lang_segments_to_fields(
                             interim_tgt_segs
                         )
-
-
-
-
 
                         event_type = (
                             SpeechEventType.PREFLIGHT_TRANSCRIPT
@@ -574,7 +545,6 @@ class SpeechStream(stt.SpeechStream):
                                 ],
                             )
                         )
-
 
                     if content.get("finished") or has_error:
                         send_endpoint_transcript()
@@ -602,7 +572,6 @@ class SpeechStream(stt.SpeechStream):
                     logger.exception(f"Error processing message: {e}")
 
         except asyncio.CancelledError:
-
             raise
         except APIError:
             raise
@@ -610,7 +579,6 @@ class SpeechStream(stt.SpeechStream):
             logger.error(f"WebSocket error while receiving: {e}")
         except Exception as e:
             logger.error(f"Unexpected error while receiving messages: {e}")
-
 
         if not self._reconnect_event.is_set():
             logger.warning("Soniox STT WebSocket closed; requesting reconnect")

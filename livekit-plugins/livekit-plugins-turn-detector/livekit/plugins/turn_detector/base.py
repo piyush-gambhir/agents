@@ -75,7 +75,6 @@ class _EUORunnerBase(_InferenceRunner):
 
             content = self._normalize_text(msg["content"])
 
-
             if last_msg and last_msg["role"] == msg["role"]:
                 last_msg["content"] += f" {content}"
             else:
@@ -89,7 +88,6 @@ class _EUORunnerBase(_InferenceRunner):
                 new_chat_ctx, add_generation_prompt=False, add_special_tokens=False, tokenize=False
             ),
         )
-
 
         ix = convo_text.rfind("<|im_end|>")
         text = convo_text[:ix]
@@ -183,7 +181,6 @@ class _EUORunnerBase(_InferenceRunner):
     def _download_files(cls) -> None:
         from transformers import AutoTokenizer
 
-
         AutoTokenizer.from_pretrained(HG_MODEL, revision=cls.model_revision())
         _download_from_hf_hub(
             HG_MODEL, ONNX_FILENAME, subfolder="onnx", revision=cls.model_revision()
@@ -205,8 +202,6 @@ class EOUModelBase(ABC):
         self,
         model_type: EOUModelType = "en",
         inference_executor: InferenceExecutor | None = None,
-
-
         unlikely_threshold: float | None = None,
         load_languages: bool = True,
     ) -> None:
@@ -240,16 +235,13 @@ class EOUModelBase(ABC):
         if language is None:
             return None
 
-
         lang_data = self._languages.get(language.iso)
-
 
         if lang_data is None:
             lang_data = self._languages.get(language.language)
 
         if not lang_data:
             return None
-
 
         if self._unlikely_threshold is not None:
             return self._unlikely_threshold
@@ -258,7 +250,6 @@ class EOUModelBase(ABC):
 
     async def supports_language(self, language: LanguageCode | None) -> bool:
         return await self.unlikely_threshold(language) is not None
-
 
     async def predict_end_of_turn(
         self,
