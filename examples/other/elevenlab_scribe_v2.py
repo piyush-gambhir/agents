@@ -23,7 +23,7 @@ server.setup_fnc = prewarm
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext) -> None:
-    # Using ElevenLabs STT plugin directly for realtime mode support
+
     stt = elevenlabs.STT(
         use_realtime=True,
         server_vad={

@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -426,7 +426,7 @@ class LLM(llm.LLM):
             temperature=temperature,
             parallel_tool_calls=parallel_tool_calls,
             tool_choice=tool_choice,
-            # TODO(long): add provider fmt for grok
+
             reasoning_effort=reasoning_effort,
             safety_identifier=safety_identifier,
             prompt_cache_key=prompt_cache_key,
@@ -468,19 +468,19 @@ class LLM(llm.LLM):
                 "OpenRouter API key is required, either as argument or set OPENROUTER_API_KEY environment variable"
             )
 
-        # Set up analytics headers for OpenRouter
+
         default_headers: dict[str, str] = {}
         if site_url:
             default_headers["HTTP-Referer"] = site_url
         if app_name:
             default_headers["X-Title"] = app_name
 
-        # Build OpenRouter-specific request body
+
         or_body: dict[str, Any] = {}
         if provider:
             or_body["provider"] = provider
         if fallback_models:
-            # Set fallback models for routing
+
             or_body["models"] = [model, *fallback_models]
         if plugins:
             or_body["plugins"] = [

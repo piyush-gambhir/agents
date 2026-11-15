@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -53,22 +53,22 @@ USER_AGENT = f"Livekit/{livekit_version} Python/{platform.python_version()}"
 SARVAM_TTS_BASE_URL = "https://api.sarvam.ai/text-to-speech"
 SARVAM_TTS_WS_URL = "wss://api.sarvam.ai/text-to-speech/ws"
 
-# Sarvam TTS WebSocket connections idle out after 60 seconds. We defend against
-# this on two layers:
-#
-# 1. Protocol-level: aiohttp ``heartbeat`` sends WebSocket PING frames every
-#    ``_WS_HEARTBEAT_INTERVAL`` seconds and auto-handles PONGs even while no
-#    application-level ``receive()`` is in flight. This is what actually keeps
-#    the TCP connection alive while it sits idle in the pool.
-# 2. Application-level: ``_keepalive_loop`` sends a Sarvam-defined
-#    ``{"type": "ping"}`` JSON message every ``_KEEPALIVE_INTERVAL`` seconds.
-#    This guards against a server-side application idle timer that may not be
-#    reset by protocol-level pings, and serves as a fast detector for stale
-#    pooled connections.
+
+
+
+
+
+
+
+
+
+
+
+
 _WS_HEARTBEAT_INTERVAL: float = 20.0
 _KEEPALIVE_INTERVAL: float = 30.0
 
-# Sarvam TTS specific models and speakers
+
 SarvamTTSModels = Literal["bulbul:v2", "bulbul:v3-beta", "bulbul:v3"]
 SarvamTTSOutputAudioBitrate = Literal["32k", "64k", "96k", "128k", "192k"]
 
@@ -91,8 +91,8 @@ _CODEC_TO_MIME: dict[str, str] = {
     "flac": "audio/flac",
     "aac": "audio/aac",
     "linear16": "audio/pcm",
-    # G.711 telephony codecs are decoded to linear 16-bit PCM in this plugin
-    # before being pushed to the AudioEmitter, so they advertise audio/pcm.
+
+
     "mulaw": "audio/pcm",
     "alaw": "audio/pcm",
 }
@@ -157,32 +157,32 @@ def _decode_telephony(codec: str, data: bytes) -> bytes:
     return pcm.astype("<i2").tobytes()
 
 
-# Supported languages in BCP-47 format
+
 SarvamTTSLanguages = Literal[
-    "bn-IN",  # Bengali
-    "en-IN",  # English (India)
-    "gu-IN",  # Gujarati
-    "hi-IN",  # Hindi
-    "kn-IN",  # Kannada
-    "ml-IN",  # Malayalam
-    "mr-IN",  # Marathi
-    "od-IN",  # Odia
-    "pa-IN",  # Punjabi
-    "ta-IN",  # Tamil
-    "te-IN",  # Telugu
+    "bn-IN",
+    "en-IN",
+    "gu-IN",
+    "hi-IN",
+    "kn-IN",
+    "ml-IN",
+    "mr-IN",
+    "od-IN",
+    "pa-IN",
+    "ta-IN",
+    "te-IN",
 ]
 
 SarvamTTSSpeakers = Literal[
-    # bulbul:v2 Female (lowercase)
+
     "anushka",
     "manisha",
     "vidya",
     "arya",
-    # bulbul:v2 Male (lowercase)
+
     "abhilash",
     "karun",
     "hitesh",
-    # bulbul:v3-beta Customer Care
+
     "shubh",
     "ritu",
     "rahul",
@@ -198,7 +198,7 @@ SarvamTTSSpeakers = Literal[
     "manan",
     "sumit",
     "priya",
-    # bulbul:v3-beta Content Creation
+
     "aditya",
     "kabir",
     "neha",
@@ -207,10 +207,10 @@ SarvamTTSSpeakers = Literal[
     "aayan",
     "ashutosh",
     "advait",
-    # bulbul:v3-beta International
+
     "amelia",
     "sophia",
-    # bulbul:v3
+
     "suhani",
     "rupali",
     "tanya",
@@ -218,7 +218,7 @@ SarvamTTSSpeakers = Literal[
     "kavitha",
 ]
 
-# Model-Speaker compatibility mapping
+
 MODEL_SPEAKER_COMPATIBILITY = {
     "bulbul:v2": {
         "female": ["anushka", "manisha", "vidya", "arya"],
@@ -405,9 +405,9 @@ class SarvamTTSOptions:
         word_tokenizer: Tokenizer for processing text
     """
 
-    target_language_code: SarvamTTSLanguages | str  # BCP-47 for supported Indian languages
-    api_key: str  # Sarvam.ai API key
-    text: str | None = None  # Will be provided by the stream adapter
+    target_language_code: SarvamTTSLanguages | str
+    api_key: str
+    text: str | None = None
     speaker: SarvamTTSSpeakers | str | None = None
     pitch: float = 0.0
     pace: float = 1.0
@@ -416,11 +416,11 @@ class SarvamTTSOptions:
     output_audio_bitrate: SarvamTTSOutputAudioBitrate | str = "128k"
     min_buffer_size: int = 50
     max_chunk_length: int = 150
-    speech_sample_rate: int = 22050  # Default 22050 Hz
+    speech_sample_rate: int = 22050
     enable_preprocessing: bool = False
-    dict_id: str | None = None  # Custom pronunciation dictionary (bulbul:v3 only)
-    enable_cached_responses: bool | None = None  # Response caching beta (bulbul:v1/v2 only)
-    model: SarvamTTSModels | str = "bulbul:v2"  # Default to v2
+    dict_id: str | None = None
+    enable_cached_responses: bool | None = None
+    model: SarvamTTSModels | str = "bulbul:v2"
     base_url: str = SARVAM_TTS_BASE_URL
     ws_url: str = SARVAM_TTS_WS_URL
     word_tokenizer: tokenize.tokenizer.SentenceTokenizer | None = None
@@ -464,7 +464,7 @@ class TTS(tts.TTS):
         model: SarvamTTSModels | str = "bulbul:v3",
         speaker: SarvamTTSSpeakers | str | None = None,
         speech_sample_rate: int = 22050,
-        num_channels: int = 1,  # Sarvam output is mono WAV
+        num_channels: int = 1,
         pitch: float = 0.0,
         pace: float = 1.0,
         loudness: float = 1.0,
@@ -494,19 +494,19 @@ class TTS(tts.TTS):
                 "Sarvam API key is required. Provide it directly or set SARVAM_API_KEY env var."
             )
 
-        # Validate inputs early
+
         if not target_language_code or not target_language_code.strip():
             raise ValueError("Target language code is required and cannot be empty")
         if not model or not model.strip():
             raise ValueError("Model is required and cannot be empty")
         if speaker is None:
-            # speaker = "shubh"
+
             if model == "bulbul:v3-beta" or model == "bulbul:v3":
                 speaker = "shubh"
             else:
                 speaker = "anushka"
 
-        # Validate parameter ranges
+
         if not -0.75 <= pitch <= 0.75:
             logger.warning(
                 "pitch value %.2f is outside the Sarvam API accepted range [-0.75, 0.75]; "
@@ -537,7 +537,7 @@ class TTS(tts.TTS):
                 f"output_audio_codec must be one of {','.join(sorted(ALLOWED_OUTPUT_AUDIO_CODECS))}"
             )
 
-        # Validate model-speaker compatibility
+
         if not validate_model_speaker_compatibility(model, speaker):
             compatible_speakers = MODEL_SPEAKER_COMPATIBILITY.get(model, {}).get("all", [])
             raise ValueError(
@@ -545,7 +545,7 @@ class TTS(tts.TTS):
                 f"Please choose a compatible speaker from: {', '.join(compatible_speakers)}"
             )
 
-        # Initialize word tokenizer for streaming
+
         word_tokenizer = tokenize.basic.SentenceTokenizer()
 
         self._opts = SarvamTTSOptions(
@@ -572,15 +572,15 @@ class TTS(tts.TTS):
         )
         self._session = http_session
         self._streams = weakref.WeakSet[SynthesizeStream]()
-        # Maps id(ws) -> background keepalive task that pings the server while
-        # the connection sits idle in the pool. Sarvam closes idle connections
-        # after 60 s; pinging every 30 s keeps them alive for reuse.
+
+
+
         self._ws_keepalive_tasks: dict[int, asyncio.Task[None]] = {}
 
         self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
             connect_cb=self._connect_ws,
             close_cb=self._close_ws,
-            max_session_duration=3600,  # 1 hour
+            max_session_duration=3600,
             mark_refreshed_on_get=False,
         )
 
@@ -592,7 +592,7 @@ class TTS(tts.TTS):
             "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate, br",
         }
-        # Add model parameter to URL like the client does
+
         ws_url = f"{self._opts.ws_url}?model={self._opts.model}&send_completion_event={self._opts.send_completion_event}"
 
         logger.info("Connecting to Sarvam TTS WebSocket")
@@ -602,12 +602,12 @@ class TTS(tts.TTS):
                 session.ws_connect(
                     ws_url,
                     headers=headers,
-                    # Send protocol-level WebSocket PING frames every
-                    # ``_WS_HEARTBEAT_INTERVAL`` seconds. aiohttp handles the
-                    # PONG accounting on its own and will close the connection
-                    # locally if the server stops responding -- this is what
-                    # actually keeps the TCP connection alive while it sits
-                    # idle in the pool (no ``receive()`` call to auto-pong).
+
+
+
+
+
+
                     heartbeat=_WS_HEARTBEAT_INTERVAL,
                 ),
                 timeout,
@@ -677,8 +677,8 @@ class TTS(tts.TTS):
                 try:
                     msg = await asyncio.wait_for(ws.receive(), timeout=_KEEPALIVE_INTERVAL)
                 except asyncio.TimeoutError:
-                    # No incoming message within the interval -- send our
-                    # app-level ping to reset Sarvam's idle timer.
+
+
                     if ws.closed:
                         return
                     try:
@@ -695,8 +695,8 @@ class TTS(tts.TTS):
                         return
                     continue
 
-                # We received something. CLOSE/CLOSED/CLOSING/ERROR means
-                # the server tore the connection down -- evict and exit.
+
+
                 if msg.type in (
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSED,
@@ -713,10 +713,10 @@ class TTS(tts.TTS):
                     with contextlib.suppress(Exception):
                         self._pool.remove(ws)
                     return
-                # Otherwise -- PONG, TEXT, BINARY, etc. -- discard. We are
-                # idle in the pool so any unsolicited TTS traffic from a
-                # previous request is no longer relevant. The act of
-                # receiving has already reset aiohttp's heartbeat.
+
+
+
+
         except asyncio.CancelledError:
             pass
 
@@ -847,7 +847,7 @@ class TTS(tts.TTS):
                 )
             self._opts.output_audio_codec = output_audio_codec
 
-    # Implement the abstract synthesize method
+
     def synthesize(
         self, text: str, *, conn_options: APIConnectOptions | None = None
     ) -> ChunkedStream:
@@ -897,17 +897,17 @@ class ChunkedStream(tts.ChunkedStream):
             "max_chunk_length": self._opts.max_chunk_length,
             "output_audio_codec": self._opts.output_audio_codec,
         }
-        # Only include pitch and loudness for v2 model (not supported in v3 or v3-beta)
+
         if self._opts.model == "bulbul:v2":
             payload["pitch"] = self._opts.pitch
             payload["loudness"] = self._opts.loudness
             payload["enable_preprocessing"] = self._opts.enable_preprocessing
             if self._opts.enable_cached_responses is not None:
                 payload["enable_cached_responses"] = self._opts.enable_cached_responses
-        # temperature is supported only for v3 and v3-beta; ignored for v2
+
         if self._opts.model in ("bulbul:v3", "bulbul:v3-beta"):
             payload["temperature"] = self._opts.temperature
-        # dict_id is supported only for v3 (not v3-beta)
+
         if self._opts.model == "bulbul:v3" and self._opts.dict_id is not None:
             payload["dict_id"] = self._opts.dict_id
         headers = {
@@ -947,7 +947,7 @@ class ChunkedStream(tts.ChunkedStream):
                     num_channels=self._tts.num_channels,
                     mime_type=mime_type,
                 )
-                # handle multiple audio chunks
+
                 for b64 in audios:
                     wav_bytes = base64.b64decode(b64)
                     if self._opts.output_audio_codec in _TELEPHONY_CODECS:
@@ -968,13 +968,13 @@ class SynthesizeStream(tts.SynthesizeStream):
         self._opts = replace(tts._opts)
         self._segments_ch = utils.aio.Chan[tokenize.SentenceStream]()
 
-        # Connection state management
+
         self._connection_state = ConnectionState.DISCONNECTED
         self._session_id = id(self)
         self._client_request_id: str | None = None
         self._server_request_id: str | None = None
 
-        # Task management for cleanup
+
         self._send_task: asyncio.Task | None = None
         self._recv_task: asyncio.Task | None = None
         self._ws_conn: aiohttp.ClientWebSocketResponse | None = None
@@ -1002,7 +1002,7 @@ class SynthesizeStream(tts.SynthesizeStream):
                     if word_stream is None:
                         tokenizer_instance: tokenize.tokenizer.SentenceTokenizer
                         if self._opts.word_tokenizer is None:
-                            # Fallback to basic tokenizer if none provided
+
                             tokenizer_instance = tokenize.basic.SentenceTokenizer()
                         else:
                             tokenizer_instance = self._opts.word_tokenizer
@@ -1102,12 +1102,12 @@ class SynthesizeStream(tts.SynthesizeStream):
             except (ConnectionResetError, RuntimeError) as e:
                 err_str = str(e).lower()
                 if "closing" in err_str or "closed" in err_str:
-                    # The transport is dead -- almost always a stale pooled
-                    # connection that the server already closed (60s idle
-                    # timeout). Raise so the pool evicts it via the
-                    # ``async with`` __aexit__; the framework will retry
-                    # against a fresh connection. Real user interruptions
-                    # propagate as ``CancelledError``, not this branch.
+
+
+
+
+
+
                     logger.debug(
                         "Sarvam TTS WebSocket transport closed before send "
                         "completed; pool will replace this connection",
@@ -1192,11 +1192,11 @@ class SynthesizeStream(tts.SynthesizeStream):
             except ConnectionResetError as e:
                 err_str = str(e).lower()
                 if "closing" in err_str or "closed" in err_str:
-                    # Same reasoning as ``send_task``: the transport is dead
-                    # (typically a stale pooled connection). Raise so the
-                    # pool evicts it and the framework retries against a
-                    # fresh connection. Real interruptions surface as
-                    # ``CancelledError``.
+
+
+
+
+
                     logger.debug(
                         "Sarvam TTS WebSocket transport closed during"
                         " receive; pool will replace this connection",
@@ -1217,11 +1217,11 @@ class SynthesizeStream(tts.SynthesizeStream):
 
         try:
             async with self._tts._pool.connection(timeout=self._conn_options.timeout) as ws:
-                # Pause the keepalive task while we own the connection so its
-                # ping frames don't interleave with config / text / flush
-                # traffic. The task was started either by ``_connect_ws`` (for
-                # a fresh connection) or by the previous ``_run_ws`` invocation
-                # that returned this connection to the pool.
+
+
+
+
+
                 await self._tts._stop_keepalive(ws)
                 keepalive_should_resume = False
 
@@ -1251,11 +1251,11 @@ class SynthesizeStream(tts.SynthesizeStream):
                         self._send_task = None
                         self._recv_task = None
                 finally:
-                    # Resume the keepalive only when the session completed
-                    # cleanly. On exception the pool will discard the
-                    # connection via ``remove(conn)`` and ``_close_ws`` will
-                    # run, so restarting here would be wasted work (and the
-                    # task would be cancelled immediately anyway).
+
+
+
+
+
                     if keepalive_should_resume:
                         self._tts._start_keepalive(ws)
 
@@ -1291,9 +1291,9 @@ class SynthesizeStream(tts.SynthesizeStream):
             msg_type = resp.get("type")
             self._maybe_set_server_request_id(resp)
             if self._server_request_id:
-                # Expose the server-assigned request id on the tts_request_run span so
-                # users can correlate traces with Sarvam's logs for debugging. Deduped
-                # internally, so calling on every message is fine.
+
+
+
                 output_emitter._note_provider_request_id(self._server_request_id)
 
             if not msg_type:
@@ -1303,13 +1303,13 @@ class SynthesizeStream(tts.SynthesizeStream):
                 )
                 return True
 
-            # logger.debug(f"Processing message type: {msg_type}", extra=self._build_log_context())
+
 
             if msg_type == "audio":
                 return await self._handle_audio_message(resp, output_emitter)
             elif msg_type == "error":
                 await self._handle_error_message(resp)
-                return False  # Stop processing on error
+                return False
             elif msg_type == "event":
                 return await self._handle_event_message(resp, output_emitter)
             else:
@@ -1321,9 +1321,9 @@ class SynthesizeStream(tts.SynthesizeStream):
                 f"Invalid JSON in WebSocket message: {e}",
                 extra={**self._build_log_context(), "raw_data": msg_data[:200]},
             )
-            return True  # Continue processing
+            return True
         except (APIStatusError, APIConnectionError):
-            # Preserve provider-originated status/body/retry metadata.
+
             raise
         except Exception as e:
             logger.error(
@@ -1351,9 +1351,9 @@ class SynthesizeStream(tts.SynthesizeStream):
 
             return True
 
-        except Exception as e:  # base64 decode error
+        except Exception as e:
             logger.error(f"Invalid base64 audio data: {e}", extra=self._build_log_context())
-            # Don't stop processing for audio decode errors
+
             return True
 
     async def _handle_error_message(self, resp: dict) -> None:
@@ -1373,7 +1373,7 @@ class SynthesizeStream(tts.SynthesizeStream):
             },
         )
 
-        # Determine if error is recoverable based on error code/type
+
         recoverable_errors = ["rate_limit", "temporary_unavailable", "timeout"]
         is_recoverable = any(err in str(error_msg).lower() for err in recoverable_errors)
 
@@ -1395,7 +1395,7 @@ class SynthesizeStream(tts.SynthesizeStream):
         if event_type == "final":
             logger.debug("Generation complete event received", extra=self._build_log_context())
             output_emitter.end_input()
-            return False  # Stop processing
+            return False
         else:
             logger.debug(f"Unknown event type: {event_type}", extra=self._build_log_context())
             return True

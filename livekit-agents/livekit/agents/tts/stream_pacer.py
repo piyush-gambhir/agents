@@ -71,7 +71,7 @@ class StreamPacerWrapper(SentenceStream):
         self._sent_stream.end_input()
         self._input_ended = True
         if self._audio_emitter._dst_ch.closed:
-            # close the stream if the audio emitter is closed
+
             self._closing = True
             self._wakeup_event.set()
 
@@ -98,7 +98,7 @@ class StreamPacerWrapper(SentenceStream):
         audio_start_time = 0.0
         first_sentence = True
 
-        # check if audio generation stopped based on audio duration change
+
         prev_audio_duration = 0.0
         prev_check_time = 0.0
         generation_started = False
@@ -119,7 +119,7 @@ class StreamPacerWrapper(SentenceStream):
             if audio_duration > 0.0 and audio_start_time == 0.0:
                 audio_start_time = curr_time
 
-            # check if audio generation stopped
+
             if curr_time - prev_check_time >= 0.1:
                 if prev_audio_duration < audio_duration:
                     generation_started = True
@@ -138,7 +138,7 @@ class StreamPacerWrapper(SentenceStream):
                 while self._sentences:
                     batch.append(self._sentences.pop(0))
                     if (
-                        first_sentence  # send first sentence immediately
+                        first_sentence
                         or sum(len(s) for s in batch) >= self._options.max_text_length
                     ):
                         break
@@ -154,9 +154,9 @@ class StreamPacerWrapper(SentenceStream):
                     generation_stopped = False
                     first_sentence = False
 
-            # reset wakeup timer
+
             if generation_started and not generation_stopped:
-                wait_time = 0.2  # check more frequently when generation is in progress
+                wait_time = 0.2
             else:
                 wait_time = max(0.5, remaining_audio - self._options.min_remaining_audio)
             self._wakeup_timer = asyncio.get_event_loop().call_later(

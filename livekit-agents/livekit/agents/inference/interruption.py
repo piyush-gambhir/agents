@@ -53,11 +53,11 @@ from ._utils import (
 
 SAMPLE_RATE = 16000
 THRESHOLD = 0.5
-MIN_INTERRUPTION_DURATION = 0.025 * 2  # 25ms per frame, 2 consecutive frames
-MAX_AUDIO_DURATION = 3  # 3 seconds
-DETECTION_INTERVAL = 0.1  # 0.1 second
-AUDIO_PREFIX_DURATION = 1.0  # 1.0 second
-REMOTE_INFERENCE_TIMEOUT = 0.7  # 700ms
+MIN_INTERRUPTION_DURATION = 0.025 * 2
+MAX_AUDIO_DURATION = 3
+DETECTION_INTERVAL = 0.1
+AUDIO_PREFIX_DURATION = 1.0
+REMOTE_INFERENCE_TIMEOUT = 0.7
 _FRAMES_PER_SECOND = 40
 
 
@@ -167,7 +167,7 @@ class OverlappingSpeechEvent(BaseModel):
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler: SerializerFunctionWrapHandler) -> Any:
-        # remove numpy arrays from the model dump
+
         copy = self.model_copy(deep=True)
         data = copy.speech_input, copy.probabilities
         copy.speech_input, copy.probabilities = None, None
@@ -211,11 +211,11 @@ class OverlappingSpeechEvent(BaseModel):
         )
 
 
-# Default empty entry used when cache misses occur
+
 _EMPTY_CACHE_ENTRY = InterruptionCacheEntry(created_at=0)
 
 
-# region: Sentinel classes
+
 class _AgentSpeechStartedSentinel:
     pass
 
@@ -245,7 +245,7 @@ class _FlushSentinel:
     pass
 
 
-# endregion: Sentinel classes
+
 
 InterruptionDataFrameType: TypeAlias = (
     rtc.AudioFrame
@@ -306,7 +306,7 @@ class AdaptiveInterruptionDetector(
         )
         lk_api_key: str = api_key if api_key else ""
         lk_api_secret: str = api_secret if api_secret else ""
-        # use LiveKit credentials if using the inference service (production or staging)
+
         is_inference_url = lk_base_url in (DEFAULT_INFERENCE_URL, STAGING_INFERENCE_URL)
         if is_inference_url:
             lk_api_key = (
@@ -608,9 +608,9 @@ class InterruptionStreamBase(ABC):
                     self._overlap_started = True
                     self._accumulated_samples = 0
                     self._overlap_count += 1
-                    # include the audio prefix in the window and
-                    # only shift (remove leading silence) when the first overlap speech started
-                    # otherwise, keep the existing data
+
+
+
                     if self._overlap_count == 1:
                         shift_size = max(
                             0,
@@ -652,7 +652,7 @@ class InterruptionStreamBase(ABC):
                     self._overlap_started = False
                     self._accumulated_samples = 0
                     self._overlap_started_at = None
-                    # we don't clear the cache here since responses might be in flight
+
                 case rtc.AudioFrame() if self._agent_speech_started:
                     samples_written = self._audio_buffer.push_frame(input_frame)
                     self._accumulated_samples += samples_written
@@ -686,7 +686,7 @@ class InterruptionStreamBase(ABC):
             self._model.emit("metrics_collected", metrics)
 
 
-# region: HTTP Stream
+
 
 
 class InterruptionResponse(BaseModel):
@@ -722,7 +722,7 @@ class InterruptionHttpStream(InterruptionStreamBase):
                 ) is None or not self._overlap_started:
                     continue
 
-                # we don't increment the request counter for hosted agents
+
                 resp: InterruptionResponse = await self.predict(data)
                 created_at = resp.created_at
                 self._cache[created_at] = entry = InterruptionCacheEntry(
@@ -817,13 +817,13 @@ class InterruptionHttpStream(InterruptionStreamBase):
             raise APIError(f"error during interruption prediction: {e}") from e
 
 
-# endregion
 
 
-# region: WebSocket Stream
 
 
-# region: WebSocket messages
+
+
+
 class InterruptionWSMessageType(str, Enum):
     SESSION_CREATE = "session.create"
     SESSION_CLOSE = "session.close"
@@ -903,7 +903,7 @@ InterruptionWSMessage: TypeAdapter[AnyInterruptionWSMessage] = TypeAdapter(
     Annotated[AnyInterruptionWSMessage, Field(discriminator="type")]
 )
 
-# endregion
+
 
 
 class InterruptionWebSocketStream(InterruptionStreamBase):
@@ -947,11 +947,11 @@ class InterruptionWebSocketStream(InterruptionStreamBase):
                             status_code=408,
                             retryable=False,
                         )
-                    break  # oldest unanswered entry is still within timeout
+                    break
 
                 await self._num_requests.increment()
                 created_at = perf_counter_ns()
-                header = struct.pack("<Q", created_at)  # 8 bytes
+                header = struct.pack("<Q", created_at)
                 await ws.send_bytes(header + audio_data.tobytes())
                 self._cache[created_at] = InterruptionCacheEntry(
                     created_at=created_at,
@@ -1165,7 +1165,7 @@ class InterruptionWebSocketStream(InterruptionStreamBase):
         return ws
 
 
-# endregion
+
 
 
 def _estimate_probability(
@@ -1178,9 +1178,9 @@ def _estimate_probability(
     if probabilities is None:
         return 0.0
 
-    n_th = math.ceil(window_size / 0.025)  # 25ms per frame
+    n_th = math.ceil(window_size / 0.025)
     if len(probabilities) < n_th:
         return 0.0
 
-    # return the n-th maximum of the probabilities
+
     return float(np.partition(probabilities, -n_th)[-n_th])

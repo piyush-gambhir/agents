@@ -21,20 +21,20 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-## This example demonstrates a text-only agent.
-## Send text input using TextStream to topic `lk.chat` (https://docs.livekit.io/home/client/data/text-streams)
-## The agent output is sent through TextStream to the `lk.transcription` topic
 
 
-# Add color constants
+
+
+
+
 COLORS = [
-    "\033[36m",  # Cyan
-    "\033[32m",  # Green
-    "\033[33m",  # Yellow
-    "\033[35m",  # Magenta
-    "\033[34m",  # Blue
+    "\033[36m",
+    "\033[32m",
+    "\033[33m",
+    "\033[35m",
+    "\033[34m",
 ]
-RESET = "\033[0m"  # Reset color
+RESET = "\033[0m"
 
 
 @dataclass
@@ -55,7 +55,7 @@ class TextStreamPrinter:
         self._color_cycle = cycle(COLORS)
         self._color_map: dict[str, str] = {}
         self._current_segment_id: str | None = None
-        # track the stream id for each segment id, overwrite if new stream with the same segment id
+
         self._segment_to_stream: dict[str, str] = {}
 
         self._tasks = set[asyncio.Task]()
@@ -76,7 +76,7 @@ class TextStreamPrinter:
 
             color = self._get_color(chunk.participant_identity)
             if self._current_segment_id != chunk.segment_id:
-                # in cli we don't actually overwrite the line, just add a flag
+
                 overwrite = (
                     "overwrite"
                     if chunk.segment_id in self._segment_to_stream
@@ -85,7 +85,7 @@ class TextStreamPrinter:
                 )
                 type = "transcript" if chunk.track_id else "chat"
 
-                # header: [participant_identity][type][segment_id]
+
                 line_header = header.format(
                     participant_identity=chunk.participant_identity,
                     type=type,
@@ -107,7 +107,7 @@ class TextStreamPrinter:
         async def _on_text_received():
             stream_id = reader.info.stream_id
             segment_id = reader.info.attributes.get(ATTRIBUTE_TRANSCRIPTION_SEGMENT_ID, None)
-            # new stream with the same segment_id should overwrite the previous one
+
             if not segment_id:
                 logger.warning("No segment id found for text stream")
                 return
@@ -118,7 +118,7 @@ class TextStreamPrinter:
                     Chunk(stream_id, participant_identity, track_id, segment_id, content=chunk)
                 )
 
-            # update the final flag
+
             final = reader.info.attributes.get(ATTRIBUTE_TRANSCRIPTION_FINAL, "null")
             await self._text_chunk_queue.put(
                 Chunk(
@@ -168,7 +168,7 @@ async def main(room_name: str):
         )
         print("Listening for chat messages. Press Ctrl+C to exit...")
 
-        await stop_event.wait()  # run forever
+        await stop_event.wait()
     finally:
         await text_printer.aclose()
 

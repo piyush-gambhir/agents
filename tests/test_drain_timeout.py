@@ -113,26 +113,26 @@ class TestDrainTimeout:
         """
         server = _make_server(drain_timeout=1)
 
-        # Set up internal state that drain() needs, without calling run()
+
         server._draining = False
         server._lock = asyncio.Lock()
         server._job_lifecycle_tasks = set[asyncio.Task[object]]()
 
-        # Create a fake proc whose join() never completes (stuck process)
+
         stuck_future: asyncio.Future[None] = asyncio.Future()
 
         class StuckProc:
-            running_job = True  # drain checks this to decide whether to wait
+            running_job = True
 
             async def join(self) -> None:
-                await stuck_future  # never resolves
+                await stuck_future
 
         class FakeProcPool:
             processes = [StuckProc()]
 
         server._proc_pool = FakeProcPool()  # type: ignore[assignment]
 
-        # Suppress the _update_worker_status call which needs a websocket
+
         with patch.object(server, "_update_worker_status", new_callable=AsyncMock):
             with pytest.raises(asyncio.TimeoutError):
                 asyncio.get_event_loop().run_until_complete(server.drain())

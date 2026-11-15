@@ -11,8 +11,8 @@ from livekit.plugins.cerebras.llm import _CerebrasClient
 
 pytestmark = pytest.mark.plugin("cerebras")
 
-# llama3.1-8b is fast and has generous rate limits but can't do tool calls reliably;
-# qwen-3-235b is needed for function calling but has tight per-minute token quotas.
+
+
 CHAT_MODEL = "llama3.1-8b"
 TOOL_MODEL = "qwen-3-235b-a22b-instruct-2507"
 

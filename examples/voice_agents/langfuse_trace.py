@@ -28,9 +28,9 @@ logger = logging.getLogger("langfuse-trace-example")
 
 load_dotenv()
 
-# This example shows how to use the langfuse tracer to trace the agent session.
-# To enable tracing, set the trace provider with `set_tracer_provider` in the module level or
-# inside the entrypoint before the `AgentSession.start()`.
+
+
+
 
 
 def setup_langfuse(
@@ -135,15 +135,15 @@ server = AgentServer()
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    # set up the langfuse tracer
+
     trace_provider = setup_langfuse(
-        # metadata will be set as attributes on all spans created by the tracer
+
         metadata={
             "langfuse.session.id": ctx.room.name,
         }
     )
 
-    # (optional) add a shutdown callback to flush the trace before process exit
+
     async def flush_trace():
         trace_provider.force_flush()
 

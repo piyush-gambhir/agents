@@ -53,7 +53,7 @@ class KrispAgent(Agent):
     async def on_enter(self):
         """Called when the agent enters the session."""
         logger.info("Krisp agent entered session")
-        # Generate initial greeting (uninterruptible for AEC calibration)
+
         self.session.generate_reply(allow_interruptions=False)
 
 
@@ -64,7 +64,7 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     """Main entrypoint for the agent session."""
 
-    # Configure the agent session
+
     session = AgentSession(
         vad=silero.VAD.load(),
         stt=openai.STT(model="whisper-1"),
@@ -77,24 +77,24 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Starting agent session with RoomIO and Krisp noise cancellation")
 
-    # Create Krisp FrameProcessor for noise cancellation
+
     processor = krisp.KrispVivaFilterFrameProcessor(
-        noise_suppression_level=100,  # 0-100, where 100 is maximum suppression
+        noise_suppression_level=100,
         frame_duration_ms=10,
-        sample_rate=16000,  # Pre-load model at this sample rate
+        sample_rate=16000,
     )
 
-    # Start the session with RoomIO configuration
-    # IMPORTANT: frame_size_ms must match Krisp's frame_duration_ms
+
+
     await session.start(
         agent=KrispAgent(),
         room=ctx.room,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
-                sample_rate=16000,  # Krisp supports: 8k, 16k, 24k, 32k, 44.1k, 48k
+                sample_rate=16000,
                 num_channels=1,
-                frame_size_ms=10,  # Must match Krisp frame_duration_ms (10, 15, 20, 30, or 32)
-                noise_cancellation=processor,  # Pass FrameProcessor directly
+                frame_size_ms=10,
+                noise_cancellation=processor,
             ),
         ),
     )

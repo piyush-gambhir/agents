@@ -62,7 +62,7 @@ class TaskGroup(AgentTask[TaskGroupResult]):
         """
         super().__init__(
             instructions="*empty*", chat_ctx=chat_ctx, llm=NOT_GIVEN
-        )  # the LLM is set as NOT_GIVEN to allow session reusage if supported
+        )
 
         self._summarize_chat_ctx = summarize_chat_ctx
         self._return_exceptions = return_exceptions
@@ -111,8 +111,8 @@ class TaskGroup(AgentTask[TaskGroupResult]):
                 self._visited_tasks.add(task_id)
                 res = await self._current_task
 
-                # AgentTask handoff merges omit function calls. Re-merge the completed
-                # task context so task-group summarization can incorporate tool results.
+
+
                 self._chat_ctx.merge(
                     self._current_task.chat_ctx.copy(),
                     exclude_instructions=True,
@@ -145,9 +145,9 @@ class TaskGroup(AgentTask[TaskGroupResult]):
                     "llm must be a LLM instance to summarize the chat_ctx"
                 )
 
-                # when a task is done, the chat_ctx is going to be merged with the "caller" chat_ctx
-                # enabling summarization will result on only one ChatMessage added.
-                # keep every item to allow summarization to be more action-aware.
+
+
+
                 summarized_chat_ctx = await self.chat_ctx.copy(
                     exclude_instructions=False,
                     exclude_handoff=False,
@@ -167,7 +167,7 @@ class TaskGroup(AgentTask[TaskGroupResult]):
         if not self._visited_tasks:
             return None
 
-        # Only allow to regress to already visited tasks
+
         task_ids = self._visited_tasks.copy()
         task_ids.discard(active_task_id)
         task_repr = {

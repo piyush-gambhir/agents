@@ -41,11 +41,11 @@ def test_tfidf_detects_loop_on_repeated_user_speech() -> None:
         "Type 2 for support",
         "Type 3 for billing",
         "Type 4 for technical support",
-        "Welcome to automated phone system",  # similar 1
-        "Type 1 for sales",  # similar 2
-        "Type 2 for support",  # similar 3, loop detected
-        "Type 3 for billing",  # similar 4, loop detected
-        "Type 4 for technical support",  # similar 5, loop detected
+        "Welcome to automated phone system",
+        "Type 1 for sales",
+        "Type 2 for support",
+        "Type 3 for billing",
+        "Type 4 for technical support",
     ]
 
     assert _count_loops(transcripts) == 3
@@ -58,13 +58,13 @@ def test_tfidf_resets_after_novel_speech() -> None:
         "Welcome to automated phone system",
         "Press 1 for sales",
         "Press 2 for support",
-        "Press 1 for sales",  # similar 1
-        "Press 2 for support",  # similar 2
-        "Press 1 for sales",  # triggers first detection
+        "Press 1 for sales",
+        "Press 2 for support",
+        "Press 1 for sales",
         "Here's a new announcement never heard before",
-        "Press 2 for support",  # similar 1 (after reset)
-        "Press 1 for sales",  # similar 2
-        "Press 2 for support",  # triggers second detection
+        "Press 2 for support",
+        "Press 1 for sales",
+        "Press 2 for support",
     ]
 
     assert _count_loops(transcripts) == 2

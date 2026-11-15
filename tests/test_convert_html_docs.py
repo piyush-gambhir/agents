@@ -10,8 +10,8 @@ import pytest
 
 pytestmark = pytest.mark.docs
 
-# The module lives at .github/convert_html_docs.py which isn't a regular
-# package, so we load it by file path.
+
+
 _SCRIPT_PATH = Path(__file__).resolve().parent.parent / ".github" / "convert_html_docs.py"
 _spec = importlib.util.spec_from_file_location("convert_html_docs", _SCRIPT_PATH)
 assert _spec and _spec.loader
@@ -296,34 +296,34 @@ class TestMapOutputPath:
         """Paths with .. are rejected."""
         input_dir = tmp_path / "html"
         input_dir.mkdir()
-        # Create a path that would have .. in relative parts
-        # We can't easily create a path with .. in parts using Path,
-        # so we test the validation logic directly
+
+
+
         html_path = input_dir / "livekit" / "agents" / "vad.html"
         html_path.parent.mkdir(parents=True)
         html_path.touch()
-        # Normal path should work
-        map_output_path(html_path, input_dir)  # should not raise
+
+        map_output_path(html_path, input_dir)
 
     def test_no_collision_index_vs_file(self, tmp_path: Path) -> None:
         """Verify no collision between dir/index.html and dir.html outputs."""
         input_dir = tmp_path / "html"
         input_dir.mkdir()
 
-        # livekit/agents/index.html -> livekit/agents.md
+
         p1 = input_dir / "livekit" / "agents" / "index.html"
         p1.parent.mkdir(parents=True)
         p1.touch()
 
-        # livekit/agents.html -> livekit/agents.md (would collide!)
-        # But pdoc3 never generates both
+
+
         p2 = input_dir / "livekit" / "agents.html"
         p2.touch()
 
         r1 = map_output_path(p1, input_dir)
         r2 = map_output_path(p2, input_dir)
-        # In the real bucket, this collision never occurs.
-        # Both map to the same path, which is fine since pdoc3 uses one or the other.
+
+
         assert r1 == Path("livekit/agents.md")
         assert r2 == Path("livekit/agents.md")
 
@@ -361,7 +361,7 @@ class TestPageConverter:
         """Empty module produces just a heading."""
         md = PageConverter(MINIMAL_MODULE_HTML).convert()
         assert md.startswith("# Module `livekit.agents.vad`")
-        # Should not have any section headings
+
         assert "## " not in md
 
     def test_namespace_title(self) -> None:
@@ -375,7 +375,7 @@ class TestPageConverter:
         assert "## Sub-modules" in md
         assert "[`livekit.agents`]" in md
         assert "LiveKit Agents for Python" in md
-        # Module without description should still be listed
+
         assert "[`livekit.rtc`]" in md
 
     def test_function_basic(self) -> None:
@@ -385,16 +385,16 @@ class TestPageConverter:
         assert "### `get_job_context`" in md
         assert "def get_job_context" in md
         assert "Get the current job context." in md
-        # Source should be in details
+
         assert "<details><summary>Source</summary>" in md
         assert "def get_job_context() -> JobContext:" in md
 
     def test_function_source_html_unescape(self) -> None:
         """HTML entities in source code are unescaped."""
         md = PageConverter(FUNCTION_HTML).convert()
-        # &#34; should become "
+
         assert '"no job context found"' in md
-        # &gt; should become >
+
         assert "-> JobContext:" in md
 
     def test_multiline_signature(self) -> None:
@@ -402,7 +402,7 @@ class TestPageConverter:
         md = PageConverter(MULTILINE_SIG_HTML).convert()
         assert "### `create_api_error`" in md
         assert "def create_api_error" in md
-        # Non-breaking hyphen ‑ (U+2011) should be normalized to -
+
         assert "- APIStatusError" in md
 
     def test_class_basic(self) -> None:
@@ -427,7 +427,7 @@ class TestPageConverter:
         md = PageConverter(CLASS_HTML).convert()
         assert "#### Instance variables" in md
         assert "`capabilities`" in md
-        # Property source should be included
+
         assert "@property" in md
 
     def test_class_methods(self) -> None:
@@ -460,7 +460,7 @@ class TestPageConverter:
     def test_class_source_details(self) -> None:
         """Class source code appears in <details>."""
         md = PageConverter(CLASS_HTML).convert()
-        # The class source should be in a details block
+
         assert "<details><summary>Source</summary>" in md
         assert "class VAD(ABC):" in md
 
@@ -553,7 +553,7 @@ class TestValidation:
             ],
         )
         vr = validate_markdown(fp, "# Completely unrelated content about cooking recipes")
-        # Should still be valid (descriptions are warning-only)
+
         assert vr.is_valid
         assert len(vr.description_warnings) > 0
 
@@ -682,10 +682,10 @@ class TestRealFiles:
         assert not result.broken, f"{len(result.broken)} broken links found:\n" + "\n".join(
             f"  {src} -> {href}" for src, href in result.broken[:20]
         )
-        # External links (e.g. Pydantic docstring cross-refs) should be
-        # classified separately, not silently dropped.
+
+
         if result.external:
-            # Sanity: we know the Pydantic ../concepts/models.md links exist
+
             ext_hrefs = {href for _, href in result.external}
             assert "../concepts/models.md" in ext_hrefs
 
@@ -733,8 +733,8 @@ class TestValidateLinks:
 
     def test_known_external_href_classified(self, tmp_path: Path) -> None:
         """The exact known Pydantic href is classified as external when missing."""
-        # Nest source so ../concepts/models.md resolves inside the output tree
-        # but points to a non-existent file.
+
+
         sub = tmp_path / "sub"
         sub.mkdir()
         (sub / "a.md").write_text("[Models](../concepts/models.md)\n")

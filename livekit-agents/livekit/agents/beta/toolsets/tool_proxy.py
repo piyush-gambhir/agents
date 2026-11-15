@@ -87,13 +87,13 @@ class ToolProxyToolset(ToolSearchToolset):
 
     @property
     def tools(self) -> list[Tool | Toolset]:
-        # constant tool list — only search_tools and call_tool
+
         return [self._search_tool, self._call_tool]
 
     async def setup(self, *, reload: bool = False) -> Self:
         await super().setup(reload=reload)
 
-        # build a ToolContext from all wrapped tools for call_tool execution
+
         self._tool_ctx = ToolContext(self._tools)
         return self
 
@@ -148,7 +148,7 @@ def _build_tool_schema(tool: FunctionTool | RawFunctionTool) -> dict[str, Any]:
             "parameters": model.model_json_schema(),
         }
 
-    # RawFunctionTool — use raw_schema directly
+
     raw = tool.info.raw_schema
     return {
         "name": raw.get("name", tool.id),

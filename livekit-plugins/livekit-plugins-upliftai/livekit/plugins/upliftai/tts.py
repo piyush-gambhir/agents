@@ -29,7 +29,7 @@ from livekit.agents.utils import is_given
 
 from .log import logger
 
-# Output format options
+
 OutputFormat = Literal[
     "PCM_22050_16",
     "WAV_22050_16",
@@ -41,7 +41,7 @@ OutputFormat = Literal[
     "ULAW_8000_8",
 ]
 
-# Default configuration
+
 DEFAULT_BASE_URL = "wss://api.upliftai.org"
 DEFAULT_SAMPLE_RATE = 22050
 DEFAULT_NUM_CHANNELS = 1
@@ -133,7 +133,7 @@ class TTS(tts.TTS):
             num_channels=num_channels,
         )
 
-        # Get configuration from environment if not provided
+
         resolved_base_url: str = (
             base_url
             if is_given(base_url)
@@ -148,7 +148,7 @@ class TTS(tts.TTS):
                 "API key is required, either as argument or set UPLIFTAI_API_KEY environment variable"
             )
 
-        # Use provided tokenizer or create default
+
         resolved_word_tokenizer: tokenize.WordTokenizer | tokenize.SentenceTokenizer
         if is_given(word_tokenizer):
             resolved_word_tokenizer = word_tokenizer
@@ -238,15 +238,15 @@ class WebSocketClient:
                 engineio_logger=False,
             )
 
-            # Register handlers
+
             self.sio.on("message", self._on_message, namespace=WEBSOCKET_NAMESPACE)
             self.sio.on("connect", self._on_connect, namespace=WEBSOCKET_NAMESPACE)
             self.sio.on("disconnect", self._on_disconnect, namespace=WEBSOCKET_NAMESPACE)
 
-            # Prepare auth
+
             auth_data = {"token": self.opts.api_key}
 
-            # Connect
+
             await self.sio.connect(
                 self.opts.base_url,
                 auth=auth_data,
@@ -255,7 +255,7 @@ class WebSocketClient:
                 wait_timeout=10,
             )
 
-            # Wait for connection
+
             max_wait = 5.0
             start_time = time.time()
             while not self.connected and (time.time() - start_time) < max_wait:
@@ -281,12 +281,12 @@ class WebSocketClient:
         if not request_id:
             request_id = str(uuid.uuid4())
 
-        # Create audio queue
+
         audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self.audio_callbacks[request_id] = audio_queue
         self.active_requests[request_id] = True
 
-        # Build message
+
         message: dict[str, Any] = {
             "type": "synthesize",
             "requestId": request_id,
@@ -378,7 +378,7 @@ class ChunkedStream(tts.ChunkedStream):
         request_id = utils.shortuuid()
 
         try:
-            # Initialize emitter
+
             output_emitter.initialize(
                 request_id=request_id,
                 sample_rate=self._tts._opts.sample_rate,
@@ -388,14 +388,14 @@ class ChunkedStream(tts.ChunkedStream):
                 ),
             )
 
-            # Create client if needed
+
             if not self._tts._client:
                 self._tts._client = WebSocketClient(self._tts._opts)
 
-            # Get audio queue
+
             audio_queue = await self._tts._client.synthesize(self._input_text, request_id)
 
-            # Stream audio
+
             while True:
                 try:
                     audio_data = await asyncio.wait_for(audio_queue.get(), timeout=30.0)
@@ -488,11 +488,11 @@ class SynthesizeStream(tts.SynthesizeStream):
         output_emitter.start_segment(segment_id=segment_id)
 
         try:
-            # Create client if needed
+
             if not self._tts._client:
                 self._tts._client = WebSocketClient(self._tts._opts)
 
-            # Collect text
+
             text_parts = []
             async for data in word_stream:
                 text_parts.append(data.token)
@@ -500,7 +500,7 @@ class SynthesizeStream(tts.SynthesizeStream):
             if not text_parts:
                 return
 
-            # Format text
+
             if isinstance(self._tts._opts.word_tokenizer, tokenize.WordTokenizer):
                 full_text = self._tts._opts.word_tokenizer.format_words(text_parts)
             else:
@@ -508,10 +508,10 @@ class SynthesizeStream(tts.SynthesizeStream):
 
             self._mark_started()
 
-            # Synthesize
+
             audio_queue = await self._tts._client.synthesize(full_text, segment_id)
 
-            # Stream audio
+
             while True:
                 try:
                     audio_data = await asyncio.wait_for(audio_queue.get(), timeout=30.0)

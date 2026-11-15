@@ -16,10 +16,10 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-## This example demonstrates how to use function tools with type hints and descriptions
-## The Args in docstring will be parsed as arg descriptions for the LLM
-## You can also use enums and pydantic.Field to add descriptions
-## For dynamic tool creation, check out dynamic_tool_creation.py
+
+
+
+
 
 
 class RoomName(str, Enum):
@@ -46,15 +46,15 @@ class MyAgent(Agent):
             location: The location to get the weather for
         """
 
-        # LLM will see location as a string argument with the description defined in docstring
-        # {
-        #     "description": "The location to get the weather for"
-        #     "title": "Location"
-        #     "type": "string",
-        # }
 
-        # Another way to add descriptions to the arguments
-        # location: Annotated[str, Field(description="The location to get the weather for")]
+
+
+
+
+
+
+
+
 
         logger.info(f"Getting weather for {location}")
         return f"The weather in {location} is sunny today."

@@ -123,10 +123,10 @@ class AudioConfig(NamedTuple):
     fade_out: float = 0.0
 
 
-# The queue size is set to 400ms, which determines how much audio Rust will buffer.
-# We intentionally keep this small within BackgroundAudio because calling
-# AudioSource.clear_queue() would abruptly cut off ambient sounds.
-# Instead, we remove the sound from the mixer, and it will get removed 400ms later.
+
+
+
+
 _AUDIO_SOURCE_BUFFER_MS = 400
 _TRACK_NAME = "background_audio"
 
@@ -222,7 +222,7 @@ class BackgroundAudioPlayer:
                 return None
 
         if isinstance(source, AudioConfig):
-            # `_replace` returns a new NamedTuple; the caller's instance is untouched.
+
             return source._replace(source=self._normalize_builtin_audio(source.source))
         return AudioConfig(self._normalize_builtin_audio(source))
 
@@ -340,7 +340,7 @@ class BackgroundAudioPlayer:
         """
         async with self._lock:
             if not self._mixer_atask:
-                return  # not started
+                return
 
             await cancel_and_wait(*self._play_tasks)
 
@@ -354,9 +354,9 @@ class BackgroundAudioPlayer:
                 self._agent_session.off("agent_state_changed", self._agent_state_changed)
 
             with contextlib.suppress(Exception):
-                # The cached publication SID may be stale if the SDK
-                # republished it during a full reconnect; resolve the current
-                # publication by track name before unpublishing.
+
+
+
                 current = self._find_publication_by_name(_TRACK_NAME)
                 if current is not None:
                     await self._room.local_participant.unpublish_track(current.sid)
@@ -393,8 +393,8 @@ class BackgroundAudioPlayer:
         stopped = False
 
         async def _gen_wrapper() -> AsyncGenerator[rtc.AudioFrame, None]:
-            t = 0  # cumulative samples (per channel) emitted so far
-            stop_t: int | None = None  # sample index when stop was requested
+            t = 0
+            stop_t: int | None = None
             try:
                 async for frame in sound:
                     if stopped:
@@ -410,9 +410,9 @@ class BackgroundAudioPlayer:
                     if stop_t is not None and (t - stop_t) >= int(fade_out * frame.sample_rate):
                         break
             finally:
-                # use try/finally because the mixer's asyncio.wait_for can cancel
-                # __anext__, which finalizes the generator and skips code after
-                # the async for loop
+
+
+
                 play_handle._mark_playout_done()
 
         gen = _gen_wrapper()
@@ -427,7 +427,7 @@ class BackgroundAudioPlayer:
             if play_handle._stop_fut.done():
                 stopped = True
                 with contextlib.suppress(RuntimeError):
-                    # ignore error caused by race condition between aclose() and gen.__anext__()
+
                     await gen.aclose()
 
     @log_exceptions(logger=logger)
@@ -471,10 +471,10 @@ class PlayHandle:
 
         with contextlib.suppress(asyncio.InvalidStateError):
             self._stop_fut.set_result(None)
-            # Mark done immediately only when there's no fade-out to
-            # honour; otherwise the play task's wait_for_playout would
-            # return before the generator has tailed out, and the
-            # finally block would aclose() the generator mid-fade.
+
+
+
+
             if self._fade_out <= 0:
                 self._mark_playout_done()
 

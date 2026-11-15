@@ -165,7 +165,7 @@ class MockBankService:
             amount=data["amount"],
         )
 
-    # -- Authentication --------------------------------------------------------------
+
 
     def list_customer_ids(self) -> tuple[str, ...]:
         return tuple(self._customers.keys())
@@ -183,7 +183,7 @@ class MockBankService:
         except KeyError as exc:
             raise KeyError(f"Unknown customer {customer_id}") from exc
 
-    # -- Deposit accounts ------------------------------------------------------------
+
 
     def list_deposit_accounts(self, customer_id: str) -> tuple[DepositAccount, ...]:
         return self.get_profile(customer_id).deposit_accounts
@@ -197,7 +197,7 @@ class MockBankService:
     def calculate_total_deposits(self, customer_id: str) -> float:
         return sum(acct.balance for acct in self.list_deposit_accounts(customer_id))
 
-    # -- Credit cards ----------------------------------------------------------------
+
 
     def list_credit_cards(self, customer_id: str) -> tuple[CreditCard, ...]:
         return self.get_profile(customer_id).credit_cards
@@ -205,7 +205,7 @@ class MockBankService:
     def calculate_total_card_balance(self, customer_id: str) -> float:
         return sum(card.statement_balance for card in self.list_credit_cards(customer_id))
 
-    # -- Loans -----------------------------------------------------------------------
+
 
     def list_loans(self, customer_id: str) -> tuple[LoanAccount, ...]:
         return self.get_profile(customer_id).loans
@@ -221,7 +221,7 @@ class MockBankService:
             for loan in self.list_loans(customer_id)
         )
 
-    # -- Rewards ---------------------------------------------------------------------
+
 
     def get_rewards(self, customer_id: str) -> RewardsSummary:
         return self.get_profile(customer_id).rewards

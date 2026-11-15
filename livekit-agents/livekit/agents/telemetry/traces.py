@@ -132,8 +132,8 @@ class _TraceLevelLoggingHandler(LoggingHandler):
 
     def _translate(self, record: logging.LogRecord) -> OTelLogRecord:
         log_record = super()._translate(record)
-        # OTel's std_to_otel returns UNSPECIFIED for levels < 10
-        # Map our TRACE_LEVEL to OTel's TRACE
+
+
         if record.levelno == TRACE_LEVEL:
             log_record.severity_number = SeverityNumber.TRACE
         return log_record
@@ -212,9 +212,9 @@ def _setup_cloud_tracer(
     )
 
     if enable_traces:
-        # Check if a tracer provider is not set and set one up
-        # below shows how the ProxyTracerProvider is returned when none have been setup
-        # https://github.com/open-telemetry/opentelemetry-python/blob/0018c0030bac9bdce4487fe5fcb3ec6a542ec904/opentelemetry-api/src/opentelemetry/trace/__init__.py#L555
+
+
+
         tracer_provider: trace_api.TracerProvider
         if isinstance(
             tracer._tracer_provider,
@@ -223,7 +223,7 @@ def _setup_cloud_tracer(
             tracer_provider = trace_sdk.TracerProvider(resource=resource)
             set_tracer_provider(tracer_provider)
         else:
-            # attach the processor to the existing tracer provider
+
             tracer_provider = tracer._tracer_provider
             if isinstance(tracer_provider, trace_sdk.TracerProvider):
                 tracer_provider.resource.merge(resource)
@@ -238,8 +238,8 @@ def _setup_cloud_tracer(
             tracer_provider.add_span_processor(_MetadataSpanProcessor(metadata))
             tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
 
-    # Always set up the logger provider — it's needed for session reports,
-    # evaluations, and chat history, not just Python log export.
+
+
     logger_provider = get_logger_provider()
     if not isinstance(logger_provider, LoggerProvider):
         logger_provider = LoggerProvider()
@@ -259,7 +259,7 @@ def _setup_cloud_tracer(
         root = logging.getLogger()
         root.addHandler(handler)
 
-    # Set up the MeterProvider for OTEL metrics export
+
     current_meter_provider = metrics_api.get_meter_provider()
     if not isinstance(current_meter_provider, SdkMeterProvider):
         metric_exporter = OTLPMetricExporter(
@@ -283,10 +283,10 @@ def _setup_cloud_tracer(
 def _chat_ctx_to_otel_events(chat_ctx: ChatContext) -> list[tuple[str, Attributes]]:
     role_to_event = {
         "system": trace_types.EVENT_GEN_AI_SYSTEM_MESSAGE,
-        # OpenAI's `developer` role is the successor to `system` on the
-        # Chat Completions API and carries equivalent instructional content,
-        # so surface it as the system-message span event rather than dropping
-        # it on the floor.
+
+
+
+
         "developer": trace_types.EVENT_GEN_AI_SYSTEM_MESSAGE,
         "user": trace_types.EVENT_GEN_AI_USER_MESSAGE,
         "assistant": trace_types.EVENT_GEN_AI_ASSISTANT_MESSAGE,
@@ -295,7 +295,7 @@ def _chat_ctx_to_otel_events(chat_ctx: ChatContext) -> list[tuple[str, Attribute
     events: list[tuple[str, Attributes]] = []
     for item in chat_ctx.items:
         if item.type == "message" and (event_name := role_to_event.get(item.role)):
-            # only support text content for now
+
             events.append((event_name, {"content": item.text_content or ""}))
         elif item.type == "function_call":
             events.append(
@@ -325,7 +325,7 @@ def _chat_ctx_to_otel_events(chat_ctx: ChatContext) -> list[tuple[str, Attribute
     return events
 
 
-def _to_proto_chat_item(item: ChatItem) -> dict:  # agent_pb.agent_session.ChatContext.ChatItem:
+def _to_proto_chat_item(item: ChatItem) -> dict:
     item_pb = agent_pb.agent_session.ChatContext.ChatItem()
 
     if item.type == "message":
@@ -560,7 +560,7 @@ async def _upload_session_report(
     if not recording_options["transcript"] and not has_audio:
         return
 
-    # emit recording
+
     access_token = (
         api.AccessToken()
         .with_observability_grants(api.ObservabilityGrants(write=True))
@@ -671,8 +671,8 @@ def _shutdown_telemetry(timeout: float = _TELEMETRY_SHUTDOWN_TIMEOUT) -> None:
     - https://github.com/open-telemetry/opentelemetry-python/issues/4623
       (TracerProvider.shutdown() has no configurable timeout — still open)
     """
-    # Detach the OTLP LoggingHandler from the root logger — belt to the
-    # suspenders of the parallel shutdown below.
+
+
     root = logging.getLogger()
     for h in list(root.handlers):
         if isinstance(h, LoggingHandler):

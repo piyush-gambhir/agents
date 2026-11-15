@@ -77,7 +77,7 @@ async def test_stt_fallback() -> None:
 
     await fallback_adapter.aclose()
 
-    # stream
+
     fake1 = FakeSTT(fake_exception=APIConnectionError("fake1 failed"))
     fake2 = FakeSTT(fake_transcript="hello world")
 
@@ -166,7 +166,7 @@ class _BrokenPushStream(RecognizeStream):
         raise RuntimeError("broken recovering stream")
 
     async def _run(self) -> None:
-        await asyncio.Future()  # block forever
+        await asyncio.Future()
 
 
 class _RecoveringFailSTT(STT):
@@ -219,8 +219,8 @@ async def test_stt_stream_recovery_failure_doesnt_block_main() -> None:
     )
 
     async with fallback.stream() as stream:
-        # push audio after a brief delay so the fallback adapter has time to
-        # fail over from the first STT to the second STT
+
+
         async def _push_delayed() -> None:
             await asyncio.sleep(0.2)
             stream.push_frame(audio_frame)

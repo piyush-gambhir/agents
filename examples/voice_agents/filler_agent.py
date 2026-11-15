@@ -45,13 +45,13 @@ class TravelToolset(AsyncToolset):
             destination: Arrival city or airport code.
             date: Travel date (e.g. "2026-04-15").
         """
-        # one real update — the LLM voices a natural intro
+
         await ctx.update(
             f"Searching flights from {origin} to {destination} on {date}. "
             "This will take a couple of minutes."
         )
 
-        # phase 1: searching — single filler if the user stays quiet for 5s
+
         async with ctx.with_filler("Still searching, hang on a sec.", delay=5):
             await asyncio.sleep(20)
             airlines = random.sample(["United", "Delta", "American", "JetBlue"], k=3)
@@ -59,7 +59,7 @@ class TravelToolset(AsyncToolset):
             price = random.randint(180, 650)
         logger.info("Found airlines and prices, booking the flight...")
 
-        # phase 2: confirming — rotating fillers, up to 3 fires
+
         followups = [
             "Almost there, just confirming.",
             "Still working on it, won't be long.",

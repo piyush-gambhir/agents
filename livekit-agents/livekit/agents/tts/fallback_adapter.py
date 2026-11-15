@@ -24,7 +24,7 @@ from .tts import (
     TTSCapabilities,
 )
 
-# don't retry when using the fallback adapter
+
 DEFAULT_FALLBACK_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -149,7 +149,7 @@ class FallbackChunkedStream(ChunkedStream):
         self._fallback_adapter = tts
 
     async def _metrics_monitor_task(self, event_aiter: AsyncIterable[SynthesizedAudio]) -> None:
-        pass  # do nothing
+        pass
 
     async def _try_synthesize(
         self, *, tts: TTS, recovering: bool = False
@@ -197,7 +197,7 @@ class FallbackChunkedStream(ChunkedStream):
                         "tts_availability_changed",
                         AvailabilityChangedEvent(tts=tts, available=True),
                     )
-                except Exception:  # exceptions already logged inside _try_synthesize
+                except Exception:
                     return
 
             tts_status.recovering_task = asyncio.create_task(_recover_tts_task(tts))
@@ -245,7 +245,7 @@ class FallbackChunkedStream(ChunkedStream):
                             output_emitter.push(rf.data.tobytes())
 
                     return
-                except Exception:  # exceptions already logged inside _try_synthesize
+                except Exception:
                     if tts_status.available:
                         tts_status.available = False
                         self._tts.emit(
@@ -275,7 +275,7 @@ class FallbackSynthesizeStream(SynthesizeStream):
         self._pushed_tokens: list[str] = []
 
     async def _metrics_monitor_task(self, event_aiter: AsyncIterable[SynthesizedAudio]) -> None:
-        pass  # do nothing
+        pass
 
     async def _try_synthesize(
         self,
@@ -285,7 +285,7 @@ class FallbackSynthesizeStream(SynthesizeStream):
         conn_options: APIConnectOptions,
         recovering: bool = False,
     ) -> AsyncGenerator[SynthesizedAudio, None]:
-        # If TTS doesn't support streaming, wrap it with StreamAdapter
+
         if tts.capabilities.streaming:
             stream = tts.stream(conn_options=conn_options)
         else:

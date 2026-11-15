@@ -62,9 +62,9 @@ from .agent import (
     Userdata,
 )
 
-# AgentTask transitions briefly clear `session.llm`; sleep before the first
-# `sess.run()` and between TaskGroup sub-tasks so the new sub-task can take
-# over. See https://docs.livekit.io/agents/logic/tasks/#testing-task-groups.
+
+
+
 _TASK_TRANSITION_DELAY = 0.5
 
 
@@ -76,15 +76,15 @@ def _llm_model() -> llm.LLM:
 
 
 def _userdata() -> Userdata:
-    # Initialize userdata: tasks read session.userdata.candidate_name and
-    # write task_results. In Python, accessing an unset userdata raises
-    # ValueError("AgentSession userdata is not set").
+
+
+
     return Userdata(filename="results-test.csv", candidate_name="", task_results={})
 
 
-# ---------------------------------------------------------------------------
-# Fixtures and helpers
-# ---------------------------------------------------------------------------
+
+
+
 
 
 SessionStarter = Callable[[Agent], Awaitable[AgentSession]]
@@ -179,9 +179,9 @@ class _SingleTaskAgent(Agent):
         await self._task
 
 
-# ---------------------------------------------------------------------------
-# Isolated task tests
-# ---------------------------------------------------------------------------
+
+
+
 
 
 @pytest.mark.asyncio
@@ -198,7 +198,7 @@ async def test_intro_task_in_isolation(session: SessionStarter) -> None:
         ),
     )
 
-    # The IntroTask writes the candidate name into userdata.
+
     assert sess.userdata.candidate_name.lower() == "alice"
 
 
@@ -213,7 +213,7 @@ async def test_commute_task_records_can_commute(session: SessionStarter) -> None
         initial="Yes, I can commute three days a week. I usually take the subway.",
     )
 
-    # Function call arguments are stored as raw JSON — parse before asserting.
+
     args = json.loads(calls["record_commute_flexibility"].arguments)
     assert args["can_commute"] is True
     assert args["commute_method"] == "subway"
@@ -262,9 +262,9 @@ async def test_behavioral_task_completes_after_three_records(
     )
 
 
-# ---------------------------------------------------------------------------
-# Full TaskGroup flow
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class _SurveyAgentForTesting(Agent):
@@ -316,13 +316,13 @@ async def test_full_task_group_flow(session: SessionStarter) -> None:
 
     sess = await session(_SurveyAgentForTesting(completed_ids=completed_ids, done=done))
 
-    # Don't assert on startup output — the IntroTask greeting produced in
-    # on_enter is not captured in the RunResult below.
 
-    # Drive each task to completion before moving on. Each call loops through
-    # additional turns until the expected tool fires — the LLM often replies
-    # conversationally before invoking a completion tool. Sleep between
-    # sub-tasks for the same reason as the initial transition delay.
+
+
+
+
+
+
     await _drive_until_called(
         sess,
         expected="record_intro",
@@ -349,8 +349,8 @@ async def test_full_task_group_flow(session: SessionStarter) -> None:
         ),
     )
 
-    # Wait for `_SurveyAgentForTesting.on_enter` to finish: TaskGroup
-    # finalization, callback delivery, and `task_results` assignment.
+
+
     await asyncio.wait_for(done.wait(), timeout=10)
 
     results = sess.userdata.task_results

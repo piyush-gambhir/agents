@@ -20,7 +20,7 @@ class _RetryableResponseError(RuntimeError):
     pass
 
 
-_MAX_INLINE_RECORDING_BYTES = 20 * 1024 * 1024  # 20 MB raw audio
+_MAX_INLINE_RECORDING_BYTES = 20 * 1024 * 1024
 _ROOM_COMPOSITE_OPUS_SAMPLE_RATE_HZ = 48_000
 
 

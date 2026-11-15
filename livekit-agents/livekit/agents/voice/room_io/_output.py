@@ -112,7 +112,7 @@ class _ParticipantAudioOutput(io.AudioOutput):
             return
 
         if self._flush_task and not self._flush_task.done():
-            # shouldn't happen if only one active speech handle at a time
+
             logger.error("flush called while playback is in progress")
             self._flush_task.cancel()
 
@@ -128,7 +128,7 @@ class _ParticipantAudioOutput(io.AudioOutput):
     def pause(self) -> None:
         super().pause()
         self._playback_enabled.clear()
-        # self._audio_source.clear_queue()
+
 
     def resume(self) -> None:
         super().resume()
@@ -144,7 +144,7 @@ class _ParticipantAudioOutput(io.AudioOutput):
                     await self._playback_enabled.wait()
 
                 await self._audio_source.wait_for_playout()
-                # avoid deadlock when clear_buffer called before capture_frame
+
                 await asyncio.sleep(0)
 
         wait_for_playout = asyncio.create_task(_wait_buffered_audio())
@@ -177,14 +177,14 @@ class _ParticipantAudioOutput(io.AudioOutput):
             if not self._playback_enabled.is_set():
                 self._audio_source.clear_queue()
                 await self._playback_enabled.wait()
-                # TODO(long): save the frames in the queue and play them later
-                # TODO(long): ignore frames from previous syllable
+
+
 
             if self._interrupted_event.is_set() or self._pushed_duration == 0:
                 if self._interrupted_event.is_set() and self._flush_task:
                     await self._flush_task
 
-                # ignore frames if interrupted
+
                 continue
 
             if not self._first_frame_event.is_set():
@@ -205,7 +205,7 @@ class _ParticipantLegacyTranscriptionOutput:
         self._track_id: str | None = None
         self._participant_identity: str | None = None
 
-        # identity of the participant that on behalf of the current participant
+
         self._represented_by: str | None = None
 
         self._room.on("track_published", self._on_track_published)
@@ -227,7 +227,7 @@ class _ParticipantLegacyTranscriptionOutput:
         if self._participant_identity is None:
             return
 
-        # find track id from existing participants
+
         if self._participant_identity == self._room.local_participant.identity:
             for local_track in self._room.local_participant.track_publications.values():
                 self._on_local_track_published(local_track, local_track.track)
@@ -390,7 +390,7 @@ class _ParticipantStreamTranscriptionOutput:
         try:
             self._track_id = find_micro_track_id(self._room, self._participant_identity)
         except ValueError:
-            # track id is optional for TextStream when audio is not published
+
             self._track_id = None
 
         self.flush()
@@ -453,12 +453,12 @@ class _ParticipantStreamTranscriptionOutput:
 
         try:
             if self._room.isconnected():
-                if self._is_delta_stream:  # reuse the existing writer
+                if self._is_delta_stream:
                     if self._writer is None:
                         self._writer = await self._create_text_writer()
 
                     await self._writer.write(text)
-                else:  # always create a new writer
+                else:
                     tmp_writer = await self._create_text_writer()
                     await tmp_writer.write(text)
                     await tmp_writer.aclose()
@@ -530,7 +530,7 @@ class _ParticipantStreamTranscriptionOutput:
         self._track_id = track.sid
 
 
-# Keep this utility private for now
+
 class _ParticipantTranscriptionOutput(io.TextOutput):
     def __init__(
         self,

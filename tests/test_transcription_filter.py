@@ -119,17 +119,17 @@ async def test_markdown_filter(chunk_size: int):
 
     print(f"\n--- Testing with chunk_size={chunk_size} ---")
 
-    # Stream the input with specified chunk size
+
     async def stream_text():
         for i in range(0, len(MARKDOWN_INPUT), chunk_size):
             yield MARKDOWN_INPUT[i : i + chunk_size]
 
-    # Process through the filter
+
     result = ""
     async for chunk in filter_markdown(stream_text()):
         result += chunk
 
-    # Compare results
+
     if result.strip() == MARKDOWN_EXPECTED_OUTPUT.strip():
         print("✓ PASS")
     else:
@@ -137,7 +137,7 @@ async def test_markdown_filter(chunk_size: int):
         print(f"Expected first 100 chars: {repr(MARKDOWN_EXPECTED_OUTPUT[:100])}")
         print(f"Got first 100 chars:      {repr(result[:100])}")
 
-        # Show differences
+
         expected_lines = MARKDOWN_EXPECTED_OUTPUT.strip().split("\n")
         result_lines = result.strip().split("\n")
 
@@ -152,17 +152,17 @@ async def test_markdown_filter(chunk_size: int):
     print("\n=== TEST COMPLETE ===")
 
 
-# --- emphasis adjacent to punctuation ---
-#
-# Regression tests for the case where ``**bold**`` / ``*italic*`` delimiters
-# are immediately followed (or preceded) by a punctuation character rather
-# than whitespace. Previously the patterns used ``(?<!\S)`` / ``(?!\S)``
-# boundaries which rejected punctuation as a valid boundary, causing
-# ``Hi **Frankie**!`` to leak through untouched to TTS.
+
+
+
+
+
+
+
 
 
 PUNCTUATION_BOUNDARY_CASES = [
-    # (input, expected)
+
     ("Hi **Frankie**!", "Hi Frankie!"),
     ("See **Dr. Smith**.", "See Dr. Smith."),
     ("Scheduled for **Monday**, at 9am.", "Scheduled for Monday, at 9am."),
@@ -190,8 +190,8 @@ async def test_punctuation_boundary(text: str, expected: str, chunk_size: int):
     assert result == expected
 
 
-# Must NOT mutate: the punctuation-boundary fix must still preserve
-# contexts where ``*`` is used for arithmetic, globs, or in-word.
+
+
 PUNCTUATION_BOUNDARY_PRESERVE_CASES = [
     "2 * 3 = 6",
     "Use *.py files",
@@ -216,7 +216,7 @@ async def test_punctuation_boundary_no_false_positives(text: str, chunk_size: in
     assert result == text
 
 
-# Emoji test data
+
 EMOJI_INPUT = """Hello! 😀 Welcome to our app! 🎉
 
 This message contains various emojis:
@@ -276,17 +276,17 @@ async def test_emoji_filter(chunk_size: int):
 
     print(f"\n--- Testing with chunk_size={chunk_size} ---")
 
-    # Stream the input with specified chunk size
+
     async def stream_text():
         for i in range(0, len(EMOJI_INPUT), chunk_size):
             yield EMOJI_INPUT[i : i + chunk_size]
 
-    # Process through the filter
+
     result = ""
     async for chunk in filter_emoji(stream_text()):
         result += chunk
 
-    # Compare results
+
     if result == EMOJI_EXPECTED_OUTPUT:
         print("✓ PASS")
     else:
@@ -294,7 +294,7 @@ async def test_emoji_filter(chunk_size: int):
         print(f"Expected first 100 chars: {repr(EMOJI_EXPECTED_OUTPUT[:100])}")
         print(f"Got first 100 chars:      {repr(result[:100])}")
 
-        # Show differences
+
         expected_lines = EMOJI_EXPECTED_OUTPUT.split("\n")
         result_lines = result.split("\n")
 
@@ -309,7 +309,7 @@ async def test_emoji_filter(chunk_size: int):
     print("\n=== EMOJI TEST COMPLETE ===")
 
 
-# --- text_transforms.replace tests ---
+
 
 
 async def _stream_text(text: str, chunk_size: int):
@@ -345,37 +345,37 @@ async def test_replace_case_sensitive(chunk_size: int):
 
 async def test_replace_edge_cases():
     """Test empty replacements, empty input, no matches, and regex special chars."""
-    # empty replacements = passthrough
+
     text = "Hello world."
     assert await _collect(replace({})(_stream_text(text, 3))) == text
 
-    # empty input
+
     assert await _collect(replace({"foo": "bar"})(_stream_text("", 1))) == ""
 
-    # no matches
+
     assert await _collect(replace({"xyz": "abc"})(_stream_text(text, 4))) == text
 
-    # regex special characters in keys
+
     transform = replace({"C++": "cpp", "file.txt": "file_txt"})
     assert (
         await _collect(transform(_stream_text("Use C++ to read file.txt", 2)))
         == "Use cpp to read file_txt"
     )
 
-    # backslashes in replacement values are treated literally
+
     transform = replace({"word": r"\1 \n \t"})
     assert await _collect(transform(_stream_text("a word here", 2))) == r"a \1 \n \t here"
 
 
 async def test_apply_text_transforms_with_callable():
     """Test _apply_text_transforms with callable, mixed transforms, and invalid input."""
-    # callable only
+
     result = await _collect(
         _apply_text_transforms(_stream_text("Hello world!", 3), [replace({"world": "planet"})])
     )
     assert result == "Hello planet!"
 
-    # mixed: builtin string + callable + builtin string
+
     result = await _collect(
         _apply_text_transforms(
             _stream_text("**hello** world! 😀", 3),
@@ -384,6 +384,6 @@ async def test_apply_text_transforms_with_callable():
     )
     assert result == "hi world! "
 
-    # invalid string transform
+
     with pytest.raises(ValueError, match="Invalid transform"):
         await _collect(_apply_text_transforms(_stream_text("text", 4), ["nonexistent"]))

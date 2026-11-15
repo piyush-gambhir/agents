@@ -57,7 +57,7 @@ class QueueAudioOutput(
         self._capturing = False
         self._data_ch.send_nowait(AudioSegmentEnd())
 
-    # as AudioReceiver for AvatarRunner
+
 
     def clear_buffer(self) -> None:
         """Clear the audio buffer"""
@@ -73,7 +73,7 @@ class QueueAudioOutput(
 
     def notify_playback_started(self) -> None:
         if not self._wait_playback_start:
-            # already fired eagerly in capture_frame; avoid double-firing
+
             return
         self.on_playback_started(created_at=time.time())
 

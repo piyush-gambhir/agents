@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -106,7 +106,7 @@ class Toolset:
             await asyncio.gather(*(toolset.aclose() for toolset in toolsets))
 
 
-# Used by ToolChoice
+
 class Function(TypedDict, total=False):
     name: Required[str]
 
@@ -225,10 +225,10 @@ class _BaseFunctionTool(Tool, Generic[_InfoT, _P, _R]):
         if obj is None:
             return self
 
-        # bind the tool to an instance
+
         bound_tool = self.__class__(self._func, self._info, instance=obj)
         sig = inspect.signature(self._func)
-        # skip the instance parameter (e.g. usually the 'self')
+
         params = list(sig.parameters.values())[1:]
         bound_tool.__signature__ = sig.replace(parameters=params)  # type: ignore[attr-defined]
         return bound_tool
@@ -323,7 +323,7 @@ def function_tool(
             raise ValueError("raw function name cannot be empty")
 
         if "parameters" not in raw_schema:
-            # support empty parameters
+
             raise ValueError("raw function description must contain a parameters key")
 
         schema = {**raw_schema}
@@ -388,8 +388,8 @@ def _wrap_with_confirm_duplicate(func: Callable[..., Any]) -> Callable[..., Any]
         annotation=annotation,
     )
     wrapper.__signature__ = sig.replace(parameters=[*sig.parameters.values(), extra])  # type: ignore[attr-defined]
-    # set both for PEP 649: __annotations__ for 3.10-3.13, __annotate__ for 3.14.
-    # __annotate__ must come last — assigning __annotations__ nulls it on 3.14.
+
+
     wrapper.__annotations__ = new_annotations
     wrapper.__annotate__ = lambda _format=1: dict(new_annotations)  # type: ignore[attr-defined]
     return wrapper
@@ -412,7 +412,7 @@ def _inject_confirm_duplicate(parameters: dict[str, Any]) -> dict[str, Any]:
 
 
 def is_function_tool(f: Any) -> TypeGuard[FunctionTool]:
-    # TODO(long): for backward compatibility, deprecate in future versions?
+
     return isinstance(f, FunctionTool)
 
 
@@ -438,7 +438,7 @@ def _resolve_wrapped_tool(tool: Any) -> FunctionTool | RawFunctionTool | None:
 
     resolved_tool: FunctionTool | RawFunctionTool | None = None
     if (
-        hasattr(tool, "__wrapped__")  # automatically added by functools.wraps
+        hasattr(tool, "__wrapped__")
         and isinstance(tool.__wrapped__, (FunctionTool, RawFunctionTool))
     ):
         wrapped = tool.__wrapped__
@@ -566,7 +566,7 @@ class ToolContext:
                 if existing is not None:
                     if existing is not tool:
                         raise ValueError(f"duplicate function name: {tool.info.name}")
-                    return  # same instance, skip
+                    return
                 self._fnc_tools_map[tool.info.name] = tool
 
             elif isinstance(tool, Toolset):

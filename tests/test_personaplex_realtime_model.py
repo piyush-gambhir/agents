@@ -21,7 +21,7 @@ from livekit.plugins.nvidia.experimental.realtime.realtime_model import (
 
 pytestmark = pytest.mark.plugin("nvidia")
 
-# -- RealtimeModel init tests --
+
 
 
 class TestRealtimeModelInit:
@@ -113,7 +113,7 @@ class TestRealtimeModelInit:
         assert caps.manual_function_calls is False
 
 
-# -- URL building tests --
+
 
 
 class TestSessionOptions:
@@ -153,7 +153,7 @@ class TestSessionOptions:
         assert opts.use_ssl is True
 
 
-# -- Text token handling tests --
+
 
 
 class TestSpecialTokens:
@@ -168,7 +168,7 @@ class TestSpecialTokens:
         assert 42 not in _SPECIAL_TOKENS
 
 
-# -- Audio data tests --
+
 
 
 class TestAudioConstants:
@@ -200,7 +200,7 @@ class TestAudioConversion:
         assert pcm_int16[1] == -32768
 
 
-# -- ResponseGeneration dataclass tests --
+
 
 
 class TestResponseGeneration:
@@ -230,7 +230,7 @@ class TestResponseGeneration:
             gen.audio_ch.close()
 
 
-# -- Retry / backoff constants tests --
+
 
 
 class TestRetryConstants:
@@ -249,7 +249,7 @@ class TestRetryConstants:
             delay = min(delay * 2, MAX_RETRY_DELAY)
 
 
-# -- Options dataclass tests --
+
 
 
 class TestPersonaplexOptions:

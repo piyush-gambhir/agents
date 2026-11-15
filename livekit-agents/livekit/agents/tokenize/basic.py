@@ -12,8 +12,8 @@ from . import (
     tokenizer,
 )
 
-# Really naive implementation of SentenceTokenizer, WordTokenizer + hyphenate_word
-# The basic tokenizer is rule-based and only English is really tested
+
+
 
 __all__ = [
     "SentenceTokenizer",
@@ -101,7 +101,7 @@ class WordTokenizer(tokenizer.WordTokenizer):
                 retain_format=self._retain_format,
             ),
             min_token_len=1,
-            min_ctx_len=1,  # ignore
+            min_ctx_len=1,
         )
 
 

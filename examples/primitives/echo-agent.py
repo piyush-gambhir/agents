@@ -17,9 +17,9 @@ load_dotenv()
 logger = logging.getLogger("echo-agent")
 
 
-# An example agent that echos each utterance from the user back to them
-# the example uses a queue to buffer incoming streams, and uses VAD to detect
-# when the user is done speaking.
+
+
+
 
 server = AgentServer()
 
@@ -29,7 +29,7 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # wait for the first participant to connect
+
     participant: rtc.Participant = await ctx.wait_for_participant()
     stream = rtc.AudioStream.from_participant(
         participant=participant,
@@ -47,8 +47,8 @@ async def entrypoint(ctx: JobContext):
         track,
         rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE),
     )
-    # speech queue holds AudioFrames
-    queue = asyncio.Queue(maxsize=1000)  # 10 seconds of audio (1000 frames * 10ms)
+
+    queue = asyncio.Queue(maxsize=1000)
     is_speaking = False
     is_echoing = False
 
@@ -59,20 +59,20 @@ async def entrypoint(ctx: JobContext):
 
     async def _process_input():
         async for audio_event in stream:
-            if is_echoing:  # Skip processing while echoing
+            if is_echoing:
                 continue
             vad_stream.push_frame(audio_event.frame)
             try:
                 queue.put_nowait(audio_event.frame)
             except asyncio.QueueFull:
-                # Remove oldest frame when queue is full
+
                 queue.get_nowait()
                 queue.put_nowait(audio_event.frame)
 
     async def _process_vad():
         nonlocal is_speaking, is_echoing
         async for vad_event in vad_stream:
-            if is_echoing:  # Skip VAD processing while echoing
+            if is_echoing:
                 continue
             if vad_event.type == VADEventType.START_OF_SPEECH:
                 is_speaking = True
@@ -94,7 +94,7 @@ async def entrypoint(ctx: JobContext):
                 except asyncio.QueueEmpty:
                     pass
                 finally:
-                    is_echoing = False  # Reset echoing flag after playback
+                    is_echoing = False
                     await _set_state("listening")
 
     await asyncio.gather(

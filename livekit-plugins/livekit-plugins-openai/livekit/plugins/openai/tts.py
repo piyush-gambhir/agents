@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -44,7 +44,7 @@ DEFAULT_VOICE = "ash"
 
 RESPONSE_FORMATS = Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] | str
 
-# Models that use audio stream format (character-based billing)
+
 AUDIO_STREAM_MODELS = {"tts-1", "tts-1-hd"}
 
 
@@ -198,8 +198,8 @@ class TTS(tts.TTS):
     def synthesize(
         self, text: str, *, conn_options: APIConnectOptions = DEFAULT_API_CONNECT_OPTIONS
     ) -> tts.ChunkedStream:
-        # Use audio stream format for tts-1/tts-1-hd (character-based billing)
-        # Use SSE stream format for newer models like gpt-4o-mini-tts (token-based billing)
+
+
         if self._opts.model in AUDIO_STREAM_MODELS:
             return AudioChunkedStream(tts=self, input_text=text, conn_options=conn_options)
         return SSEChunkedStream(tts=self, input_text=text, conn_options=conn_options)
@@ -294,12 +294,12 @@ class SSEChunkedStream(tts.ChunkedStream):
                     mime_type=f"audio/{self._opts.response_format}",
                 )
 
-                # Parse SSE events from the stream
+
                 async for line in stream.iter_lines():
                     if not line or not line.startswith("data: "):
                         continue
 
-                    data = line[6:]  # Remove "data: " prefix
+                    data = line[6:]
                     if data == "[DONE]":
                         break
 
@@ -311,14 +311,14 @@ class SSEChunkedStream(tts.ChunkedStream):
                     event_type = event.get("type", "")
 
                     if event_type == "speech.audio.delta":
-                        # Decode base64 audio and push to emitter
+
                         audio_b64 = event.get("delta", "") or event.get("audio", "")
                         if audio_b64:
                             audio_data = base64.b64decode(audio_b64)
                             output_emitter.push(audio_data)
 
                     elif event_type == "speech.audio.done":
-                        # Extract token usage from the done event
+
                         usage = event.get("usage", {})
                         input_tokens = usage.get("input_tokens", 0)
                         output_tokens = usage.get("output_tokens", 0)

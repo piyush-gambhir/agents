@@ -31,12 +31,12 @@ from .models import PersonaplexVoice
 SAMPLE_RATE = 24000
 NUM_CHANNELS = 1
 
-# Message type prefixes for the PersonaPlex binary WebSocket protocol
+
 MSG_HANDSHAKE = 0x00
 MSG_AUDIO = 0x01
 MSG_TEXT = 0x02
 
-# Special text tokens to ignore (padding/EOS markers)
+
 _SPECIAL_TOKENS = {0, 3}
 
 DEFAULT_SILENCE_THRESHOLD_MS = 500
@@ -119,7 +119,7 @@ class RealtimeModel(llm.RealtimeModel):
         )
 
         resolved_url: str = base_url or os.environ.get("PERSONAPLEX_URL") or "localhost:8998"
-        # Detect SSL from the scheme before stripping it
+
         use_ssl = resolved_url.startswith(("wss://", "https://"))
         for prefix in ("ws://", "wss://", "http://", "https://"):
             if resolved_url.startswith(prefix):
@@ -184,7 +184,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         self._bstream = utils.audio.AudioByteStream(
             SAMPLE_RATE,
             NUM_CHANNELS,
-            samples_per_channel=1920,  # 80ms — valid Opus frame size
+            samples_per_channel=1920,
         )
 
         self._opus_writer = sphn.OpusStreamWriter(SAMPLE_RATE)
@@ -203,7 +203,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             self._main_task(), name="PersonaplexSession._main_task"
         )
 
-    # -- Properties --
+
 
     @property
     def chat_ctx(self) -> llm.ChatContext:
@@ -213,7 +213,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def tools(self) -> llm.ToolContext:
         return self._tools
 
-    # -- Public API: audio input --
+
 
     @utils.log_exceptions(logger=logger)
     def push_audio(self, frame: rtc.AudioFrame) -> None:
@@ -225,9 +225,9 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                 self._encode_and_send(audio_frame)
 
     def push_video(self, frame: rtc.VideoFrame) -> None:
-        pass  # PersonaPlex is audio-only
+        pass
 
-    # -- Public API: generation control --
+
 
     def generate_reply(
         self,
@@ -245,13 +245,13 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             self._finalize_generation(interrupted=True)
 
     def commit_audio(self) -> None:
-        pass  # Full-duplex, continuous streaming
+        pass
 
     def commit_user_turn(self) -> None:
         logger.warning("commit_user_turn is not supported by PersonaPlex.")
 
     def clear_audio(self) -> None:
-        pass  # No server-side audio buffer
+        pass
 
     def truncate(
         self,
@@ -263,7 +263,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     ) -> None:
         logger.debug("truncate is not supported by PersonaPlex.")
 
-    # -- Public API: updates --
+
 
     async def update_instructions(self, instructions: str) -> None:
         if self._opts.text_prompt != instructions:
@@ -280,7 +280,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def update_options(self, *, tool_choice: NotGivenOr[llm.ToolChoice | None] = NOT_GIVEN) -> None:
         pass
 
-    # -- Lifecycle --
+
 
     async def aclose(self) -> None:
         if self._closed:
@@ -299,7 +299,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         if self._current_generation and not self._current_generation._done:
             self._finalize_generation(interrupted=True)
 
-    # -- Internal: connection management --
+
 
     def _mark_restart_needed(self) -> None:
         if not self._session_should_close.is_set():
@@ -335,13 +335,13 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             self._session_should_close.clear()
             self._handshake_event.clear()
 
-            # Reset codec and audio buffer state for new connection
+
             self._opus_writer = sphn.OpusStreamWriter(SAMPLE_RATE)
             self._opus_reader = sphn.OpusStreamReader(SAMPLE_RATE)
             self._bstream = utils.audio.AudioByteStream(
                 SAMPLE_RATE,
                 NUM_CHANNELS,
-                samples_per_channel=1920,  # 80ms — valid Opus frame size
+                samples_per_channel=1920,
             )
 
             try:
@@ -352,7 +352,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                 ws_conn = await http_session.ws_connect(ws_url)
                 self._report_connection_acquired(time.perf_counter() - t0)
                 self._closing = False
-                retry_delay = INITIAL_RETRY_DELAY  # reset on successful connect
+                retry_delay = INITIAL_RETRY_DELAY
 
                 logger.info(f"Connected to PersonaPlex server at {self._opts.base_url}")
 
@@ -391,12 +391,12 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             except Exception as e:
                 logger.error(f"PersonaPlex WebSocket error: {e}", exc_info=True)
 
-                # Clean up any active generation and silence timer
+
                 if self._current_generation and not self._current_generation._done:
                     self._finalize_generation(interrupted=True)
                 self._cancel_silence_timer()
 
-                # Discard stale Opus-encoded messages from the old connection
+
                 old_ch = self._msg_ch
                 old_ch.close()
                 self._msg_ch = utils.aio.Chan[bytes]()
@@ -430,11 +430,11 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
     @utils.log_exceptions(logger=logger)
     async def _send_task(self, ws_conn: aiohttp.ClientWebSocketResponse) -> None:
-        # The server's is_alive() check consumes WS messages during system
-        # prompt processing without feeding them to the opus decoder.  Wait
-        # for the handshake before sending audio so nothing gets dropped.
-        # Queued frames are sent immediately — they're the first audio the
-        # server's recv_loop will see.
+
+
+
+
+
         await self._handshake_event.wait()
 
         async for msg in self._msg_ch:
@@ -488,8 +488,8 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                 if self._closing:
                     return
 
-                # Code 1000 (normal close) — finalize gracefully and reconnect
-                # rather than treating it as a retriable error.
+
+
                 if ws_conn.close_code in (1000, None):
                     logger.debug("PersonaPlex server closed connection normally")
                     if self._current_generation and not self._current_generation._done:
@@ -503,7 +503,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
                     message=f"PersonaPlex WebSocket error: {ws_conn.exception()}"
                 )
 
-    # -- Internal: audio encode/decode --
+
 
     def _encode_and_send(self, audio_frame: rtc.AudioFrame) -> None:
         """Encode a PCM audio frame to Opus and queue for sending."""
@@ -511,18 +511,18 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             return
 
         try:
-            # Convert int16 PCM to float32 for sphn
+
             pcm_int16 = np.frombuffer(audio_frame.data, dtype=np.int16)
             if pcm_int16.size == 0:
                 return
 
             pcm_float = pcm_int16.astype(np.float32) / 32768.0
 
-            # sphn >=0.2: append_pcm returns opus bytes directly
+
             opus_bytes = self._opus_writer.append_pcm(pcm_float)
 
             if opus_bytes:
-                # Prepend audio message type
+
                 message = bytes([MSG_AUDIO]) + opus_bytes
                 with contextlib.suppress(utils.aio.channel.ChanClosed):
                     self._msg_ch.send_nowait(message)
@@ -532,17 +532,17 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def _handle_audio_data(self, opus_payload: bytes) -> None:
         """Decode Opus audio from server and push to generation."""
         try:
-            # sphn >=0.2: append_bytes returns pcm directly
+
             pcm_float = self._opus_reader.append_bytes(opus_payload)
 
             if pcm_float is None or len(pcm_float) == 0:
                 return
 
-            # Convert float32 to int16 PCM
+
             pcm_int16 = np.clip(pcm_float * 32768.0, -32768, 32767).astype(np.int16)
             pcm_bytes = pcm_int16.tobytes()
 
-            # Ensure generation exists
+
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation()
 
@@ -561,7 +561,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             with contextlib.suppress(utils.aio.channel.ChanClosed):
                 gen.audio_ch.send_nowait(frame)
 
-            # Reset silence timer on every audio frame
+
             self._reset_silence_timer()
 
         except Exception as e:
@@ -570,7 +570,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
     def _handle_text_token(self, payload: bytes) -> None:
         """Handle text token from server."""
         try:
-            # Filter special tokens by raw byte value (padding/EOS markers)
+
             if len(payload) == 1 and payload[0] in _SPECIAL_TOKENS:
                 return
 
@@ -579,7 +579,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             if not text:
                 return
 
-            # Ensure generation exists
+
             if not self._current_generation or self._current_generation._done:
                 self._start_new_generation()
 
@@ -593,7 +593,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         except Exception as e:
             logger.error(f"Error processing text token: {e}")
 
-    # -- Internal: generation lifecycle --
+
 
     def _start_new_generation(self) -> None:
         if self._current_generation and not self._current_generation._done:
@@ -649,7 +649,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
 
         self._cancel_silence_timer()
 
-        # Append assistant message to local chat context
+
         if gen.output_text:
             self._chat_ctx.add_message(
                 role="assistant",
@@ -708,7 +708,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
         self.emit("metrics_collected", metrics)
         self._current_generation = None
 
-    # -- Internal: silence detection --
+
 
     def _reset_silence_timer(self) -> None:
         self._cancel_silence_timer()
@@ -726,7 +726,7 @@ class RealtimeSession(llm.RealtimeSession[Literal["personaplex_server_event"]]):
             logger.debug("Silence detected, finalizing generation")
             self._finalize_generation(interrupted=False)
 
-    # -- Internal: audio resampling --
+
 
     def _resample_audio(self, frame: rtc.AudioFrame) -> Iterator[rtc.AudioFrame]:
         if self._input_resampler:

@@ -52,12 +52,12 @@ def _make_proc(*, memory_warn_mb: float = 500, memory_limit_mb: float = 0) -> _F
 async def test_memory_warning_is_rate_limited() -> None:
     proc = _make_proc()
 
-    # first time over the threshold fires immediately
+
     assert proc._should_emit_memory_warning(520.0, now=1000.0) is True
-    # a sample right after, still above the threshold, is suppressed
+
     assert proc._should_emit_memory_warning(521.0, now=1005.0) is False
     assert proc._should_emit_memory_warning(522.0, now=1010.0) is False
-    # once the cooldown elapses it fires again
+
     assert proc._should_emit_memory_warning(522.0, now=1000.0 + _MEMORY_WARN_COOLDOWN + 1) is True
 
 
@@ -65,7 +65,7 @@ async def test_memory_warning_reemits_on_significant_growth() -> None:
     proc = _make_proc()
 
     assert proc._should_emit_memory_warning(520.0, now=1000.0) is True
-    # well within the cooldown, but usage jumped: re-emit so a real leak surfaces
+
     grown = 520.0 + _MEMORY_WARN_RESET_DELTA_MB + 1
     assert proc._should_emit_memory_warning(grown, now=1005.0) is True
 
@@ -73,7 +73,7 @@ async def test_memory_warning_reemits_on_significant_growth() -> None:
 async def test_memory_logging_extra_reports_baseline_and_growth() -> None:
     proc = _make_proc()
 
-    # before a baseline is captured, only the basic fields are present
+
     extra = proc._memory_logging_extra(520.0)
     assert extra["memory_usage_mb"] == 520.0
     assert extra["memory_warn_mb"] == 500
@@ -81,7 +81,7 @@ async def test_memory_logging_extra_reports_baseline_and_growth() -> None:
     assert "uptime" in extra
     assert "baseline_memory_mb" not in extra
 
-    # once a baseline is set, growth-since-startup is reported
+
     proc._memory_baseline_mb = 300.0
     extra = proc._memory_logging_extra(520.0)
     assert extra["baseline_memory_mb"] == 300.0
@@ -94,8 +94,8 @@ async def test_uptime_is_zero_before_start() -> None:
 
 
 def test_process_kind_renders_as_plain_string() -> None:
-    # the log message interpolates `f"{self.process_kind} process …"`, so the enum
-    # must stringify to its value (not "SupervisedProcKind.JOB")
+
+
     assert f"{SupervisedProcKind.JOB} process" == "job process"
     assert f"{SupervisedProcKind.INFERENCE} process" == "inference process"
 

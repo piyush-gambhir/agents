@@ -1,14 +1,14 @@
 # Copyright 2026 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -68,7 +68,7 @@ class _CerebrasClient(openai.AsyncClient):
 
         json_data = options.json_data
         if json_data is not None:
-            # merge extra_json (same logic as base class)
+
             if options.extra_json is not None:
                 if is_mapping(json_data):
                     json_data = {**json_data, **options.extra_json}
@@ -83,7 +83,7 @@ class _CerebrasClient(openai.AsyncClient):
             if self._use_gzip:
                 body = gzip.compress(body, compresslevel=5)
 
-            # bypass openapi_dumps() by switching to the content path
+
             options.json_data = None
             options.extra_json = None
             options.content = body

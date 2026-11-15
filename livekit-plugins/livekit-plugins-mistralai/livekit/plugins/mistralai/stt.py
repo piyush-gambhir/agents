@@ -287,7 +287,7 @@ class SpeechStream(stt.RecognizeStream):
         connection: RealtimeConnection,
         vad_stream: vad.VADStream | None,
     ) -> None:
-        samples_per_chunk = SAMPLE_RATE // 20  # 50ms chunks
+        samples_per_chunk = SAMPLE_RATE // 20
         audio_bstream = utils.audio.AudioByteStream(
             sample_rate=SAMPLE_RATE,
             num_channels=NUM_CHANNELS,
@@ -326,7 +326,7 @@ class SpeechStream(stt.RecognizeStream):
                         stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
                     )
             elif ev.type == vad.VADEventType.END_OF_SPEECH:
-                # force Mistral to finalize the current speech segment
+
                 await connection.flush_audio()
                 if self._speaking:
                     self._speaking = False

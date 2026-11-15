@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from livekit.agents import Agent, AgentServer, AgentSession, JobContext, cli, llm
 from livekit.plugins import openai
 
-## This example shows how to load chat history for OpenAI Realtime Model
+
 
 logger = logging.getLogger("realtime-load-chat-history")
 
@@ -43,9 +43,9 @@ async def entrypoint(ctx: JobContext):
     agent = Agent(
         instructions="You are a helpful travel planner.",
         llm=openai.realtime.RealtimeModel(voice="alloy", model="gpt-4o-mini-realtime-preview"),
-        # OpenAI realtime API may response in only text when text-based chat context is loaded
-        # we will use the TTS model to generate audio output as fallback if this happens
-        # more details about this issue: https://community.openai.com/t/trouble-loading-previous-messages-with-realtime-api
+
+
+
         tts=openai.TTS(voice="alloy"),
         chat_ctx=chat_ctx,
     )

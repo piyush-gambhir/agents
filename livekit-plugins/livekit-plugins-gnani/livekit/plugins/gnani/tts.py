@@ -190,9 +190,9 @@ class TTS(tts.TTS):
         pass
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+
+
+
 
 
 def _build_payload(opts: GnaniTTSOptions, text: str) -> dict:
@@ -230,9 +230,9 @@ def _strip_wav_header(data: bytes) -> bytes:
     return data
 
 
-# ---------------------------------------------------------------------------
-# REST ChunkedStream
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class RESTChunkedStream(tts.ChunkedStream):
@@ -282,9 +282,9 @@ class RESTChunkedStream(tts.ChunkedStream):
             raise APIConnectionError(f"Gnani TTS REST error: {e}") from e
 
 
-# ---------------------------------------------------------------------------
-# SSE ChunkedStream
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class SSEChunkedStream(tts.ChunkedStream):
@@ -385,9 +385,9 @@ class SSEChunkedStream(tts.ChunkedStream):
             raise APIConnectionError(f"Gnani TTS SSE error: {e}") from e
 
 
-# ---------------------------------------------------------------------------
-# WebSocket ChunkedStream (for synthesize_method="websocket")
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class WebSocketChunkedStream(tts.ChunkedStream):
@@ -479,9 +479,9 @@ class WebSocketChunkedStream(tts.ChunkedStream):
             raise APIConnectionError(f"Gnani TTS WebSocket error: {e}") from e
 
 
-# ---------------------------------------------------------------------------
-# WebSocket SynthesizeStream (for stream())
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class SynthesizeStream(tts.SynthesizeStream):

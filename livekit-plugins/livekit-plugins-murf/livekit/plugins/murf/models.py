@@ -54,7 +54,7 @@ TTSStyles = Literal[
 ]
 
 TTSEncoding = Literal[
-    "pcm",  # pcm_s16le
+    "pcm",
 ]
 
 TTSDefaultVoiceId = "en-US-matthew"

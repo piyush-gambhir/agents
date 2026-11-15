@@ -89,7 +89,7 @@ async def _wait_for_stream_failure(
     feed_task = asyncio.create_task(_feed_audio_continuously(stream, stop))
 
     try:
-        # wait for the internal _task to complete (it will fail after retries)
+
         try:
             await stream._task
         except Exception as exc:
@@ -110,9 +110,9 @@ def _mock_request_info() -> MagicMock:
     return ri
 
 
-# ---------------------------------------------------------------------------
-# HTTP stream tests
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestHttpTimeout:
@@ -140,7 +140,7 @@ class TestHttpTimeout:
         assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
 
 
-# there is no 429 in HTTP when hosted on LiveKit Cloud, so this is actually redundant
+
 class TestHttp429:
     @pytest.mark.asyncio
     async def test_retries_then_emits_unrecoverable(self) -> None:
@@ -201,9 +201,9 @@ class TestHttpNonRetryable:
         assert len(unrecoverable_errors) == 1
 
 
-# ---------------------------------------------------------------------------
-# WebSocket stream tests
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestWsConnectionTimeout:
@@ -249,7 +249,7 @@ class TestWsConnection429:
         assert exc is not None
         assert isinstance(exc, APIError)
 
-        # 429 -> APIStatusError(retryable=False) so no retries, immediate unrecoverable
+
         recoverable_errors = [e for e in errors if e.recoverable]
         unrecoverable_errors = [e for e in errors if not e.recoverable]
         assert len(recoverable_errors) == 0

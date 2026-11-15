@@ -18,7 +18,7 @@ from ...utils import is_given
 from .. import io
 from ._speaking_rate import SpeakingRateDetector, SpeakingRateStream
 
-STANDARD_SPEECH_RATE = 3.83  # hyphens (syllables) per second
+STANDARD_SPEECH_RATE = 3.83
 
 
 @dataclass
@@ -59,11 +59,11 @@ class _SpeakingRateData:
         end_time: float | None,
     ) -> None:
         if start_time is not None:
-            # calculate the integral of the speaking rate up to the start time
+
             integral = self.speak_integrals[-1] if self.timestamps else 0
 
             dt = start_time - self.pushed_duration
-            # use the length of the text directly instead of hyphens
+
             text_len = sum(len(text) for text in self._text_buffer)
             integral += text_len
             rate = text_len / dt if dt > 0 else 0
@@ -89,7 +89,7 @@ class _SpeakingRateData:
 
         integral_t = self.speak_integrals[idx - 1]
 
-        # fill the tail assuming the speaking rate is constant
+
         dt = timestamp - self.timestamps[idx - 1]
         rate = (
             self.speaking_rate[idx]
@@ -99,7 +99,7 @@ class _SpeakingRateData:
         integral_t += rate * dt
 
         if idx < len(self.timestamps):
-            # if there is a next timestamp, make sure the integral does not exceed the next
+
             integral_t = min(integral_t, self.speak_integrals[idx])
 
         return integral_t
@@ -111,11 +111,11 @@ class _SpeakingRateData:
 
 @dataclass
 class _AudioData:
-    sr_stream: SpeakingRateStream  # speaking rate estimation
+    sr_stream: SpeakingRateStream
     pushed_duration: float = 0.0
     done: bool = False
     estimated_rate: _SpeakingRateData = field(default_factory=_SpeakingRateData)
-    annotated_rate: _SpeakingRateData | None = None  # speaking rate from `start_time`
+    annotated_rate: _SpeakingRateData | None = None
 
 
 @dataclass
@@ -144,9 +144,9 @@ class _SegmentSynchronizerImpl:
         self._output_enabled_ev = asyncio.Event()
         self._output_enabled_ev.set()
 
-        self._speed = STANDARD_SPEECH_RATE * self._opts.speed  # hyphens per second
-        self._speed_on_speaking_unit: float | None = None  # hyphens per speaking unit
-        # a speaking unit is defined by the speaking rate estimation method, it's a relative unit
+        self._speed = STANDARD_SPEECH_RATE * self._opts.speed
+        self._speed_on_speaking_unit: float | None = None
+
 
         self._out_ch = utils.aio.Chan[TimedString]()
         self._close_future = asyncio.Future[None]()
@@ -214,7 +214,7 @@ class _SegmentSynchronizerImpl:
             if not self._audio_data.annotated_rate:
                 self._audio_data.annotated_rate = _SpeakingRateData()
 
-            # accumulate the actual text length if time annotations are present
+
             self._audio_data.annotated_rate.add_by_annotation(
                 text=text, start_time=start_time, end_time=end_time
             )
@@ -248,9 +248,9 @@ class _SegmentSynchronizerImpl:
 
         if self._paused_wall_time is not None:
             if self._start_wall_time is not None:
-                # use max() to handle the case where pause() was called before the first audio
-                # frame was pushed (i.e., before _start_wall_time was set). This can happen when
-                # a new impl is created while the synchronizer is already paused.
+
+
+
                 self._paused_duration += time.time() - max(
                     self._start_wall_time, self._paused_wall_time
                 )
@@ -262,11 +262,11 @@ class _SegmentSynchronizerImpl:
             return
 
         pushed_hyphens = len(self._calc_hyphens(self._text_data.pushed_text))
-        # hyphens per second
+
         if self._audio_data.pushed_duration > 0:
             self._speed = pushed_hyphens / self._audio_data.pushed_duration
 
-        # hyphens per speaking unit
+
         pushed_speaking_units = self._audio_data.estimated_rate.accumulate_to(
             self._audio_data.pushed_duration
         )
@@ -286,8 +286,8 @@ class _SegmentSynchronizerImpl:
             )
             return
 
-        # if the playback of the segment is done and were not interrupted, make sure the whole
-        # transcript is sent. (In case we're late)
+
+
         if not interrupted:
             self._playback_completed = True
 
@@ -348,7 +348,7 @@ class _SegmentSynchronizerImpl:
             if (annotated := self._audio_data.annotated_rate) and (
                 annotated.pushed_duration >= elapsed
             ):
-                # use the actual speaking rate
+
                 target_len = int(annotated.accumulate_to(elapsed))
                 forwarded_len = len(self._text_data.forwarded_text)
                 if target_len >= forwarded_len:
@@ -359,14 +359,14 @@ class _SegmentSynchronizerImpl:
                     d_hyphens = -len(self._calc_hyphens(d_text))
 
             elif self._speed_on_speaking_unit:
-                # use the estimated speed from speaking rate
+
                 target_speaking_units = self._audio_data.estimated_rate.accumulate_to(elapsed)
                 target_hyphens = target_speaking_units * self._speed_on_speaking_unit
                 d_hyphens = np.ceil(target_hyphens) - self._text_data.forwarded_hyphens
 
             delay = max(0.0, word_hyphens - d_hyphens) / self._speed
 
-            # if playback completed, flush the word as soon as possible
+
             if self._playback_completed:
                 delay = 0
 
@@ -397,9 +397,9 @@ class _SegmentSynchronizerImpl:
 
         self._close_future.set_result(None)
         if self._start_wall_time is None:
-            # avoid assertion error in _main_task if playback completed
+
             self._start_wall_time = time.time()
-        self._start_fut.set()  # avoid deadlock of main_task in case it never started
+        self._start_fut.set()
         self._output_enabled_ev.set()
         await self._text_data.word_stream.aclose()
         await self._audio_data.sr_stream.aclose()
@@ -443,14 +443,14 @@ class TranscriptSynchronizer:
         self._enabled = True
         self._closed = False
 
-        # track pause state at the synchronizer level to apply to new impls after rotation
+
         self._paused = False
 
-        # warn once per enabled cycle when only one of audio/text is detached; reset when
-        # the synchronizer transitions back to enabled
+
+
         self._warned_asymmetric_detach = False
 
-        # initial segment/first segment, recreated for each new segment
+
         self._impl = _SegmentSynchronizerImpl(options=self._opts, next_in_chain=next_in_chain_text)
         self._rotate_segment_atask: asyncio.Task[None] | None = None
 
@@ -479,8 +479,8 @@ class TranscriptSynchronizer:
         if enabled:
             self._warned_asymmetric_detach = False
         if not self._rotate_segment_atask or self._rotate_segment_atask.done():
-            # avoid calling rotate_segment twice when closing the session during agent speaking
-            # first time when speech interrupted, second time here when output detached
+
+
             self.rotate_segment()
 
     def _on_attachment_changed(
@@ -507,13 +507,13 @@ class TranscriptSynchronizer:
         except Exception:
             logger.exception("failed to close segment synchronizer impl during rotation")
 
-        # always create a new impl even if aclose() failed, to avoid leaving
-        # self._impl pointing to a closed impl which causes the agent to get stuck
+
+
         self._impl = _SegmentSynchronizerImpl(
             options=self._opts, next_in_chain=self._text_output._next_in_chain
         )
 
-        # apply the current pause state to the new impl
+
         if self._paused:
             self._impl.pause()
 
@@ -532,8 +532,8 @@ class TranscriptSynchronizer:
         if self._rotate_segment_atask is None:
             return
 
-        # using a while loop in case rotate_segment is called twice (this should not happen, but
-        # just in case, we do log a warning if it does)
+
+
         while not self._rotate_segment_atask.done():
             await self._rotate_segment_atask
 
@@ -548,16 +548,16 @@ class _SyncedAudioOutput(io.AudioOutput):
             sample_rate=next_in_chain.sample_rate,
             capabilities=io.AudioOutputCapabilities(pause=True),
         )
-        self._next_in_chain: io.AudioOutput = next_in_chain  # redefined for better typing
+        self._next_in_chain: io.AudioOutput = next_in_chain
         self._synchronizer = synchronizer
         self._pushed_duration: float = 0.0
 
     async def capture_frame(self, frame: rtc.AudioFrame) -> None:
-        # using barrier() on capture should be sufficient, flush() must not be called if
-        # capture_frame isn't completed
+
+
         await self._synchronizer.barrier()
 
-        await self._next_in_chain.capture_frame(frame)  # passthrough audio
+        await self._next_in_chain.capture_frame(frame)
         await super().capture_frame(frame)
         self._pushed_duration += frame.duration
 
@@ -576,7 +576,7 @@ class _SyncedAudioOutput(io.AudioOutput):
             return
 
         if self._synchronizer._impl.audio_input_ended:
-            # this should not happen if `on_playback_finished` is called after each flush
+
             logger.warning(
                 "_SegmentSynchronizerImpl audio marked as ended in capture audio, rotating segment"
             )
@@ -593,7 +593,7 @@ class _SyncedAudioOutput(io.AudioOutput):
             return
 
         if not self._pushed_duration:
-            # in case there is no audio after text was pushed, rotate the segment
+
             self._synchronizer.rotate_segment()
             return
 
@@ -602,7 +602,7 @@ class _SyncedAudioOutput(io.AudioOutput):
     def clear_buffer(self) -> None:
         self._next_in_chain.clear_buffer()
 
-    # this is going to be automatically called by the next_in_chain
+
     def on_playback_started(self, *, created_at: float) -> None:
         super().on_playback_started(created_at=created_at)
         if self._synchronizer.enabled:
@@ -645,14 +645,14 @@ class _SyncedAudioOutput(io.AudioOutput):
 
     def pause(self) -> None:
         super().pause()
-        # track pause state at synchronizer level so it persists across segment rotations
+
         self._synchronizer._paused = True
         if not self._synchronizer._impl.closed:
             self._synchronizer._impl.pause()
 
     def resume(self) -> None:
         super().resume()
-        # track pause state at synchronizer level so it persists across segment rotations
+
         self._synchronizer._paused = False
         if not self._synchronizer._impl.closed:
             self._synchronizer._impl.resume()
@@ -670,7 +670,7 @@ class _SyncedTextOutput(io.TextOutput):
     async def capture_text(self, text: str) -> None:
         await self._synchronizer.barrier()
 
-        if not self._synchronizer.enabled:  # passthrough text if the synchronizer is disabled
+        if not self._synchronizer.enabled:
             if (
                 self._synchronizer._text_attached
                 and not self._synchronizer._audio_attached
@@ -688,7 +688,7 @@ class _SyncedTextOutput(io.TextOutput):
 
         self._capturing = True
         if self._synchronizer._impl.text_input_ended:
-            # this should not happen if `on_playback_finished` is called after each flush
+
             logger.warning(
                 "_SegmentSynchronizerImpl text marked as ended in capture text, rotating segment"
             )
@@ -698,7 +698,7 @@ class _SyncedTextOutput(io.TextOutput):
         self._synchronizer._impl.push_text(text)
 
     def flush(self) -> None:
-        if not self._synchronizer.enabled:  # passthrough text if the synchronizer is disabled
+        if not self._synchronizer.enabled:
             if self._next_in_chain:
                 self._next_in_chain.flush()
             return

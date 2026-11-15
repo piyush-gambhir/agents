@@ -60,7 +60,7 @@ MCPToolResultResolver = Callable[[MCPToolResultContext], Any | Awaitable[Any]]
 
 
 def _default_tool_result_resolver(ctx: MCPToolResultContext) -> str:
-    # TODO(theomonnom): handle images & binary messages
+
     if len(ctx.result.content) == 1:
         return str(ctx.result.content[0].model_dump_json())
     elif len(ctx.result.content) > 1:
@@ -130,7 +130,7 @@ class MCPServer(ABC):
                     await self._closing_ev.wait()
         except BaseException as e:
             if not ready_fut.done():
-                ready_fut.set_exception(e)  # raising from `await initialize()`
+                ready_fut.set_exception(e)
             else:
                 if isinstance(e, Exception):
                     logger.exception("MCP client connection failed with unexpected error")
@@ -165,7 +165,7 @@ class MCPServer(ABC):
         meta: dict[str, Any] | None,
     ) -> MCPTool:
         async def _tool_called(raw_arguments: dict[str, Any]) -> Any:
-            # In case (somehow), the tool is called after the MCPServer aclose.
+
             if self._client is None:
                 raise ToolError(
                     "Tool invocation failed: internal service is unavailable. "
@@ -267,7 +267,7 @@ class MCPServerHTTP(MCPServer):
         self._sse_read_timeout = sse_read_timeout
         self._allowed_tools = set(allowed_tools) if allowed_tools else None
 
-        # Determine transport type: explicit > URL-based detection
+
         if transport_type is not None:
             if transport_type not in ("sse", "streamable_http"):
                 raise ValueError(
@@ -275,7 +275,7 @@ class MCPServerHTTP(MCPServer):
                 )
             self._use_streamable_http = transport_type == "streamable_http"
         else:
-            # Fall back to URL-based detection for backward compatibility
+
             self._use_streamable_http = self._should_use_streamable_http(url)
 
         self._http_client: httpx.AsyncClient | None = None
@@ -296,7 +296,7 @@ class MCPServerHTTP(MCPServer):
         timeout: httpx.Timeout | None = None,
         auth: httpx.Auth | None = None,
     ) -> httpx.AsyncClient:
-        # ported from mcp.shared._httpx_utils.create_mcp_http_client
+
         kwargs: dict[str, Any] = {
             "follow_redirects": True,
             "timeout": timeout
@@ -359,11 +359,11 @@ class MCPServerHTTP(MCPServer):
         """
         all_tools = await super().list_tools()
 
-        # If no filter is set, return all tools
+
         if self._allowed_tools is None:
             return all_tools
 
-        # Filter tools by name
+
         return self._filter_tools(all_tools)
 
     def _filter_tools(self, tools: list[MCPTool]) -> list[MCPTool]:
@@ -375,13 +375,13 @@ class MCPServerHTTP(MCPServer):
 
         filtered_tools: list[MCPTool] = []
         for tool in tools:
-            # Get tool name based on tool type
+
             if is_function_tool(tool):
                 tool_name = get_function_info(tool).name
             elif is_raw_function_tool(tool):
                 tool_name = get_raw_function_info(tool).name
             else:
-                # Fallback: skip tools we can't identify
+
                 continue
 
             if tool_name in self._allowed_tools:

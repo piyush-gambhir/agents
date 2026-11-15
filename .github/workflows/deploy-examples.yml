@@ -1,10 +1,10 @@
 name: Deploy Examples
 
 on:
-  # Manual runs deploy from the branch picked in the Actions "Use workflow
-  # from" selector — no input needed.
+
+
   workflow_dispatch:
-  # Called by publish.yml after a release to deploy the published commit.
+
   workflow_call:
     inputs:
       ref:
@@ -24,15 +24,15 @@ jobs:
       matrix:
         example: [healthcare, survey, frontdesk, drive-thru, inference, avatar]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.ref || github.ref }}
-          # Fetch Git-LFS assets (e.g. examples/drive-thru/bg_noise.mp3) so the
-          # real binaries — not pointer files — get uploaded as the build context
-          # and copied into the image via `COPY . .`. This checkout authenticates
-          # with GITHUB_TOKEN, so its LFS fetch is allowed (unlike pip's anonymous
-          # git clone). Without this the agent crashes at runtime decoding a
-          # 131-byte pointer as audio.
+
+
+
+
+
+
           lfs: true
 
       - name: Install LiveKit CLI
@@ -76,11 +76,11 @@ jobs:
       - name: Pin livekit-* requirements to the deployed ref
         working-directory: examples/${{ matrix.example }}
         env:
-          # Build the agent against the code at the ref we're deploying,
-          # not the latest release on PyPI. Without this, a branch deploy
-          # would silently run against the published livekit-agents instead
-          # of the branch's own SDK changes. Mirror the checkout ref above,
-          # using ref_name so it's a plain branch/tag pip can resolve.
+
+
+
+
+
           DEPLOY_REF: ${{ inputs.ref || github.ref_name }}
         run: |
           python3 <<'PY'

@@ -29,9 +29,9 @@ from .fake_vad import FakeVAD
 
 pytestmark = pytest.mark.unit
 
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
+
+
+
 
 _AGENT_SESSION_MOD = "livekit.agents.voice.agent_session"
 _TRACES_MOD = "livekit.agents.telemetry.traces"
@@ -184,9 +184,9 @@ def _get_multipart_part_names(mp_writer: aiohttp.MultipartWriter) -> list[str]:
     return names
 
 
-# ---------------------------------------------------------------------------
-# Group 1: RecordingOptions normalization (no JobContext)
-# ---------------------------------------------------------------------------
+
+
+
 
 
 @pytest.mark.parametrize(
@@ -218,9 +218,9 @@ async def test_record_not_given_without_job_ctx() -> None:
     await _cleanup(session)
 
 
-# ---------------------------------------------------------------------------
-# Group 2: init_recording() interaction with mock JobContext
-# ---------------------------------------------------------------------------
+
+
+
 
 
 async def test_init_recording_called_with_options() -> None:
@@ -232,7 +232,7 @@ async def test_init_recording_called_with_options() -> None:
     with _patch_job_ctx(mock_ctx, patch_recorder=True):
         await session.start(SimpleAgent(), record=custom)
 
-    # _resolve_recording_options merges with defaults, so the result should match
+
     mock_ctx.init_recording.assert_called_once()
     assert mock_ctx.init_recording.call_args[0][0] == {
         "audio": True,
@@ -282,9 +282,9 @@ async def test_init_recording_called_when_job_recording_disabled() -> None:
     await _cleanup(session)
 
 
-# ---------------------------------------------------------------------------
-# Group 3: _upload_session_report() conditional upload
-# ---------------------------------------------------------------------------
+
+
+
 
 
 async def test_upload_returns_early_when_none() -> None:
@@ -377,7 +377,7 @@ def test_setup_cloud_tracer_logger_provider_always_created() -> None:
         mock_token.with_ttl.return_value = mock_token
         mock_token.to_jwt.return_value = "test-jwt"
         mock_at.return_value = mock_token
-        # Return a non-LoggerProvider so the code creates a new one
+
         mock_glp.return_value = MagicMock()
 
         _setup_cloud_tracer(
@@ -389,14 +389,14 @@ def test_setup_cloud_tracer_logger_provider_always_created() -> None:
         )
 
     mock_slp.assert_called_once()
-    # OTLP exporter should NOT be created when enable_logs=False
+
     mock_exporter.assert_not_called()
     mock_blrp.assert_not_called()
 
 
-# ---------------------------------------------------------------------------
-# Group 4: RecorderIO conditional creation
-# ---------------------------------------------------------------------------
+
+
+
 
 
 async def test_recorder_io_created_when_audio_true() -> None:
@@ -422,9 +422,9 @@ async def test_recorder_io_not_created_when_audio_false() -> None:
     await _cleanup(session)
 
 
-# ---------------------------------------------------------------------------
-# Group 5: _split_frame (encode-path helper)
-# ---------------------------------------------------------------------------
+
+
+
 
 
 def _ramp_frame(num_samples: int, num_channels: int, sample_rate: int = 24000) -> rtc.AudioFrame:
@@ -451,11 +451,11 @@ def test_split_frame_is_consistent_and_lossless(num_channels: int, fraction: flo
     frame = _ramp_frame(n, num_channels)
     left, right = _split_frame(frame, frame.duration * fraction)
 
-    # each half is internally consistent
+
     assert len(left.data) == left.samples_per_channel * left.num_channels
     assert len(right.data) == right.samples_per_channel * right.num_channels
 
-    # no samples lost or duplicated across the split
+
     assert left.samples_per_channel + right.samples_per_channel == n
     recon = np.concatenate(
         [

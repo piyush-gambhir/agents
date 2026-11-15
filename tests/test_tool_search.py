@@ -218,8 +218,8 @@ class TestToolSearchToolset:
             tools=[WeatherToolset(), FinanceToolset()],
         )
         await ts.setup()
-        assert len(ts.tools) == 1  # still only tool_search
-        # Each function tool is its own SearchItem: weather_tool, forecast_tool, stock_tool
+        assert len(ts.tools) == 1
+
         assert len(ts._search_items) == 3
 
     async def test_search_loads_matching_toolset(self):
@@ -231,7 +231,7 @@ class TestToolSearchToolset:
 
         await ts._handle_search({"query": "weather"})
 
-        # Verify via ToolContext that the loaded tools are accessible
+
         ctx = ToolContext([ts])
         assert "tool_search" in ctx.function_tools
         assert "weather_tool" in ctx.function_tools
@@ -243,11 +243,11 @@ class TestToolSearchToolset:
         ts = ToolSearchToolset(id="search", tools=[WeatherToolset(), FinanceToolset()])
         await ts.setup()
 
-        # "forecast" isn't in the toolset id, but forecast_tool is in WeatherToolset
+
         await ts._handle_search({"query": "weather"})
         ctx = ToolContext([ts])
         assert "weather_tool" in ctx.function_tools
-        assert "forecast_tool" in ctx.function_tools  # loaded atomically
+        assert "forecast_tool" in ctx.function_tools
         assert "stock_tool" not in ctx.function_tools
 
     async def test_toolset_loads_once_even_if_multiple_tools_match(self):
@@ -258,9 +258,9 @@ class TestToolSearchToolset:
         )
         await ts.setup()
 
-        # Both weather_tool and forecast_tool match "weather", but WeatherToolset loads once
+
         await ts._handle_search({"query": "weather"})
-        assert len(ts._loaded_tools) == 1  # only one unique source (WeatherToolset)
+        assert len(ts._loaded_tools) == 1
 
     async def test_standalone_tools(self):
         ts = ToolSearchToolset(
@@ -269,7 +269,7 @@ class TestToolSearchToolset:
         )
         await ts.setup()
 
-        # calculator + weather_tool + forecast_tool = 3 SearchItems
+
         assert len(ts._search_items) == 3
 
         await ts._handle_search({"query": "math calculate"})
@@ -293,7 +293,7 @@ class TestToolSearchToolset:
 
         await ts._handle_search({"query": "weather forecast calculator"})
         ctx = ToolContext([ts])
-        # OuterToolset loaded atomically — includes its nested WeatherToolset + calculator
+
         assert "weather_tool" in ctx.function_tools
         assert "forecast_tool" in ctx.function_tools
         assert "calculator" in ctx.function_tools
@@ -325,7 +325,7 @@ class TestToolSearchToolset:
             def search(
                 self, query: str, items: list[SearchItem], max_results: int
             ) -> list[SearchItem]:
-                # Always return items that have "weather" in their data
+
                 return [i for i in items if i.index_data and "weather" in str(i.index_data)][
                     :max_results
                 ]
@@ -397,7 +397,7 @@ class TestToolSearchWithToolContext:
 
         await ts._handle_search({"query": "weather"})
 
-        # Re-building ToolContext picks up new tools (this is what generation.py does)
+
         ctx2 = ToolContext([ts])
         assert "tool_search" in ctx2.function_tools
         assert "weather_tool" in ctx2.function_tools

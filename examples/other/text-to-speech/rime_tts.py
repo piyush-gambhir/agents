@@ -8,7 +8,7 @@ from livekit.agents import AgentServer, AutoSubscribe, JobContext, cli, inferenc
 from livekit.agents.tokenize import blingfire
 from livekit.agents.tts import StreamAdapter
 
-# Initialize environment and logging
+
 load_dotenv()
 logger = logging.getLogger("rime-tts-demo")
 logger.setLevel(logging.INFO)
@@ -36,30 +36,30 @@ async def entrypoint(ctx: JobContext) -> None:
         Exception: If any error occurs during setup or streaming
     """
     try:
-        # Initialize LiveKit connection with no auto-subscription
+
         await ctx.connect(auto_subscribe=AutoSubscribe.SUBSCRIBE_NONE)
         await ctx.wait_for_participant()
         logger.info("Connected to LiveKit room successfully And participant joined")
-        # Initialize Rime TTS via LiveKit inference
+
         tts = inference.TTS("rime/arcana", voice="Astra")
 
         logger.info("TTS initialized successfully")
 
-        # Set up audio streaming infrastructure
+
         source = rtc.AudioSource(tts.sample_rate, tts.num_channels)
         track = rtc.LocalAudioTrack.create_audio_track("agent-mic", source)
         options = rtc.TrackPublishOptions()
         options.source = rtc.TrackSource.SOURCE_MICROPHONE
 
-        # Connect to LiveKit and publish audio track
+
         publication = await ctx.room.local_participant.publish_track(track, options)
         await publication.wait_for_subscription()
         logger.info("Audio track published successfully")
 
-        # Sample text to demonstrate TTS capabilities
+
         text = """Hi! I'm using Rime's Arcana model with the Astra voice. I can speak naturally with different tones, paces, and emotions. Want to try other voices like Luna, Celeste, or Orion?"""
 
-        # Stream synthesized audio
+
         logger.info("Starting audio synthesis...")
         async for output in tts.synthesize(text):
             await source.capture_frame(output.frame)
@@ -88,7 +88,7 @@ async def entrypoint(ctx: JobContext) -> None:
         chunk_size = 15
         for i in range(0, len(streaming_text), chunk_size):
             chunk = streaming_text[i : i + chunk_size]
-            logger.debug("Processing chunk: %s...", chunk[:50])  # Log first 50 chars
+            logger.debug("Processing chunk: %s...", chunk[:50])
             stream.push_text(chunk)
             await asyncio.sleep(0.1)
 
@@ -100,7 +100,7 @@ async def entrypoint(ctx: JobContext) -> None:
         logger.error("An error occurred: %s", str(e), exc_info=True)
         raise
     finally:
-        # Clean up resources
+
         if "stream" in locals():
             await stream.aclose()
         if "tts_wrapped" in locals():
@@ -108,5 +108,5 @@ async def entrypoint(ctx: JobContext) -> None:
 
 
 if __name__ == "__main__":
-    # Run the application using LiveKit's CLI utilities
+
     cli.run_app(server)

@@ -33,7 +33,7 @@ class STT(stt.STT):
             capabilities=stt.STTCapabilities(
                 streaming=False,
                 interim_results=False,
-                # word timestamps don't seem to work despite the docs saying they do
+
                 aligned_transcript=False,
             )
         )

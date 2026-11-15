@@ -1,14 +1,14 @@
 # Copyright 2024 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -69,7 +69,7 @@ class StreamBuffer:
     Allows writing from one thread and reading from another.
     """
 
-    _COMPACT_THRESHOLD = 5 * 1024 * 1024  # compact after 5MB consumed
+    _COMPACT_THRESHOLD = 5 * 1024 * 1024
 
     def __init__(self) -> None:
         self._bio = io.BytesIO()
@@ -167,11 +167,11 @@ class _WavInlineDecoder:
 
         self._state = _WavState.RIFF_HEADER
         self._hdr_buf = bytearray()
-        self._need = 12  # bytes needed for current header state
+        self._need = 12
         self._skip_remaining = 0
         self._chunk_size = 0
 
-        # set after fmt is parsed
+
         self._bstream: AudioByteStream | None = None
         self._resampler: rtc.AudioResampler | None = None
         self._wave_channels = 0
@@ -198,7 +198,7 @@ class _WavInlineDecoder:
             elif self._state == _WavState.SKIP_CHUNK_DATA:
                 pos = self._consume_skip(buf, pos)
             elif self._state == _WavState.STREAMING:
-                # remainder after headers goes straight to PCM path
+
                 self._push_pcm(bytes(buf[pos:]))
                 return
 
@@ -232,7 +232,7 @@ class _WavInlineDecoder:
         self._wave_channels = 0
         self._wave_rate = 0
 
-    # -- state handlers -------------------------------------------------------
+
 
     def _consume_riff(self, buf: memoryview, pos: int) -> int:
         take = min(self._need - len(self._hdr_buf), len(buf) - pos)
@@ -306,7 +306,7 @@ class _WavInlineDecoder:
             self._state = _WavState.CHUNK_HEADER
         return pos
 
-    # -- streaming helpers ----------------------------------------------------
+
 
     def _init_streaming(self) -> None:
         if self._wave_rate == 0:
@@ -362,11 +362,11 @@ class AudioStreamDecoder:
         self._started = False
         self._loop = asyncio.get_event_loop()
 
-        # lazy-initialized only for non-WAV codecs
+
         self._input_buf: StreamBuffer | None = None
         self._executor: ThreadPoolExecutor | None = None
 
-        # lazy-initialized only for WAV
+
         self._wav_decoder: _WavInlineDecoder | None = None
 
     def push(self, chunk: bytes) -> None:
@@ -412,7 +412,7 @@ class AudioStreamDecoder:
         container: av.container.InputContainer | None = None
         resampler: av.AudioResampler | None = None
         try:
-            # open container in low-latency streaming mode
+
             container = av.open(
                 self._input_buf,
                 mode="r",
@@ -428,7 +428,7 @@ class AudioStreamDecoder:
                     "avioflags": "direct",
                 },
             )
-            # explicitly disable internal buffering flags on the FFmpeg container
+
             container.flags |= cast(
                 int, av.container.Flags.no_buffer.value | av.container.Flags.flush_packets.value
             )
@@ -438,7 +438,7 @@ class AudioStreamDecoder:
 
             audio_stream = container.streams.audio[0]
 
-            # Set up resampler only if needed
+
             if self._sample_rate is not None or self._layout is not None:
                 resampler = av.AudioResampler(
                     format="s16", layout=self._layout, rate=self._sample_rate
@@ -456,7 +456,7 @@ class AudioStreamDecoder:
                 for f in frames:
                     self._emit_av_frame(f)
 
-            # flush the resampler to get any remaining buffered samples
+
             if resampler and not self._closed:
                 for f in resampler.resample(None):
                     self._emit_av_frame(f)

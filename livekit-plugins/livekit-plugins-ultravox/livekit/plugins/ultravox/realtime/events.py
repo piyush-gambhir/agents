@@ -37,7 +37,7 @@ class UltravoxEvent(BaseModel):
     type: str = Field(..., description="Event type identifier")
 
 
-# Client-to-Server Events
+
 
 
 class PingEvent(UltravoxEvent):
@@ -92,7 +92,7 @@ class ClientToolResultEvent(UltravoxEvent):
     )
 
 
-# Server-to-Client Events
+
 
 
 class CallStartedEvent(UltravoxEvent):
@@ -154,7 +154,7 @@ class PlaybackClearBufferEvent(UltravoxEvent):
     type: Literal["playback_clear_buffer"] = "playback_clear_buffer"
 
 
-# Union type for all possible events
+
 UltravoxEventType = (
     PingEvent
     | UserTextMessageEvent

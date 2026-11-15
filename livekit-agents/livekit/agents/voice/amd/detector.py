@@ -253,7 +253,7 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                 transcript=result.transcript,
             )
 
-        # eagerly resume so agent can speak immediately to a human
+
         if self._session._activity:
             self._session._activity._resume_authorization()
 
@@ -297,7 +297,7 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
     ) -> None:
         await self.aclose()
 
-    # region: lifecycle hooks (called by AudioRecognition)
+
 
     def push_audio(self, frame: rtc.AudioFrame) -> None:
         if not (self._classifier and self._classifier.listening):
@@ -343,9 +343,9 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
 
         self._session._amd = None
 
-    # endregion
 
-    # region: internal methods
+
+
 
     async def _run(self, session: AgentSession) -> None:
         if self._classifier:
@@ -376,8 +376,8 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
 
         session._amd = self
 
-        # classifier is dormant until start_detection_timer / start_listening;
-        # the listening gate stays closed so pre-setup audio is dropped.
+
+
         self._start_span()
         if session._activity:
             session._activity._pause_authorization()
@@ -404,8 +404,8 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
             )
             if self._closed or not self._classifier:
                 return
-            # outer budget runs from track-up so AMD bails out even if the
-            # call never reaches the active state
+
+
             self._classifier.start_detection_timer()
 
             if self._participant_identity:
@@ -420,7 +420,7 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                     None,
                 )
             if publisher is None:
-                # publisher gone start listening so the no-speech timer settles faster
+
                 self._start_listening()
                 return
 
@@ -451,7 +451,7 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
                 value=_SIP_CALL_STATUS_ACTIVE,
             )
         except RuntimeError as e:
-            # SIP participant disconnected before going active, default to detection timeout
+
             logger.debug(
                 "AMD: SIP answer wait failed; starting to listen", extra={"reason": str(e)}
             )
@@ -595,7 +595,7 @@ class AMD(EventEmitter[Literal["amd_prediction"]]):
 
         return None
 
-    # endregion
+
 
 
 def _warn_if_not_evaluated(

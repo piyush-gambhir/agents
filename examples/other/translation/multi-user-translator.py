@@ -92,7 +92,7 @@ class Translator:
         """Initialize translator for a specific language."""
         self._room = room
         self._target_language = target_language
-        self._track_id = track_id  # source track id
+        self._track_id = track_id
         self._participant_identity = participant_identity
         self._tasks: list[asyncio.Task] = []
         self._input_ch = utils.aio.Chan[str]()
@@ -360,7 +360,7 @@ class RoomTranslator:
         ):
             if track.kind == rtc.TrackKind.KIND_AUDIO:
                 audio_language = participant.attributes.get("language")
-                # TODO: this is test code
+
                 if audio_language is None:
                     audio_language = "en"
                 self._add_track(
@@ -376,7 +376,7 @@ class RoomTranslator:
             if track.kind == rtc.TrackKind.KIND_AUDIO:
                 self._remove_track(track)
 
-        # first set to the current state that's already in the room
+
         self._update_languages()
 
         existing_track_ids = [input_track.track.sid for input_track in self.input_tracks]
@@ -435,7 +435,7 @@ async def entrypoint(ctx: JobContext):
     """Main entrypoint for the translation agent service."""
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # set the current agent's state to be compatible with new sandbox
+
     await ctx.room.local_participant.set_attributes(
         {
             "lk.agent.state": "listening",
@@ -445,8 +445,8 @@ async def entrypoint(ctx: JobContext):
 
     room_translator = RoomTranslator(
         ctx.room,
-        # for testing, uncomment to add additional languages to translate to
-        # additional_languages=[],
+
+
     )
     room_translator.start()
 

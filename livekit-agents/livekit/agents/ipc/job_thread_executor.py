@@ -114,8 +114,8 @@ class ThreadJobExecutor:
 
     async def _start(self) -> None:
         async with self._lock:
-            # to simplify the runners implementation, we also use a duplex in the threaded executor
-            # (ThreadedRunners), so we can use the same protocol
+
+
             mp_pch, mp_cch = socket.socketpair()
             pch: duplex_unix._AsyncDuplex | None = None
             try:
@@ -195,7 +195,7 @@ class ThreadJobExecutor:
                 asyncio.TimeoutError("runner initialization timed out")
             )
             raise
-        except Exception as e:  # should be channel.ChannelClosed most of the time
+        except Exception as e:
             self._initialize_fut.set_exception(e)
             raise
         else:
@@ -276,9 +276,9 @@ class ThreadJobExecutor:
         try:
             await self._initialize_fut
         except asyncio.TimeoutError:
-            pass  # this happens when the initialization takes longer than self._initialize_timeout
+            pass
         except Exception:
-            pass  # initialization failed
+            pass
 
         ping_task = asyncio.create_task(self._ping_task())
         monitor_task = asyncio.create_task(self._monitor_task())
@@ -324,7 +324,7 @@ class ThreadJobExecutor:
                 self._inference_tasks.add(task)
                 task.add_done_callback(self._inference_tasks.discard)
 
-        # resolve pending futures when the channel closes
+
         if not self._shutdown_ack_fut.done():
             self._shutdown_ack_fut.set_result(None)
 

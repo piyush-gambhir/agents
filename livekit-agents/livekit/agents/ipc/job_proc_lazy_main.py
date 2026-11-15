@@ -5,7 +5,7 @@ from multiprocessing import current_process
 if current_process().name == "job_proc":
     import signal
 
-    # ignore signals in the jobs process (the parent process will handle them)
+
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
@@ -44,11 +44,11 @@ from .proto import (
     StartJobRequest,
 )
 
-# Defensive timeout for AgentSession.aclose() during job shutdown. Hardcoded for now
-# as a guardrail against close paths that hang indefinitely. If aclose() does not
-# return in this window, the rest of the shutdown sequence (on_session_end,
-# ShuttingDown ack, room.disconnect, shutdown callbacks) runs anyway so user-
-# registered shutdown callbacks are not silently dropped.
+
+
+
+
+
 _SESSION_ACLOSE_TIMEOUT = 60.0
 
 
@@ -92,7 +92,7 @@ def proc_main(args: ProcStartArgs) -> None:
         client.initialize()
     except Exception:
         log_handler.close()
-        return  # initialization failed, exit (initialize will send an error to the worker)
+        return
 
     client.run()
 
@@ -201,7 +201,7 @@ class _JobProc:
         self._session_end_timeout = session_end_timeout
         self._job_task: asyncio.Task[None] | None = None
 
-        # used to warn users if both connect and shutdown are not called inside the job_entry
+
         self._ctx_connect_called = False
         self._ctx_shutdown_called = False
 
@@ -239,7 +239,7 @@ class _JobProc:
                     if not self.has_running_job:
                         await self._client.send(ShuttingDown())
                         self._exit_proc_flag.set()
-                        break  # exit immediately
+                        break
 
                     with contextlib.suppress(asyncio.InvalidStateError):
                         self._shutdown_fut.set_result(
@@ -252,14 +252,14 @@ class _JobProc:
                 if isinstance(msg, DumpStackTraceRequest):
                     _dump_stack_traces_impl()
 
-            # unblock any pending do_inference() calls
+
             self._inf_client.close()
 
         read_task = asyncio.create_task(_read_ipc_task(), name="job_ipc_read")
         try:
             await self._exit_proc_flag.wait()
         finally:
-            # ensure cleanup on cancellation (e.g. parent channel closes)
+
             if self._job_task is not None:
                 await aio.cancel_and_wait(self._job_task)
             await aio.cancel_and_wait(read_task)
@@ -346,8 +346,8 @@ class _JobProc:
                     "unhandled exception while running the job task",
                     exc_info=t.exception(),
                 )
-                # if the process crashes before ctx.connect(), shutdown_fut will never resolve
-                # we'll force it to trigger shutdown so _on_cleanup can flush crash logs
+
+
                 with contextlib.suppress(asyncio.InvalidStateError):
                     self._shutdown_fut.set_result(
                         _ShutdownInfo(user_initiated=False, reason="job crashed")
@@ -365,7 +365,7 @@ class _JobProc:
 
         shutdown_info = await self._shutdown_fut
 
-        # wait for the entrypoint to finish, cancel if it takes too long
+
         if not job_entry_task.done():
             try:
                 await asyncio.wait_for(asyncio.shield(job_entry_task), timeout=15)
@@ -373,8 +373,8 @@ class _JobProc:
                 logger.warning("entrypoint did not exit in time, cancelling")
                 await aio.cancel_and_wait(job_entry_task)
             except Exception:
-                # entrypoint raised; already logged via _on_entry_done.
-                # swallow so shutdown callbacks still run.
+
+
                 pass
 
         if session := self._job_ctx._primary_agent_session:

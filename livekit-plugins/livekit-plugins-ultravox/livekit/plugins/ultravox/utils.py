@@ -38,7 +38,7 @@ def parse_tools(tools: list[llm.FunctionTool | llm.RawFunctionTool]) -> list[dic
                         if isinstance(variant, dict) and "type" in variant:
                             assert isinstance(variant["type"], str)
                             return variant["type"]
-            # Fallback to string
+
             return "string"
 
         results.append(
@@ -53,7 +53,7 @@ def parse_tools(tools: list[llm.FunctionTool | llm.RawFunctionTool]) -> list[dic
                             "schema": (
                                 p
                                 if "type" in p
-                                else {  # fallback minimal schema for enum/anyOf etc.
+                                else {
                                     "type": _extract_type(p),
                                     **(
                                         {"description": p.get("description")}

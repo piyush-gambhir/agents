@@ -22,7 +22,7 @@ async def test_open_yields_working_session_and_closes_on_exit() -> None:
     async with http_context.open() as session:
         assert isinstance(session, aiohttp.ClientSession)
         assert not session.closed
-        # http_session() returns the same instance inside the block
+
         assert http_context.http_session() is session
 
     assert session.closed
@@ -33,10 +33,10 @@ async def test_open_yields_working_session_and_closes_on_exit() -> None:
 async def test_open_is_reentrant_inner_does_not_close_outer() -> None:
     async with http_context.open() as outer:
         async with http_context.open() as inner:
-            # nested open() reuses the outer session — does not create a new one
+
             assert inner is outer
 
-        # outer session is untouched after inner exits
+
         assert not outer.closed
         assert http_context.http_session() is outer
 
@@ -87,7 +87,7 @@ async def test_inference_stt_surfaces_real_error_outside_ctx(
     stt = inference.STT(model="cartesia/sonic-3")
     stream = stt.stream()
 
-    # SpeechStream no longer eagerly grabs `_session` in __init__.
+
     assert not hasattr(stream, "_session")
 
     with pytest.raises(RuntimeError, match="http_context.open"):

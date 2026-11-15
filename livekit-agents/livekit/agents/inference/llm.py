@@ -38,8 +38,8 @@ from ._utils import (
 
 lk_oai_debug = int(os.getenv("LK_OPENAI_DEBUG", 0))
 
-# Reasoning models don't support sampling parameters.
-# See: https://platform.openai.com/docs/guides/reasoning
+
+
 _REASONING_UNSUPPORTED_PARAMS: set[str] = {
     "temperature",
     "top_p",
@@ -51,15 +51,15 @@ _REASONING_UNSUPPORTED_PARAMS: set[str] = {
     "n",
 }
 
-# xAI reasoning models only restrict presence_penalty, frequency_penalty, stop.
-# They still support temperature and top_p.
+
+
 _XAI_REASONING_UNSUPPORTED_PARAMS: set[str] = {
     "presence_penalty",
     "frequency_penalty",
     "stop",
 }
 
-# Model prefix -> set of param names that should be dropped
+
 _UNSUPPORTED_PARAMS: dict[str, set[str]] = {
     "o1": _REASONING_UNSUPPORTED_PARAMS,
     "o3": _REASONING_UNSUPPORTED_PARAMS,
@@ -70,7 +70,7 @@ _UNSUPPORTED_PARAMS: dict[str, set[str]] = {
     "grok-4.20-multi-agent": _XAI_REASONING_UNSUPPORTED_PARAMS,
 }
 
-# models that don't support reasoning_effort when function tools are present
+
 _REASONING_EFFORT_TOOL_INCOMPATIBLE_PREFIXES: set[str] = {"gpt-5.2", "gpt-5.4"}
 
 
@@ -178,10 +178,10 @@ class ChatCompletionOptions(TypedDict, total=False):
     verbosity: Literal["low", "medium", "high"] | None
     web_search_options: completion_create_params.WebSearchOptions
 
-    # livekit-typed arguments
+
     tool_choice: ToolChoice
-    # TODO(theomonnomn): support repsonse format
-    # response_format: completion_create_params.ResponseFormat
+
+
 
 
 @dataclass
@@ -365,7 +365,7 @@ class LLMStream(llm.LLMStream):
         tools: list[Tool],
         conn_options: APIConnectOptions,
         extra_kwargs: dict[str, Any],
-        provider_fmt: str = "openai",  # used internally for chat_ctx format
+        provider_fmt: str = "openai",
     ) -> None:
         super().__init__(llm_v, chat_ctx=chat_ctx, tools=tools, conn_options=conn_options)
         self._model = model
@@ -379,8 +379,8 @@ class LLMStream(llm.LLMStream):
         self._tool_ctx = llm.ToolContext(tools)
 
     async def _run(self) -> None:
-        # current function call that we're waiting for full completion (args are streamed)
-        # (defined inside the _run method to make sure the state is reset for each run/attempt)
+
+
         self._oai_stream: openai.AsyncStream[ChatCompletionChunk] | None = None
         self._tool_call_id: str | None = None
         self._fnc_name: str | None = None
@@ -406,7 +406,7 @@ class LLMStream(llm.LLMStream):
                     },
                 )
             if not self._tools:
-                # remove tool_choice from extra_kwargs if no tools are provided
+
                 self._extra_kwargs.pop("tool_choice", None)
 
             extra_headers = self._extra_kwargs.setdefault("extra_headers", {})
@@ -469,8 +469,8 @@ class LLMStream(llm.LLMStream):
     ) -> llm.ChatChunk | None:
         delta = choice.delta
 
-        # https://github.com/livekit/agents/issues/688
-        # the delta can be None when using Azure OpenAI (content filtering)
+
+
         if delta is None:
             return None
 
@@ -504,7 +504,7 @@ class LLMStream(llm.LLMStream):
                     self._tool_call_id = tool.id
                     self._fnc_name = tool.function.name
                     self._fnc_raw_arguments = tool.function.arguments or ""
-                    # Extract extra from tool call (e.g., Google thought signatures)
+
                     self._tool_extra = getattr(tool, "extra_content", None)
                 elif tool.function.arguments:
                     self._fnc_raw_arguments += tool.function.arguments  # type: ignore
@@ -536,7 +536,7 @@ class LLMStream(llm.LLMStream):
 
         delta.content = llm_utils.strip_thinking_tokens(delta.content, thinking)
 
-        # Extract extra from delta (e.g., Google thought signatures on text parts)
+
         delta_extra = getattr(delta, "extra_content", None)
 
         if not delta.content and not delta_extra:

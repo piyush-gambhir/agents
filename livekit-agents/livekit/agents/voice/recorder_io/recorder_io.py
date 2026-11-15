@@ -23,7 +23,7 @@ from .. import io
 if TYPE_CHECKING:
     from ..agent_session import AgentSession
 
-# the recorder currently assume the input is a continous uninterrupted audio stream
+
 
 
 WRITE_INTERVAL = 2.5
@@ -134,12 +134,12 @@ class RecorderIO:
         assert self._in_record is not None
         assert self._out_record is not None
 
-        # Forward the input audio to the encoder every WRITE_INTERVAL seconds.
+
         while True:
             await asyncio.sleep(WRITE_INTERVAL)
             if self._out_record.has_pending_data:
-                # if the output is currenetly playing audio, wait for it to stay in sync
-                continue  # always wait for the complete output
+
+                continue
 
             input_buf = self._in_record.take_buf(pad_since=self._out_record._last_speech_end_time)
             self._in_q.put_nowait(input_buf)
@@ -154,7 +154,7 @@ class RecorderIO:
 
         container = av.open(self._output_path, mode="w", format="ogg")
 
-        # prefer libopus; fallback to native opus only if necessary
+
         try:
             av.Codec("libopus", "w")
             codec_name = "libopus"
@@ -168,14 +168,14 @@ class RecorderIO:
             layout="stereo",
         )
 
-        # native ffmpeg opus encoder is experimental
+
         if codec_name == "opus":
             stream.codec_context.options["strict"] = FFMPEG_STRICT_LEVEL
 
         in_resampler: rtc.AudioResampler | None = None
         out_resampler: rtc.AudioResampler | None = None
 
-        capacity = self._sample_rate * 6  # 6s, 1ch
+        capacity = self._sample_rate * 6
         stereo_buf = np.zeros((2, capacity), dtype=np.float32)
 
         def remix_and_resample(frames: list[rtc.AudioFrame], channel_idx: int) -> int:
@@ -211,7 +211,7 @@ class RecorderIO:
                     if input_buf is None or output_buf is None:
                         break
 
-                    # lazy creation of the resamplers
+
                     if in_resampler is None and len(input_buf):
                         input_rate, num_channels = (
                             input_buf[0].sample_rate,
@@ -246,7 +246,7 @@ class RecorderIO:
 
                     if output_buf:
                         assert out_resampler is not None
-                        # the output is sent per-segment. Always flush when the playback is done
+
                         output_resampled.extend(out_resampler.flush())
 
                     len_left = remix_and_resample(input_resampled, 0)
@@ -335,8 +335,8 @@ class RecorderAudioInput(io.AudioInput):
                 _create_silence_frame(padding, frames[0].sample_rate, frames[0].num_channels),
                 *frames,
             ]
-        # we could pad with silence here with some fixed SR and channels,
-        # but it's better for the user to know that this is happening
+
+
         elif pad_since and self.__started_time is None and not self.__padded and not frames:
             logger.warning(
                 "input speech hasn't started yet, skipping silence padding, "
@@ -372,8 +372,8 @@ class RecorderAudioOutput(io.AudioOutput):
             label="RecorderIO",
             next_in_chain=audio_output,
             sample_rate=audio_output.sample_rate if audio_output else None,
-            # TODO: support pause
-            capabilities=io.AudioOutputCapabilities(pause=True),  # depends on the next_in_chain
+
+            capabilities=io.AudioOutputCapabilities(pause=True),
         )
         self.__recording_io = recording_io
         self.__write = write_fnc
@@ -382,7 +382,7 @@ class RecorderAudioOutput(io.AudioOutput):
         self._last_speech_end_time: None | float = None
         self._last_speech_start_time: None | float = None
 
-        # pause tracking
+
         self.__current_pause_start: float | None = None
         self.__pause_wall_times: list[tuple[float, float]] = []
 
@@ -468,7 +468,7 @@ class RecorderAudioOutput(io.AudioOutput):
             self._last_speech_start_time = None
             return
 
-        pause_events: deque[tuple[float, float]] = deque()  # (position, duration)
+        pause_events: deque[tuple[float, float]] = deque()
         playback_start_time = finish_time - playback_position
         if self.__pause_wall_times:
             total_pause_duration = sum(end - start for start, end in self.__pause_wall_times)
@@ -493,12 +493,12 @@ class RecorderAudioOutput(io.AudioOutput):
                 frame, _ = _split_frame(frame, playback_position - acc_dur)
                 should_break = True
 
-            # process any pauses before this frame starts
+
             while pause_events and pause_events[0][0] <= acc_dur:
                 pause_pos, pause_dur = pause_events.popleft()
                 buf.append(_create_silence_frame(pause_dur, sample_rate, num_channels))
 
-            # process any pauses within this frame
+
             while pause_events and pause_events[0][0] < acc_dur + frame.duration:
                 pause_pos, pause_dur = pause_events.popleft()
                 left, frame = _split_frame(frame, pause_pos - acc_dur)
@@ -575,9 +575,9 @@ def _split_frame(frame: rtc.AudioFrame, position: float) -> tuple[rtc.AudioFrame
 
     samples_needed = min(int(position * frame.sample_rate), frame.samples_per_channel)
 
-    # `frame.data` is a memoryview of int16 samples (format "h"), so it is indexed in
-    # samples, not bytes. The split point in that buffer is `samples_per_channel` worth
-    # of interleaved samples across all channels.
+
+
+
     split = samples_needed * frame.num_channels
     data = frame.data
 

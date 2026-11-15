@@ -49,7 +49,7 @@ def create_session(
         min_duration=0.5 / speed_factor,
         false_interruption_timeout=2.0 / speed_factor,
     )
-    # allowing overriding default endpointing and interruption options
+
     turn_handling = turn_handling or {}
     turn_handling["endpointing"] = EndpointingOptions(
         **{**default_endpointing, **turn_handling.get("endpointing", {})}
@@ -61,7 +61,7 @@ def create_session(
     stt = FakeSTT(fake_user_speeches=user_speeches)
 
     if "aec_warmup_duration" not in extra:
-        extra["aec_warmup_duration"] = None  # disable aec warmup by default
+        extra["aec_warmup_duration"] = None
 
     session = AgentSession[None](
         vad=FakeVAD(
@@ -76,7 +76,7 @@ def create_session(
         **extra,
     )
 
-    # setup io with transcription sync
+
     audio_input = FakeAudioInput()
     audio_output = FakeAudioOutput(can_pause=can_pause_audio)
     transcription_output = FakeTextOutput()
@@ -105,11 +105,11 @@ async def run_session(session: AgentSession, agent: Agent, *, drain_delay: float
 
     await session.start(agent)
 
-    # start the fake vad and stt
+
     t_origin = time.time()
     audio_input.push(0.1)
 
-    # wait for the user speeches to be processed
+
     await stt.fake_user_speeches_done
 
     await asyncio.sleep(drain_delay)
@@ -153,7 +153,7 @@ class FakeActions:
             and self._items
             and isinstance(self._items[-1], FakeUserSpeech)
         ):
-            # use the last user speech as input
+
             input = self._items[-1].transcript
 
         if not utils.is_given(input):

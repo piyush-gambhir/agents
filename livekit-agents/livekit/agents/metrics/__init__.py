@@ -29,7 +29,7 @@ __all__ = [
     "TTSMetrics",
     "RealtimeModelMetrics",
     "InterruptionMetrics",
-    # New model usage classes
+
     "LLMModelUsage",
     "TTSModelUsage",
     "STTModelUsage",
@@ -37,13 +37,13 @@ __all__ = [
     "ModelUsage",
     "AgentSessionUsage",
     "ModelUsageCollector",
-    # Deprecated - use ModelUsageCollector and ModelUsage instead
+
     "UsageSummary",
     "UsageCollector",
     "log_metrics",
 ]
 
-# Cleanup docs of unexported modules
+
 _module = dir()
 NOT_IN_ALL = [m for m in _module if m not in __all__]
 

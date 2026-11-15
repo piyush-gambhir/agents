@@ -23,8 +23,8 @@ async def entrypoint(job: JobContext):
     NUM_CHANNELS = 1
 
     tts = neuphonic.TTS(
-        # voice_id=<uuid>,
-        sample_rate=SAMPLE_RATE  # defaults to 22050
+
+        sample_rate=SAMPLE_RATE
     )
 
     source = rtc.AudioSource(SAMPLE_RATE, NUM_CHANNELS)
@@ -46,7 +46,7 @@ async def entrypoint(job: JobContext):
 
     text = "Hello from Neuphonic. You have just successfully run the example!"
 
-    # split into two word chunks to simulate LLM streaming
+
     words = text.split()
     for i in range(0, len(words), 2):
         chunk = " ".join(words[i : i + 2])
@@ -54,7 +54,7 @@ async def entrypoint(job: JobContext):
             logger.info(f'pushing chunk: "{chunk} "')
             stream.push_text(chunk + " ")
 
-    # Mark end of input segment
+
     stream.flush()
     stream.end_input()
     await asyncio.gather(task)

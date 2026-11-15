@@ -143,7 +143,7 @@ def main() -> None:
     results = _fetch_all()
     today = datetime.now().date()
 
-    w = 24  # name column width
+    w = 24
     print(f"PyPI Stats (no mirrors) — {today}")
     print(f"{'Package':<{w}} {'7d':>6} {'30d':>6} {'90d':>6}  {'WoW':>5} {'MoM':>5} {'QoQ':>5}")
     print("-" * (w + 38))
@@ -158,7 +158,7 @@ def main() -> None:
         )
 
     for label, idx, min_prev in [("WoW", 4, 500), ("MoM", 5, 2000), ("QoQ", 6, 5000)]:
-        prev_idx = {4: 1, 5: 2, 6: 3}  # map growth idx -> current period volume field
+        prev_idx = {4: 1, 5: 2, 6: 3}
         growers = [
             (r[0], r[idx]) for r in results
             if r[idx] is not None and r[idx] > 0 and r[prev_idx[idx]] >= min_prev

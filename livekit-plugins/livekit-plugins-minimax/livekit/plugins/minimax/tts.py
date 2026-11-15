@@ -37,45 +37,45 @@ TTSModel = Literal[
     "speech-01-turbo",
 ]
 
-# Minimax TTS Voice IDs
-# Defines commonly used voices for static analysis.
-# See full voice list in Minimax documentation
+
+
+
 TTSVoice = Literal[
-    # Social Media Voices
+
     "socialmedia_female_2_v1",
     "socialmedia_female_1_v1",
-    # Voice Agent Series
+
     "voice_agent_Female_Phone_4",
     "voice_agent_Male_Phone_1",
     "voice_agent_Male_Phone_2",
-    # English Voices - Female
+
     "English_StressedLady",
     "English_SentimentalLady",
     "English_radiant_girl",
-    # English Voices - Male
+
     "English_WiseScholar",
     "English_Persuasive_Man",
     "English_Explanatory_Man",
     "English_Insightful_Speaker",
-    # Japanese Voices
+
     "japanese_male_social_media_1_v2",
     "japanese_female_social_media_1_v2",
-    # French Voices
+
     "French_CasualMan",
     "French_Female Journalist",
-    # Spanish Voices
+
     "Spanish_Narrator",
     "Spanish_WiseScholar",
     "Spanish_ThoughtfulMan",
-    # Arabic Voices
+
     "Arabic_CalmWoman",
     "Arabic_FriendlyGuy",
-    # Portuguese Voices
+
     "Portuguese_ThoughtfulLady",
-    # German Voices
+
     "German_PlayfulMan",
     "German_SweetLady",
-    # MOSS Audio Series
+
     "moss_audio_7c7e7ae2-7356-11f0-9540-7ef9b4b62566",
     "moss_audio_b118f320-78c0-11f0-bbeb-26e8167c4779",
     "moss_audio_84f32de9-2363-11f0-b7ab-d255fae1f27b",
@@ -86,7 +86,7 @@ DEFAULT_MODEL = "speech-02-turbo"
 DEFAULT_VOICE_ID = "socialmedia_female_2_v1"
 
 
-# Note: "fluent" emotion is only supported by speech-2.6-* models
+
 TTSEmotion = Literal[
     "happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral", "fluent"
 ]
@@ -137,10 +137,10 @@ TTSLanguageBoost = Literal[
 
 TTSAudioFormat = Literal["pcm", "mp3", "flac", "wav"]
 TTSSampleRate = Literal[8000, 16000, 22050, 24000, 32000, 44100]
-TTSBitRate = Literal[32000, 64000, 128000, 256000]  # only for mp3 format
+TTSBitRate = Literal[32000, 64000, 128000, 256000]
 
 DEFAULT_BASE_URL = (
-    "https://api-uw.minimax.io"  # or "https://api.minimaxi.chat or https://api.minimax.io"
+    "https://api-uw.minimax.io"
 )
 
 
@@ -153,13 +153,13 @@ class _TTSOptions:
     sample_rate: TTSSampleRate
     bitrate: TTSBitRate
     emotion: TTSEmotion | None
-    speed: float  # [0.5, 2.0]
-    vol: float  # (0, 10]
-    pitch: int  # [-12, 12]
+    speed: float
+    vol: float
+    pitch: int
     text_normalization: bool
     pronunciation_dict: dict[str, list[str]] | None
     language_boost: TTSLanguageBoost | None
-    # voice_modify
+
     intensity: int | None
     timbre: int | None
     audio_format: TTSAudioFormat
@@ -244,7 +244,7 @@ class TTS(tts.TTS):
         if timbre is not None and not (-100 <= timbre <= 100):
             raise ValueError(f"timbre must be between -100 and 100, but got {timbre}")
 
-        # Validate fluent emotion is only used with speech-2.6-* models
+
         if emotion == "fluent" and not model.startswith("speech-2.6"):
             raise ValueError(
                 f'"fluent" emotion is only supported by speech-2.6-* models, '
@@ -360,7 +360,7 @@ class TTS(tts.TTS):
         session = self._ensure_session()
         ws = await asyncio.wait_for(session.ws_connect(url, headers=headers), timeout)
 
-        # Log WebSocket connection establishment
+
         logger.debug(f"MiniMax WebSocket connected to {url}")
 
         return ws
@@ -394,9 +394,9 @@ class SynthesizeStream(tts.SynthesizeStream):
         self._opts = replace(tts._opts)
 
     async def _run(self, output_emitter: tts.AudioEmitter) -> None:
-        # Initialize with temporary ID, will be updated from WebSocket messages
+
         request_id = utils.shortuuid()
-        trace_id = request_id  # Use trace_id directly instead of creating a dict
+        trace_id = request_id
 
         output_emitter.initialize(
             request_id=request_id,
@@ -441,7 +441,7 @@ class SynthesizeStream(tts.SynthesizeStream):
             await ws.send_str(json.dumps({"event": "task_finish"}))
 
         async def _recv_task(ws: aiohttp.ClientWebSocketResponse) -> None:
-            # Initialize trace_id to ensure it's available in all code paths
+
             current_trace_id = trace_id
 
             while True:
@@ -468,8 +468,8 @@ class SynthesizeStream(tts.SynthesizeStream):
 
                 data: dict[str, Any] = json.loads(msg.data)
 
-                # Extract trace_id (priority: root.trace_id > base_resp.trace_id)
-                # api.minimax.io returns trace_id in root.trace_id, api.minimaxi.com may return in base_resp.trace_id
+
+
                 msg_trace_id = data.get("trace_id") or data.get("base_resp", {}).get("trace_id")
                 if msg_trace_id and msg_trace_id != current_trace_id:
                     current_trace_id = msg_trace_id
@@ -589,7 +589,7 @@ class ChunkedStream(tts.ChunkedStream):
                 "text": self._input_text,
                 "stream": True,
                 "stream_options": {
-                    "exclude_aggregated_audio": True,  # don't include complete audio in last chunk
+                    "exclude_aggregated_audio": True,
                 },
             }
         )
@@ -601,13 +601,13 @@ class ChunkedStream(tts.ChunkedStream):
                 },
                 json=msg,
                 timeout=aiohttp.ClientTimeout(total=30, sock_connect=self._conn_options.timeout),
-                # large read_bufsize to avoid `ValueError: Chunk too big`
+
                 read_bufsize=10 * 1024 * 1024,
             ) as resp:
                 resp.raise_for_status()
 
-                # Extract trace_id from response headers (all requests have this)
-                # Note: api.minimax.io also returns trace_id in response body root.trace_id
+
+
                 trace_id = resp.headers.get("Trace-Id") or resp.headers.get("X-Trace-Id")
                 minimax_request_id = resp.headers.get("Minimax-Request-Id")
 
@@ -638,7 +638,7 @@ class ChunkedStream(tts.ChunkedStream):
 
                     data = json.loads(line[5:])
 
-                    # api.minimax.io returns trace_id in response body root level
+
                     body_trace_id = data.get("trace_id")
                     if body_trace_id and body_trace_id != trace_id:
                         logger.debug(f"Found trace_id in response body: {body_trace_id}")
@@ -650,7 +650,7 @@ class ChunkedStream(tts.ChunkedStream):
                         status_code = base_resp.get("status_code", 0)
                         if status_code != 0:
                             status_msg = base_resp.get("status_msg", "Unknown error")
-                            # trace_id priority: response body top level > response headers
+
                             error_trace_id = body_trace_id or trace_id
 
                             logger.error(

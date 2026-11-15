@@ -27,7 +27,7 @@ class BufferedTokenStream:
         self._retain_format = retain_format
         self._current_segment_id = shortuuid()
 
-        self._buf_tokens: list[str] = []  # <= min_token_len
+        self._buf_tokens: list[str] = []
         self._in_buf = ""
         self._out_buf = ""
 

@@ -71,17 +71,17 @@ class TestLanguageNormalization:
         assert LanguageCode("zh-hant-tw") == "zh-Hant-TW"
 
     def test_bcp47_iso639_3_subtag_preserved(self):
-        # ISO 639-3 subtags in compound BCP-47 are preserved for API round-tripping
-        # (e.g. Google STT expects "cmn-Hans-CN", not "zh-Hans-CN")
+
+
         assert LanguageCode("cmn-Hans-CN") == "cmn-Hans-CN"
         assert LanguageCode("cmn-Hant-TW") == "cmn-Hant-TW"
         assert LanguageCode("cmn-cn") == "cmn-CN"
-        # But .language resolves to ISO 639-1
+
         assert LanguageCode("cmn-Hans-CN").language == "zh"
         assert LanguageCode("cmn-Hans-CN").to_language_name() == "chinese"
 
     def test_bcp47_iso639_3_no_iso1_subtag(self):
-        # ISO 639-3 codes with no ISO 639-1 equivalent stay as-is
+
         assert LanguageCode("yue-Hant-HK") == "yue-Hant-HK"
         assert LanguageCode("yue-Hant-HK").language == "yue"
 
@@ -90,7 +90,7 @@ class TestLanguageNormalization:
         assert LanguageCode("auto") == "auto"
 
     def test_iso639_3_no_iso1(self):
-        # These ISO 639-3 codes have no ISO 639-1 equivalent
+
         assert LanguageCode("ast") == "ast"
         assert LanguageCode("ceb") == "ceb"
         assert LanguageCode("fil") == "fil"
@@ -145,7 +145,7 @@ class TestLanguageStrCompat:
         assert "US" in lang
 
     def test_hashable(self):
-        # Can be used as dict key / set member
+
         d = {LanguageCode("en"): "English"}
         assert d["en"] == "English"
         assert d[LanguageCode("english")] == "English"

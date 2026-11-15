@@ -39,15 +39,15 @@ class PeriodicCollector(Generic[T]):
 
 
 def _to_deepgram_url(opts: dict, base_url: str, *, websocket: bool) -> str:
-    # don't modify the original opts
+
     opts = opts.copy()
     if opts.get("keywords"):
-        # convert keywords to a list of "keyword:intensifier"
+
         opts["keywords"] = [
             f"{keyword}:{intensifier}" for (keyword, intensifier) in opts["keywords"]
         ]
 
-    # lowercase bools
+
     opts = {k: str(v).lower() if isinstance(v, bool) else v for k, v in opts.items()}
 
     if websocket and base_url.startswith("http"):

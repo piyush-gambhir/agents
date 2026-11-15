@@ -204,8 +204,8 @@ class SpeechStream(stt.RecognizeStream):
             for frame in audio_bstream.flush():
                 await ws.send_bytes(frame.data.tobytes())
 
-            # Don't close the WS here — let recv_task read the final
-            # transcript before the server closes the connection.
+
+
             closing_ws = True
 
         @utils.log_exceptions(logger=logger)

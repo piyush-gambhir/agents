@@ -216,8 +216,8 @@ class LLMStream(ABC):
             try:
                 with tracer.start_as_current_span("llm_request_run") as attempt_span:
                     attempt_span.set_attribute(trace_types.ATTR_RETRY_COUNT, i)
-                    # Reset per-attempt context ids; the monitor task populates
-                    # this as ChatChunks arrive.
+
+
                     self._provider_request_ids = []
                     try:
                         await self._run()
@@ -231,7 +231,7 @@ class LLMStream(ABC):
                             )
                     return
             except APIError as e:
-                # 499 (Client Closed Request) - close gracefully without raising
+
                 if isinstance(e, APIStatusError) and e.status_code == 499:
                     return
 
@@ -259,7 +259,7 @@ class LLMStream(ABC):
                 if retry_interval > 0:
                     await asyncio.sleep(retry_interval)
 
-                # reset the flag when retrying
+
                 self._current_attempt_has_error = False
 
             except Exception as e:
@@ -308,7 +308,7 @@ class LLMStream(ABC):
 
         duration = time.perf_counter() - start_time
 
-        # if generation is aborted before any tokens are received, it doesn't make sense to report -1 ttft
+
         if self._current_attempt_has_error or ttft < 0:
             return
 
@@ -330,12 +330,12 @@ class LLMStream(ABC):
             ),
         )
         if self._llm_request_span:
-            # livekit metrics attribute
+
             self._llm_request_span.set_attribute(
                 trace_types.ATTR_LLM_METRICS, metrics.model_dump_json()
             )
 
-            # set gen_ai attributes
+
             self._llm_request_span.set_attributes(
                 {
                     trace_types.ATTR_GEN_AI_OPERATION_NAME: "chat",

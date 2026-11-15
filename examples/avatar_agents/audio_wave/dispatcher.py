@@ -19,8 +19,8 @@ THIS_DIR = Path(__file__).parent.absolute()
 @dataclass
 class AvatarConnectionInfo:
     room_name: str
-    url: str  # LiveKit server URL
-    token: str  # Token for avatar worker to join
+    url: str
+    token: str
 
 
 class WorkerLauncher:
@@ -58,7 +58,7 @@ class WorkerLauncher:
             except subprocess.TimeoutExpired:
                 worker.process.kill()
 
-        # Launch new worker process
+
         cmd = [sys.executable, str(THIS_DIR / "avatar_runner.py")]
         env = os.environ.copy()
         env["LIVEKIT_URL"] = connection_info.url

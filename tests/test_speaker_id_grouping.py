@@ -27,11 +27,11 @@ class TestSpeakerIdGrouping:
         """Helper method to process a list of (text, speaker_id) fragments."""
         result = ""
         for text, speaker_id in fragments:
-            # Skip speakers to ignore
+
             if speaker_id and re.match(r"^__[A-Z0-9_]{2,}__$", speaker_id):
                 continue
 
-            # Create a SpeakerSpeechData object and get formatted text
+
             speech_data = stt.SpeechData(
                 text=self._format_text(text, speaker_id),
                 speaker_id=speaker_id,
@@ -41,10 +41,10 @@ class TestSpeakerIdGrouping:
                 confidence=1.0,
             )
 
-            # Add the text
+
             processed = speech_data.text
 
-            # Concatenate to the result
+
             if processed:
                 if result:
                     result += f" {processed}"
@@ -100,9 +100,9 @@ class TestSpeakerIdGrouping:
     def test_none_speaker_id(self):
         """Test handling fragments with None speaker_id."""
         fragments = [
-            ("Hello world", None),  # No speaker ID
+            ("Hello world", None),
             ("How are you?", "S1"),
-            ("Good thanks!", None),  # No speaker ID
+            ("Good thanks!", None),
         ]
         result = self._process_fragments(fragments)
         assert result == "Hello world [S1]How are you?[/S1] Good thanks!"

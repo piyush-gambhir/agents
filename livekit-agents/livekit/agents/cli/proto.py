@@ -15,7 +15,7 @@ from ..job import JobAcceptArguments, RunningJobInfo
 class CliArgs:
     log_level: str
 
-    # TODO(long): these are not actually used?
+
     url: str | None
     api_key: str | None = field(repr=False, default=None)
     api_secret: str | None = field(repr=False, default=None)
@@ -23,14 +23,14 @@ class CliArgs:
     devmode: bool = False
     reload: bool = False
 
-    # simulate_job: str | None = None
 
-    # internal states
-    # amount of time this worker has been reloaded
+
+
+
     reload_count: int = 0
 
-    # pipe used for the communication between the watch server and the watch client
-    # when reload/dev mode is enabled
+
+
     mp_cch: socket.socket | None = None
 
 

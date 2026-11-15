@@ -93,7 +93,7 @@ async def _test_wait_disconnect(wait_fn: Callable[[rtc.Room], Awaitable[object]]
     await room.connect(LK_URL, token)
 
     task = asyncio.ensure_future(wait_fn(room))
-    # ensure the task is running and has registered its event handlers
+
     await asyncio.sleep(0.5)
     await room.disconnect()
 
@@ -101,7 +101,7 @@ async def _test_wait_disconnect(wait_fn: Callable[[rtc.Room], Awaitable[object]]
         await asyncio.wait_for(task, timeout=TIMEOUT)
 
 
-# -- wait_for_participant tests --
+
 
 
 @pytest.mark.usefixtures("livekit_server")
@@ -134,12 +134,12 @@ class TestWaitForParticipant:
             task = asyncio.ensure_future(wait_for_participant(room_a, identity="target"))
             await asyncio.sleep(0.3)
 
-            # Join with wrong identity first
+
             async with connect_room("decoy", name):
                 await asyncio.sleep(0.3)
                 assert not task.done()
 
-                # Now join with the target identity
+
                 async with connect_room("target", name):
                     result = await asyncio.wait_for(task, timeout=TIMEOUT)
                     assert result.identity == "target"
@@ -156,12 +156,12 @@ class TestWaitForParticipant:
             )
             await asyncio.sleep(0.3)
 
-            # Standard participant should not match
+
             async with connect_room("standard", name):
                 await asyncio.sleep(0.3)
                 assert not task.done()
 
-                # Agent participant should match
+
                 async with connect_room("agent-p", name, kind="agent", agent=True):
                     result = await asyncio.wait_for(task, timeout=TIMEOUT)
                     assert result.identity == "agent-p"
@@ -171,7 +171,7 @@ class TestWaitForParticipant:
         await _test_wait_disconnect(wait_for_participant)
 
 
-# -- wait_for_track_publication tests --
+
 
 
 @pytest.mark.usefixtures("livekit_server")
@@ -205,7 +205,7 @@ class TestWaitForTrackPublication:
         await _test_wait_disconnect(wait_for_track_publication)
 
 
-# -- wait_for_agent tests --
+
 
 
 @pytest.mark.usefixtures("livekit_server")
@@ -223,16 +223,16 @@ class TestWaitForAgent:
                 assert result.kind == rtc.ParticipantKind.PARTICIPANT_KIND_AGENT
 
 
-# -- Reconnect E2E tests --
-#
-# exercise resume vs full-reconnect behavior end-to-end against a
-# real LiveKit server.
+
+
+
+
 
 _AGENT_IDENTITY = "agent"
 _USER_IDENTITY = "user"
 _TONE_NAME = "agent_tone"
-# Threshold tuned to discriminate the steady sine wave from server-side
-# silence/noise. The 440Hz tone at 0.5 amplitude lands well above 0.1.
+
+
 _AUDIO_RMS_THRESHOLD = 0.05
 
 
@@ -248,10 +248,10 @@ async def _agent_publishing_tone(agent_room: rtc.Room):
         track_publish_options=rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE),
         track_name=_TONE_NAME,
     )
-    # Replace the helper's internal AudioSource with our SineToneSource so the
-    # published track carries the known signal. _ParticipantAudioOutput
-    # constructs its own AudioSource in __init__; swap it before .start() so
-    # the LocalAudioTrack is built against ours.
+
+
+
+
     await output._audio_source.aclose()
     output._audio_source = tone.source
     await output.start()
@@ -326,7 +326,7 @@ class TestReconnect:
             async with AudioEnergyMonitor.watch(track) as mon:
                 await mon.wait_for_audio(min_rms=_AUDIO_RMS_THRESHOLD, timeout=5.0)
 
-                # Snapshot publication state before the disturbance.
+
                 publications_before = _agent_audio_publications(user_room)
                 assert len(publications_before) == 1, publications_before
                 sid_before = publications_before[0].sid
@@ -336,24 +336,24 @@ class TestReconnect:
 
                 await simulate_resume(agent_room)
 
-                # Engine cycles through Reconnecting -> Connected; wait for
-                # the second transition.
+
+
                 await _wait_back_to_connected(agent_room, timeout=15.0)
 
-                # Brief grace window for any Reconnected dispatch.
+
                 await asyncio.sleep(1.0)
                 assert reconnected_fired.is_set(), (
                     "RoomEvent::Reconnected should be fired on a resume"
                 )
 
-                # Publication identity is preserved.
+
                 publications_after = _agent_audio_publications(user_room)
                 assert len(publications_after) == 1, publications_after
                 assert publications_after[0].sid == sid_before, (
                     "publication SID changed on resume — engine should have preserved it"
                 )
 
-                # Audio continues to flow uninterrupted.
+
                 await mon.assert_audio_continuous(min_rms=_AUDIO_RMS_THRESHOLD, duration=1.5)
 
     async def test_full_reconnect_republishes_once_and_audio_recovers(self):
@@ -380,7 +380,7 @@ class TestReconnect:
                 publications_before = _agent_audio_publications(user_room)
                 assert len(publications_before) == 1
 
-                # Bug regression check: should fire exactly once.
+
                 reconnect_count = 0
 
                 def _count(*_args) -> None:
@@ -392,15 +392,15 @@ class TestReconnect:
                 await simulate_full_reconnect(agent_room)
                 await wait_for_event(agent_room, "reconnected", timeout=20.0)
 
-                # After the SDK's auto-republish the user observes
-                # unpublish -> publish on the agent. Resubscribe.
+
+
                 new_track = await _await_subscribed_audio(user_room)
 
-                # Bug regression: must be exactly ONE audio publication.
-                # Pre-fix, the agents framework's `_on_reconnected` raced
-                # to publish a second track on top of the SDK's
-                # auto-republished one.
-                await asyncio.sleep(0.5)  # let any stray duplicate settle
+
+
+
+
+                await asyncio.sleep(0.5)
                 publications_after = _agent_audio_publications(user_room)
                 assert len(publications_after) == 1, (
                     f"expected exactly 1 audio publication after full reconnect, "

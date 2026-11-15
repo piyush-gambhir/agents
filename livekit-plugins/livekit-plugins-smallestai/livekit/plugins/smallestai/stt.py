@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -46,14 +46,14 @@ from .models import STTEncoding, STTModels
 from .version import __version__
 
 NUM_CHANNELS = 1
-# Base URL for the Smallest AI API.
-# Streaming: wss://api.smallest.ai/waves/v1/{model}/get_text
-# Batch:     https://api.smallest.ai/waves/v1/{model}/get_text
+
+
+
 SMALLEST_STT_BASE_URL = "https://api.smallest.ai/waves/v1"
 
-# ---------------------------------------------------------------------------
-# Minimal PeriodicCollector — same logic as livekit-plugins-deepgram/_utils.py
-# ---------------------------------------------------------------------------
+
+
+
 
 T = TypeVar("T")
 
@@ -80,19 +80,19 @@ class _PeriodicCollector(Generic[T]):
         self._last_flush_time = time.monotonic()
 
 
-# ---------------------------------------------------------------------------
+
 
 
 @dataclass
 class _STTOptions:
     model: STTModels | str
     api_key: str
-    language: str  # BCP-47 code, e.g. "en", "hi"; use "multi" for auto-detection
+    language: str
     sample_rate: int
     encoding: STTEncoding | str
     word_timestamps: bool
     diarize: bool
-    eou_timeout_ms: int  # end-of-utterance silence timeout (100–10 000 ms)
+    eou_timeout_ms: int
     base_url: str
 
 
@@ -203,7 +203,7 @@ class STT(stt.STT):
                     "X-LiveKit-Version": __version__,
                 },
                 params=params,
-                # to_wav_bytes() produces a valid WAV file; the server auto-detects format.
+
                 data=rtc.combine_audio_frames(buffer).to_wav_bytes(),
                 timeout=aiohttp.ClientTimeout(
                     total=30,
@@ -280,9 +280,9 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-    # Signals end of stream: server flushes remaining audio, emits final transcripts,
-    # and responds with is_last=True before closing the session.
-    # Use {"type": "finalize"} mid-session to force is_final without closing.
+
+
+
     _CLOSE_STREAM_MSG: str = json.dumps({"type": "close_stream"})
 
     def __init__(
@@ -332,7 +332,7 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-            # Send audio in 50ms chunks; matches the 50–100ms guidance from Smallest AI docs.
+
             samples_per_chunk = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -346,16 +346,16 @@ class SpeechStream(stt.SpeechStream):
                         self._audio_duration_collector.push(frame.duration)
                         await ws.send_bytes(frame.data.tobytes())
                 elif isinstance(data, self._FlushSentinel):
-                    # User paused: drain the accumulator so the server gets all buffered
-                    # audio. The server's eou_timeout_ms will then detect the silence and
-                    # emit a final transcript — no explicit flush message is needed.
+
+
+
                     for frame in audio_bstream.flush():
                         self._audio_duration_collector.push(frame.duration)
                         await ws.send_bytes(frame.data.tobytes())
                     self._audio_duration_collector.flush()
 
-            # Input channel closed: close the stream so the server flushes remaining
-            # audio, emits final transcripts, and sends is_last=True.
+
+
             closing_ws = True
             await ws.send_str(SpeechStream._CLOSE_STREAM_MSG)
 
@@ -389,7 +389,7 @@ class SpeechStream(stt.SpeechStream):
 
                 self._process_stream_event(data)
 
-                # Server confirms the session is fully flushed; recv loop can exit.
+
                 if data.get("is_last"):
                     return
 
@@ -432,10 +432,10 @@ class SpeechStream(stt.SpeechStream):
             "word_timestamps": str(self._opts.word_timestamps).lower(),
             "diarize": str(self._opts.diarize).lower(),
         }
-        # Only send eou_timeout_ms when explicitly set (non-zero).
-        # When 0, omit the parameter and let the server use its default,
-        # which avoids adding server-side silence latency on top of LiveKit's
-        # own end-of-turn detection.
+
+
+
+
         if self._opts.eou_timeout_ms > 0:
             params["eou_timeout_ms"] = self._opts.eou_timeout_ms
         ws_url = (
@@ -446,8 +446,8 @@ class SpeechStream(stt.SpeechStream):
 
         t0 = time.perf_counter()
         try:
-            # heartbeat sends standard WebSocket ping frames every 5s, which is sufficient
-            # to keep the Smallest AI connection alive without a custom JSON message.
+
+
             ws = await asyncio.wait_for(
                 self._session.ws_connect(
                     ws_url,
@@ -477,18 +477,18 @@ class SpeechStream(stt.SpeechStream):
         )
 
     def _process_stream_event(self, data: dict[str, Any]) -> None:
-        # Streaming WebSocket response schema (Smallest AI Pulse API):
-        # {
-        #   "session_id":   str,
-        #   "transcript":   str,        # partial or final text for this utterance
-        #   "is_final":     bool,       # True when the utterance is complete
-        #   "is_last":      bool,       # True when the session itself is done (after close_stream)
-        #   "language":     str,        # present when is_final=True (detected or echoed)
-        #   "words":        [           # present when word_timestamps=True
-        #     {"word": str, "start": float, "end": float,
-        #      "confidence": float, "speaker": int}  # speaker only when diarize=True
-        #   ]
-        # }
+
+
+
+
+
+
+
+
+
+
+
+
         session_id = data.get("session_id", "")
         if session_id:
             self._session_id = session_id
@@ -499,7 +499,7 @@ class SpeechStream(stt.SpeechStream):
         if not transcript:
             return
 
-        # Infer START_OF_SPEECH — the Pulse API does not emit a dedicated speech-start event.
+
         if not self._speaking:
             self._speaking = True
             self._event_ch.send_nowait(stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH))
@@ -558,8 +558,8 @@ def _transcript_to_speech_data(
     start_time = raw_words[0].get("start", 0.0) + start_time_offset if raw_words else 0.0
     end_time = raw_words[-1].get("end", 0.0) + start_time_offset if raw_words else 0.0
 
-    # Streaming diarization: per-word speaker IDs are integers (0, 1, …).
-    # Pick the most frequent speaker across the utterance for top-level speaker_id.
+
+
     speaker_id: str | None = None
     if diarize and raw_words:
         speaker_counts = Counter(w["speaker"] for w in raw_words if "speaker" in w)
@@ -586,16 +586,16 @@ def _batch_transcription_to_speech_event(
     language: str,
     data: dict[str, Any],
 ) -> stt.SpeechEvent:
-    # Batch HTTP response schema (Smallest AI Pulse API):
-    # {
-    #   "status":       str,
-    #   "transcription": str,
-    #   "audio_length": str,   # duration in seconds as a string
-    #   "words":        [{"word": str, "start": float, "end": float,
-    #                     "confidence": float, "speaker": str}],
-    #   "language":     str,
-    #   "metadata":     {"filename": str, "duration": float, "fileSize": int}
-    # }
+
+
+
+
+
+
+
+
+
+
     transcript = data.get("transcription", "")
     raw_words: list[dict[str, Any]] = data.get("words") or []
     detected_language = data.get("language", language) or language

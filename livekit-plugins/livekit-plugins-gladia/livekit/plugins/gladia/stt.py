@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -356,27 +356,27 @@ class STT(stt.STT):
         streaming_config = _build_streaming_config(config)
 
         try:
-            # Initialize a session with Gladia
+
             session_response = await self._init_live_session(streaming_config, conn_options)
             session_id = session_response["id"]
             session_url = session_response["url"]
 
-            # Connect to the WebSocket
+
             receive_timeout = conn_options.timeout * 5
             async with self._ensure_session().ws_connect(
                 session_url,
                 timeout=aiohttp.ClientWSTimeout(ws_receive=receive_timeout, ws_close=10),
             ) as ws:
-                # Combine audio frames to get a single frame with all raw PCM data
+
                 combined_frame = rtc.combine_audio_frames(buffer)
-                # Get the raw bytes from the combined frame
+
                 pcm_data = combined_frame.data.tobytes()
 
                 bytes_per_second = config.sample_rate * config.channels * (config.bit_depth // 8)
                 chunk_size = (bytes_per_second * 150) // 1000
                 chunk_size = max(chunk_size, 1024)
 
-                # Send raw PCM audio data in chunks
+
                 for i in range(0, len(pcm_data), chunk_size):
                     chunk = pcm_data[i : i + chunk_size]
                     chunk_b64 = base64.b64encode(chunk).decode("utf-8")
@@ -384,23 +384,23 @@ class STT(stt.STT):
                         json.dumps({"type": "audio_chunk", "data": {"chunk": chunk_b64}})
                     )
 
-                # Tell Gladia we're done sending audio
+
                 await ws.send_str(json.dumps({"type": "stop_recording"}))
 
-                # Wait for final transcript
+
                 utterances = []
 
-                # Receive messages until we get the post_final_transcript message
+
                 try:
-                    # Set a timeout for waiting for the final results after sending stop_recording
+
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             data = json.loads(msg.data)
-                            # Collect final utterances
+
                             if data["type"] == "transcript" and data["data"]["is_final"]:
                                 utterance = data["data"]["utterance"]
                                 utterances.append(utterance)
-                            # Check for translation as the final result if enabled
+
                             elif (
                                 data["type"] == "translation" and config.translation_config.enabled
                             ):
@@ -437,17 +437,17 @@ class STT(stt.STT):
                             f"Timeout waiting for Gladia final transcript ({receive_timeout}s)"
                         ) from None
 
-                # Create a speech event from the collected final utterances
+
                 return self._create_speech_event(
                     utterances, session_id, config.language_config.languages
                 )
 
         except asyncio.TimeoutError as e:
-            # Catch timeout during connection or initial phase
+
             logger.error(f"Timeout during Gladia connection/initialization: {e}")
             raise APITimeoutError("Timeout connecting to or initializing Gladia session") from e
         except aiohttp.ClientResponseError as e:
-            # Error during session initialization POST request
+
             logger.error(f"Gladia API status error during session init: {e.status} {e.message}")
             raise APIStatusError(
                 message=e.message,
@@ -456,14 +456,14 @@ class STT(stt.STT):
                 body=await e.response.text() if hasattr(e, "response") else None,
             ) from e
         except aiohttp.ClientError as e:
-            # General client errors (connection refused, DNS resolution etc.)
+
             logger.error(f"Gladia connection error: {e}")
             raise APIConnectionError(f"Gladia connection error: {e}") from e
         except Exception as e:
-            # Catch-all for other unexpected errors
+
             logger.exception(
                 f"Unexpected error during Gladia synchronous recognition: {e}"
-            )  # Use logger.exception to include stack trace
+            )
             raise APIConnectionError(f"An unexpected error occurred: {e}") from e
 
     async def _init_live_session(self, config: dict, conn_options: APIConnectOptions) -> dict:
@@ -480,7 +480,7 @@ class STT(stt.STT):
                     sock_connect=conn_options.timeout,
                 ),
             ) as res:
-                # Gladia returns 201 Created when successfully creating a session
+
                 if res.status not in (200, 201):
                     raise APIStatusError(
                         message=f"Failed to initialize Gladia session: {res.status}",
@@ -499,7 +499,7 @@ class STT(stt.STT):
         """Create a SpeechEvent from Gladia's transcript data."""
         alternatives = []
 
-        # Process each utterance into a SpeechData object
+
         for utterance in utterances:
             text = utterance.get("text", "").strip()
             words = utterance.get("words", [])
@@ -865,15 +865,15 @@ class SpeechStream(stt.SpeechStream):
 
         while True:
             try:
-                # Initialize the Gladia session
+
                 session_info = await self._init_live_session()
                 session_url = session_info["url"]
                 self._request_id = session_info["id"]
 
-                # Reset backoff on success
+
                 backoff_time = 1.0
 
-                # Connect to the WebSocket
+
                 async with self._session.ws_connect(session_url) as ws:
                     self._ws = ws
                     logger.info(f"Connected to Gladia session {self._request_id}")
@@ -939,7 +939,7 @@ class SpeechStream(stt.SpeechStream):
         if not self._ws:
             return
 
-        # We'll aim to send audio chunks every ~100ms
+
         samples_100ms = self._opts.sample_rate // 10
         audio_bstream = utils.audio.AudioByteStream(
             sample_rate=self._opts.sample_rate,
@@ -976,7 +976,7 @@ class SpeechStream(stt.SpeechStream):
 
             for frame in frames:
                 self._audio_duration_collector.push(frame.duration)
-                # Encode the audio data as base64
+
                 chunk_b64 = base64.b64encode(frame.data.tobytes()).decode("utf-8")
                 message = json.dumps({"type": "audio_chunk", "data": {"chunk": chunk_b64}})
                 await self._ws.send_str(message)
@@ -986,7 +986,7 @@ class SpeechStream(stt.SpeechStream):
                     await self._ws.send_str(json.dumps({"type": "stop_recording"}))
                     has_ended = False
 
-        # Tell Gladia we're done sending audio when the stream ends
+
         if self._ws:
             await self._ws.send_str(json.dumps({"type": "stop_recording"}))
 
@@ -1055,8 +1055,8 @@ class SpeechStream(stt.SpeechStream):
                 )
 
                 if is_final:
-                    # Only emit FINAL_TRANSCRIPT for the *original* language
-                    # if translation is NOT enabled.
+
+
                     if not self._opts.translation_config.enabled:
                         event = stt.SpeechEvent(
                             type=stt.SpeechEventType.FINAL_TRANSCRIPT,
@@ -1065,7 +1065,7 @@ class SpeechStream(stt.SpeechStream):
                         )
                         self._event_ch.send_nowait(event)
 
-                        # End of speech after final original transcript only if not translating
+
                         if self._speaking:
                             self._speaking = False
                             self._event_ch.send_nowait(
@@ -1074,10 +1074,10 @@ class SpeechStream(stt.SpeechStream):
                                     request_id=self._request_id,
                                 )
                             )
-                    # If translation *is* enabled, we suppress this final event
-                    # and wait for the 'translation' message to emit the final event.
+
+
                 elif self._opts.interim_results:
-                    # Always send INTERIM_TRANSCRIPT for the original language if enabled
+
                     event = stt.SpeechEvent(
                         type=stt.SpeechEventType.INTERIM_TRANSCRIPT,
                         request_id=self._request_id,
@@ -1086,12 +1086,12 @@ class SpeechStream(stt.SpeechStream):
                     self._event_ch.send_nowait(event)
 
         elif data["type"] == "translation":
-            # Process translation messages according to Gladia's documentation:
-            # https://docs.gladia.io/reference/realtime-messages/translation
+
+
             if self._opts.translation_config.enabled and "data" in data:
                 translation_data = data["data"]
 
-                # Extract translated utterance
+
                 translated_utterance = translation_data.get("translated_utterance", {})
                 if not translated_utterance:
                     logger.warning(
@@ -1099,23 +1099,23 @@ class SpeechStream(stt.SpeechStream):
                     )
                     return
 
-                # Get language information
+
                 target_language = translation_data.get("target_language", "")
                 language = translated_utterance.get("language", target_language)
 
-                # Get original/input language and text from the original utterance
+
                 original_utterance = translation_data.get("utterance", {})
                 original_language = original_utterance.get("language", "")
                 original_text = original_utterance.get("text", "") or None
 
-                # Get the translated text
+
                 translated_text = translated_utterance.get("text", "").strip()
                 words = translated_utterance.get("words", [])
 
                 if translated_text and language:
-                    # Create speech data for the translation
+
                     speech_data = stt.SpeechData(
-                        language=LanguageCode(language),  # Use the target language
+                        language=LanguageCode(language),
                         source_languages=[LanguageCode(original_language)]
                         if original_language
                         else None,
@@ -1123,7 +1123,7 @@ class SpeechStream(stt.SpeechStream):
                         start_time=translated_utterance.get("start", 0) + self.start_time_offset,
                         end_time=translated_utterance.get("end", 0) + self.start_time_offset,
                         confidence=translated_utterance.get("confidence", 1.0),
-                        text=translated_text,  # Use the translated text
+                        text=translated_text,
                         words=[
                             TimedString(
                                 text=word.get("word", ""),
@@ -1135,15 +1135,15 @@ class SpeechStream(stt.SpeechStream):
                         ],
                     )
 
-                    # Emit FINAL_TRANSCRIPT containing the TRANSLATION
+
                     event = stt.SpeechEvent(
                         type=stt.SpeechEventType.FINAL_TRANSCRIPT,
                         request_id=self._request_id,
-                        alternatives=[speech_data],  # Now contains translated data
+                        alternatives=[speech_data],
                     )
                     self._event_ch.send_nowait(event)
 
-                    # Emit END_OF_SPEECH after the final *translated* transcript
+
                     if self._speaking:
                         self._speaking = False
                         self._event_ch.send_nowait(
@@ -1153,11 +1153,11 @@ class SpeechStream(stt.SpeechStream):
                         )
 
         elif data["type"] == "post_final_transcript":
-            # This is sent at the end of a session
-            # We now tie END_OF_SPEECH to the emission of the relevant FINAL_TRANSCRIPT
-            # (either original if no translation, or translated if translation is enabled).
-            # So, we might not strictly need to act on this message anymore for END_OF_SPEECH,
-            # but ensure speaking state is reset if somehow missed.
+
+
+
+
+
             if self._speaking:
                 self._speaking = False
 

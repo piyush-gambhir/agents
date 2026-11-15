@@ -12,9 +12,9 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 
 
-# This example shows how to close the agent session when the linked participant disconnects
-# or when the worker is shutting down. When closing the session, agent will be interrupted
-# and the last agent message will be added to the chat context.
+
+
+
 
 
 class MyAgent(Agent):
@@ -24,11 +24,11 @@ class MyAgent(Agent):
             stt="deepgram/nova-3:en",
             llm="openai/gpt-4.1-mini",
             tts="cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
-            # llm=google.realtime.RealtimeModel(),
+
             tools=[
                 EndCallTool(
                     end_instructions="thanks the user for calling and tell them goodbye",
-                    delete_room=True,  # this will disconnect all remote participants, including SIP callers
+                    delete_room=True,
                 )
             ],
         )

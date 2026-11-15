@@ -87,7 +87,7 @@ async def test_slot_scheduling() -> None:
 
         result = await sess.run(
             user_input="My email address is theo@livekit.io",
-            input_modality="audio",  # simulate audio input
+            input_modality="audio",
         )
         result.expect.next_event().is_function_call(
             name="update_email_address", arguments={"email": "theo@livekit.io"}
@@ -104,7 +104,7 @@ async def test_slot_scheduling() -> None:
         result.expect.next_event().is_function_call_output()
         result.expect.next_event().is_agent_handoff(new_agent_type=FrontDeskAgent)
 
-        result.expect.next_event().is_function_call_output()  # output of the schedule_appointment
+        result.expect.next_event().is_function_call_output()
         await (
             result.expect.next_event()
             .is_message(role="assistant")
@@ -114,7 +114,7 @@ async def test_slot_scheduling() -> None:
 
 @pytest.mark.asyncio
 async def test_no_availability() -> None:
-    userdata = Userdata(cal=FakeCalendar(timezone=TIMEZONE, slots=[]))  # no slots
+    userdata = Userdata(cal=FakeCalendar(timezone=TIMEZONE, slots=[]))
 
     async with _llm_model() as llm, AgentSession(llm=llm, userdata=userdata) as sess:
         await sess.start(FrontDeskAgent(timezone=TIMEZONE))

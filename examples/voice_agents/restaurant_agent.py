@@ -10,15 +10,15 @@ from livekit.agents import Agent, AgentServer, AgentSession, JobContext, RunCont
 from livekit.agents.llm import function_tool
 from livekit.plugins import silero
 
-# from livekit.plugins import noise_cancellation
 
-# This example demonstrates a multi-agent system where tasks are delegated to sub-agents
-# based on the user's request.
-#
-# The user is initially connected to a greeter, and depending on their need, the call is
-# handed off to other agents that could help with the more specific tasks.
-# This helps to keep each agent focused on the task at hand, and also reduces costs
-# since only a subset of the tools are used at any given time.
+
+
+
+
+
+
+
+
 
 
 logger = logging.getLogger("restaurant-example")
@@ -69,14 +69,14 @@ class UserData:
             "expense": self.expense or "unknown",
             "checked_out": self.checked_out or False,
         }
-        # summarize in yaml performs better than json
+
         return yaml.dump(data)
 
 
 RunContext_T = RunContext[UserData]
 
 
-# common functions
+
 
 
 @function_tool()
@@ -119,7 +119,7 @@ class BaseAgent(Agent):
         userdata: UserData = self.session.userdata
         chat_ctx = self.chat_ctx.copy()
 
-        # add the previous agent's chat history to the current agent
+
         if isinstance(userdata.prev_agent, Agent):
             truncated_chat_ctx = userdata.prev_agent.chat_ctx.copy(
                 exclude_instructions=True,
@@ -131,9 +131,9 @@ class BaseAgent(Agent):
             items_copy = [item for item in truncated_chat_ctx.items if item.id not in existing_ids]
             chat_ctx.items.extend(items_copy)
 
-        # add an instructions including the user data as assistant message
+
         chat_ctx.add_message(
-            role="system",  # role=system works for OpenAI's LLM and Realtime API
+            role="system",
             content=f"You are {agent_name} agent. Current user data is {userdata.summarize()}",
         )
         await self.update_chat_ctx(chat_ctx)
@@ -332,8 +332,8 @@ async def entrypoint(ctx: JobContext):
         tts=inference.TTS(model="cartesia/sonic-3"),
         vad=silero.VAD.load(),
         max_tool_steps=5,
-        # to use realtime model, replace the stt, llm, tts and vad with the following
-        # llm=openai.realtime.RealtimeModel(voice="alloy"),
+
+
     )
 
     await session.start(
@@ -341,7 +341,7 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
     )
 
-    # await agent.say("Welcome to our restaurant! How may I assist you today?")
+
 
 
 if __name__ == "__main__":

@@ -85,7 +85,7 @@ def to_chat_ctx(
     if current_role is not None and content:
         messages.append({"role": current_role, "content": content})
 
-    # ensure the messages starts with a "user" message
+
     if inject_dummy_user_message and (not messages or messages[0]["role"] != "user"):
         messages.insert(
             0,
@@ -95,8 +95,8 @@ def to_chat_ctx(
             },
         )
 
-    # Claude 4.6+ does not support prefilling (trailing assistant messages).
-    # Append a dummy user message so the request ends with a user turn.
+
+
     if inject_trailing_user_message and messages and messages[-1]["role"] == "assistant":
         messages.append({"role": "user", "content": [{"text": " ", "type": "text"}]})
 

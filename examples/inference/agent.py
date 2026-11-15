@@ -24,10 +24,10 @@ DEFAULT_STT = "deepgram/nova-3"
 DEFAULT_LLM = "openai/gpt-4.1-mini"
 DEFAULT_TTS = "cartesia/sonic-3"
 
-# Default starter prompt. Keep in sync with the `set_system_prompt`
-# control's `default` in examples/playground.yaml — the UI seeds the
-# textarea with the same string so the first session before any edit
-# matches what the user sees.
+
+
+
+
 INSTRUCTIONS = (
     "You're a friendly agent in the LiveKit Playground. The person "
     "talking to you is prototyping their own voice agent — they can "
@@ -108,10 +108,10 @@ async def entrypoint(ctx: JobContext) -> None:
 
     @ctx.room.local_participant.register_rpc_method("open_in_builder")
     async def open_in_builder(data: RpcInvocationData) -> str:
-        # Build the Cloud Builder deep-link agent-side so the
-        # frontend doesn't have to know the URL schema. `p_` is a
-        # placeholder project_id — Cloud routes the user through
-        # login if needed and preserves the params on redirect.
+
+
+
+
         params = {
             "modelMode": "pipeline",
             "instructions": agent.instructions or "",
@@ -123,10 +123,10 @@ async def entrypoint(ctx: JobContext) -> None:
 
     @ctx.room.local_participant.register_rpc_method("set_system_prompt")
     async def set_system_prompt(data: RpcInvocationData) -> str:
-        # The UI fires this on every keystroke (debounced client-side
-        # by the textarea's edit→commit boundary), so dedupe against
-        # the current value before touching the agent. update_instructions
-        # is cheap but it logs.
+
+
+
+
         prompt = parse_value(data.payload, "")
         if not prompt:
             return ""

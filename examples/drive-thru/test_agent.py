@@ -9,14 +9,14 @@ from .agent import DriveThruAgent, new_userdata
 
 
 def _main_llm() -> llm.LLM | llm.RealtimeModel:
-    # use any LLM or realtime model
+
     return inference.LLM(
         "openai/gpt-4.1", extra_kwargs={"parallel_tool_calls": False, "temperature": 0.45}
     )
 
 
 def _judge_llm() -> llm.LLM:
-    # judge must be a text-based LLM
+
     return inference.LLM(
         "openai/gpt-5.1", extra_kwargs={"parallel_tool_calls": False, "temperature": 0.45}
     )
@@ -30,10 +30,10 @@ async def test_item_ordering() -> None:
         _main_llm() as llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-        # add big mac
+
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(user_input="Can I get a Big Mac, no meal?")
-        # some LLMs would confirm the order
+
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(
             name="order_regular_item", arguments={"item_id": "big_mac"}
@@ -43,7 +43,7 @@ async def test_item_ordering() -> None:
         result.expect.next_event().is_message(role="assistant")
         result.expect.no_more_events()
 
-        # remove item
+
         result = await sess.run(user_input="No actually I don't want it")
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(name="list_order_items")
@@ -51,7 +51,7 @@ async def test_item_ordering() -> None:
         result.expect.contains_function_call(name="remove_order_item")
         result.expect[-1].is_message(role="assistant")
 
-        # order mcflurry
+
         result = await sess.run(user_input="Can I get a McFlurry Oreo?")
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(
@@ -71,7 +71,7 @@ async def test_meal_order() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-        # add combo crispy, forgetting drink
+
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(
             user_input="Can I get a large Combo McCrispy Original with mayonnaise?"
@@ -80,7 +80,7 @@ async def test_meal_order() -> None:
         await msg_assert.judge(judge_llm, intent="should prompt the user to choose a drink")
         result.expect.no_more_events()
 
-        # order the drink
+
         result = await sess.run(user_input="a large coca cola")
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(
@@ -107,7 +107,7 @@ async def test_failure() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-        # simulate a tool error
+
         with mock_tools(
             DriveThruAgent, {"order_regular_item": lambda: RuntimeError("test failure")}
         ):
@@ -127,8 +127,8 @@ async def test_failure() -> None:
                 )
             )
 
-            # leaving this commented, some LLMs may occasionally try to retry.
-            # result.expect.no_more_events()
+
+
 
 
 @pytest.mark.asyncio
@@ -144,7 +144,7 @@ async def test_unavailable_item() -> None:
         _judge_llm() as judge_llm,
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
-        # ask for a coke (unavailable)
+
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(user_input="Can I get a large coca cola?")
         try:
@@ -176,7 +176,7 @@ async def test_ask_for_size() -> None:
         AgentSession(llm=llm, userdata=userdata) as sess,
     ):
         await sess.start(DriveThruAgent(userdata=userdata))
-        # ask for a fanta
+
         result = await sess.run(user_input="Can I get a fanta orange?")
         await (
             result.expect.next_event()
@@ -185,7 +185,7 @@ async def test_ask_for_size() -> None:
         )
         result.expect.no_more_events()
 
-        # order a small fanta
+
         result = await sess.run(user_input="a small one")
         result.expect.skip_next_event_if(type="message", role="assistant")
         result.expect.next_event().is_function_call(
@@ -212,7 +212,7 @@ async def test_consecutive_order() -> None:
         await sess.start(DriveThruAgent(userdata=userdata))
         result = await sess.run(user_input="Can I get two mayonnaise sauces?")
         result.expect.skip_next_event_if(type="message", role="assistant")
-        # ensure we have two mayonnaise sauces
+
         num_mayonnaise = 0
         for item in userdata.order.items.values():
             if item.type == "regular" and item.item_id == "mayonnaise":

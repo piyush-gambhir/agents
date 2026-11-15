@@ -10,9 +10,9 @@ logger = logging.getLogger("kokoro-tts-agent")
 
 load_dotenv()
 
-# This example demonstrates how to use the Kokoro TTS model with LiveKit Agents
-# with OpenAI-compatible endpoint of Kokoro-FastAPI https://github.com/remsky/Kokoro-FastAPI
-# Kokoro-FastAPI can run locally on CPU or GPU devices with docker under linux and MacOS
+
+
+
 
 
 class MyAgent(Agent):
@@ -36,14 +36,14 @@ server.setup_fnc = prewarm
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    # each log entry will include these fields
+
     ctx.log_context_fields = {
         "room": ctx.room.name,
         "user_id": "your user_id",
     }
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
-        # any combination of STT, LLM, TTS, or realtime API can be used
+
         llm=openai.LLM(model="gpt-4.1-mini"),
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=openai.TTS(

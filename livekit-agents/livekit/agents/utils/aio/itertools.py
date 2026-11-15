@@ -5,7 +5,7 @@ from typing import Any, Generic, Protocol, TypeVar, overload, runtime_checkable
 
 from typing_extensions import AsyncContextManager
 
-# based on https://github.com/maxfischer2781/asyncstdlib/blob/master/asyncstdlib/itertools.py
+
 
 
 @runtime_checkable
@@ -24,21 +24,21 @@ async def tee_peer(
     lock: AsyncContextManager[Any],
     exception: list[BaseException | None],
 ) -> AsyncGenerator[T, None]:
-    # exception is a shared mutable container across all peers. When the upstream
-    # iterator raises, only the first peer to call __anext__() would normally see
-    # the error — subsequent calls return StopAsyncIteration per Python async
-    # generator semantics, silently swallowing the error for other peers.
-    #
-    # To fix this, the first peer to hit the exception stores it in exception[0].
-    # Other peers check this before advancing the iterator and re-raise the same
-    # exception, ensuring all peers observe the upstream failure.
+
+
+
+
+
+
+
+
     try:
         while True:
             if not buffer:
                 async with lock:
                     if buffer:
                         continue
-                    # a peer already hit an upstream error — re-raise for this peer
+
                     if exception[0] is not None:
                         raise exception[0]
                     try:
@@ -46,8 +46,8 @@ async def tee_peer(
                     except StopAsyncIteration:
                         break
                     except asyncio.CancelledError:
-                        # CancelledError is task-specific — don't store it in the
-                        # shared exception list to avoid cascading to other peers
+
+
                         raise
                     except BaseException as e:
                         exception[0] = e

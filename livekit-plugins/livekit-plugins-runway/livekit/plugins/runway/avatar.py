@@ -215,9 +215,9 @@ class AvatarSession(BaseAvatarSession):
         return self._end_session_task
 
     async def _end_runway_realtime_session(self, room: rtc.Room) -> None:
-        # Preferred path: data-channel END_CALL while the room is still connected.
-        # The Runway worker handles this message and shuts the session down through
-        # the normal "user ended call" lifecycle (COMPLETED, not CANCELLED).
+
+
+
         if room.isconnected():
             try:
                 await room.local_participant.publish_data(
@@ -233,10 +233,10 @@ class AvatarSession(BaseAvatarSession):
                     extra={"error": str(exc)},
                 )
 
-        # Fallback for hard shutdowns where the room is already disconnected
-        # (e.g. aclose() registered as a job shutdown callback runs after
-        # room.disconnect()): cancel the session via API so we don't keep
-        # billing until maxDuration.
+
+
+
+
         await self._cancel_runway_realtime_session()
 
     async def _cancel_runway_realtime_session(self) -> None:

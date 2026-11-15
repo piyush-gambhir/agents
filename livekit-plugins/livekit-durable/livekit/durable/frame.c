@@ -10,7 +10,7 @@
 #endif
 
 
-/* only for internal headers */
+
 #define Py_BUILD_CORE
 #include "internal/pycore_code.h"
 #if PY_MINOR_VERSION == 14
@@ -24,10 +24,10 @@
 
 
 
-// This is a redefinition of the private PyTryBlock from <= 3.10.
-// https://github.com/python/cpython/blob/3.8/Include/frameobject.h#L10
-// https://github.com/python/cpython/blob/3.9/Include/cpython/frameobject.h#L11
-// https://github.com/python/cpython/blob/3.10/Include/cpython/frameobject.h#L22
+
+
+
+
 typedef struct {
   int b_type;
   int b_handler;
@@ -42,28 +42,28 @@ typedef _PyInterpreterFrame Frame;
 
 typedef signed char PyFrameState;
 
-// https://github.com/python/cpython/blob/3.10/Include/cpython/frameobject.h#L28
-struct _frame {
-  PyObject_VAR_HEAD struct _frame *f_back; /* previous frame, or NULL */
-  PyCodeObject *f_code;                    /* code segment */
-  PyObject *f_builtins;    /* builtin symbol table (PyDictObject) */
-  PyObject *f_globals;     /* global symbol table (PyDictObject) */
-  PyObject *f_locals;      /* local symbol table (any mapping) */
-  PyObject **f_valuestack; /* points after the last local */
-  PyObject *f_trace;       /* Trace function */
-  int f_stackdepth;        /* Depth of value stack */
-  char f_trace_lines;      /* Emit per-line trace events? */
-  char f_trace_opcodes;    /* Emit per-opcode trace events? */
 
-  /* Borrowed reference to a generator, or NULL */
+struct _frame {
+  PyObject_VAR_HEAD struct _frame *f_back;
+  PyCodeObject *f_code;
+  PyObject *f_builtins;
+  PyObject *f_globals;
+  PyObject *f_locals;
+  PyObject **f_valuestack;
+  PyObject *f_trace;
+  int f_stackdepth;
+  char f_trace_lines;
+  char f_trace_opcodes;
+
+
   PyObject *f_gen;
 
-  int f_lasti;          /* Last instruction if called */
-  int f_lineno;         /* Current line number. Only valid if non-zero */
-  int f_iblock;         /* index in f_blockstack */
-  PyFrameState f_state; /* What state the frame is in */
-  PyTryBlock f_blockstack[CO_MAXBLOCKS]; /* for try and loop blocks */
-  PyObject *f_localsplus[1];             /* locals+stack, dynamically sized */
+  int f_lasti;
+  int f_lineno;
+  int f_iblock;
+  PyFrameState f_state;
+  PyTryBlock f_blockstack[CO_MAXBLOCKS];
+  PyObject *f_localsplus[1];
 };
 
 typedef struct _frame Frame;
@@ -80,13 +80,13 @@ enum _framestate {
 
 #endif
 
-// This is a redefinition of the private PyCoroWrapper from 3.8-3.13.
-// https://github.com/python/cpython/blob/3.8/Objects/genobject.c#L840
-// https://github.com/python/cpython/blob/3.9/Objects/genobject.c#L830
-// https://github.com/python/cpython/blob/3.10/Objects/genobject.c#L884
-// https://github.com/python/cpython/blob/3.11/Objects/genobject.c#L1016
-// https://github.com/python/cpython/blob/3.12/Objects/genobject.c#L1003
-// https://github.com/python/cpython/blob/v3.13.0a5/Objects/genobject.c#L985
+
+
+
+
+
+
+
 typedef struct {
   PyObject_HEAD PyCoroObject *cw_coroutine;
 } PyCoroWrapper;
@@ -107,7 +107,7 @@ static PyTryBlock *get_frame_blockstack(Frame *frame) {
   return blockstack;
 }
 #else
-// iblock not applicable for pythom >= 3.11
+
 static int get_frame_iblock_limit(Frame *frame) { return 1; }
 
 static int get_frame_iblock(Frame *frame) { return 0; }
@@ -270,25 +270,25 @@ static const char *get_type_name(PyObject *obj) {
 static PyGenObject *get_generator_like_object(PyObject *obj) {
   if (PyGen_Check(obj) || PyCoro_CheckExact(obj) ||
       PyAsyncGen_CheckExact(obj)) {
-    // Note: In Python 3.9-3.13, the PyGenObject, PyCoroObject and
-    // PyAsyncGenObject have the same layout, they just have different field
-    // prefixes (gi_, cr_, ag_). We cast to PyGenObject here so that the
-    // remainder of the code can use the gi_ prefix for all three cases.
+
+
+
+
     return (PyGenObject *)obj;
   }
-  // If the object isn't a PyGenObject, PyCoroObject or PyAsyncGenObject, it may
-  // still be a coroutine, for example a PyCoroWrapper. CPython unfortunately
-  // does not export a function that checks whether a PyObject is a
-  // PyCoroWrapper. We need to check the type name string.
+
+
+
+
   const char *type_name = get_type_name(obj);
   if (!type_name) {
     return NULL;
   }
   if (strcmp(type_name, "coroutine_wrapper") == 0) {
-    // FIXME: improve safety here, e.g. by checking that the obj type matches a
-    // known size
+
+
     PyCoroWrapper *wrapper = (PyCoroWrapper *)obj;
-    // Cast the inner PyCoroObject to a PyGenObject. See the comment above.
+
     return (PyGenObject *)wrapper->cw_coroutine;
   }
   PyErr_SetString(PyExc_TypeError,
@@ -396,8 +396,8 @@ static PyObject *ext_get_frame_stack_at(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-  // NULL in C != None in Python. We need to preserve the fact that some items
-  // on the stack are NULL (not yet available).
+
+
   PyObject *is_null = Py_False;
 
 #if PY_MINOR_VERSION >= 14

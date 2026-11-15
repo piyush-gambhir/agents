@@ -32,7 +32,7 @@ async def entrypoint(ctx: JobContext):
     )
     await avatario_avatar.start(session, room=ctx.room)
 
-    # start the agent, it will join the room and wait for the avatar to join
+
     await session.start(
         agent=Agent(instructions="Talk to me!"),
         room=ctx.room,

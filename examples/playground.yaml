@@ -1,18 +1,18 @@
-# Examples metadata consumed by livekit/agents-jukebox.
-#
-# Each top-level key under `examples` is the agent name — used as
-#   - the directory name under examples/
-#   - the LIVEKIT_AGENT_NAME injected at deploy time
-#   - the dispatch target in the jukebox's token endpoint
-#
-# Pixel art icons: `1` = accent color, `2` = lighter accent (highlight
-# / secondary detail), `0` = transparent.
+
+
+
+
+
+
+
+
+
 
 version: 1
 
-# All examples deploy to this LiveKit Cloud project. The CI regenerates
-# each example's livekit.toml from this subdomain + the per-example
-# agent_id below before invoking `lk agent deploy`.
+
+
+
 project:
   subdomain: examples-wfxyig8v
 
@@ -20,14 +20,14 @@ examples:
   frontdesk:
     title: Front Desk
     description: A receptionist agent wired up to a live calendar. Answers questions about availability, books appointments in real time, and confirms back to the caller.
-    # brand palette — indigo-500
+
     accent: "#1F44F9"
     agent_id: CA_9TqkLsnwhjmE
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/frontdesk"
     tags: [tools, scheduling]
     icon:
-      # Calendar with the top header strip in the highlight tone.
+
       size: 12
       pixels: |
         000000000000
@@ -49,14 +49,14 @@ examples:
   healthcare:
     title: Healthcare
     description: A medical front-desk agent that handles intake, authenticates returning patients, books appointments, and hands the conversation off to a human when it needs to.
-    # LiveKit brand palette (raw-colors.ts) — green-500
+
     accent: "#009E4F"
     agent_id: CA_uFGnwowV2PMS
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/healthcare"
     tags: [multi-agent, scheduling]
     icon:
-      # Heart with a top-left specular highlight on the left lobe.
+
       size: 12
       pixels: |
         000000000000
@@ -75,14 +75,14 @@ examples:
   survey:
     title: Survey
     description: A structured interview agent that walks candidates through a software engineer screening flow, captures answers as they go, and writes a graded summary to disk.
-    # brand palette — amber-500
+
     accent: "#EF8B01"
     agent_id: CA_APDyCSXwMUNS
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/survey"
     tags: [multi-agent]
     icon:
-      # Speech bubble outline with two highlight "text lines" inside.
+
       size: 12
       pixels: |
         000000000000
@@ -101,15 +101,15 @@ examples:
   drive-thru:
     title: Drive Thru
     description: A drive-thru ordering agent that takes the order over voice, builds a structured cart with dynamically-generated tools per menu item, and reads back the total.
-    # brand palette — red-500
+
     accent: "#FA4C39"
     agent_id: CA_cn3jfgKTxXDL
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/drive-thru"
     tags: [tools]
     icon:
-      # Side-view car: cabin pillars in accent, windshield + side
-      # windows in the lighter tone, body and wheels in accent.
+
+
       size: 12
       pixels: |
         000000000000
@@ -124,33 +124,33 @@ examples:
         000000000000
         000000000000
         000000000000
-    # The playground reads these `views` and renders a read-only
-    # markdown card per entry on the right of the orb. The agent fills
-    # them at runtime by RPC'ing the matching `id` with a markdown
-    # payload — the card stays hidden until the first payload arrives.
-    # The agent fills these `views` at runtime by RPC'ing the
-    # declared method name (e.g. `set_cart_content`) with a markdown
-    # payload. Each entry renders as a card on the right of the orb,
-    # hidden until the first non-empty payload, re-hidden on empty.
+
+
+
+
+
+
+
+
     views:
       - rpc: set_cart_content
-        # Card title is rendered in the body font, which has the
-        # FA Solid range merged in — so YAML `\u` escapes for any
-        # FA codepoint render inline. `\uf07a` is shopping-cart.
+
+
+
         title: "\uf07a Current order"
 
   inference:
     title: Inference
     description: A voice agent powered end-to-end by LiveKit Inference. Pick the STT, LLM, and TTS provider live to hear how each one feels in the same conversation.
-    # brand palette — purple-500
+
     accent: "#9B5CFF"
     agent_id: CA_K9e3yQ3RPNKQ
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/inference"
     tags: [inference]
     icon:
-      # Three stacked bars: the STT → LLM → TTS pipeline, with the
-      # middle bar in the highlight tone.
+
+
       size: 12
       pixels: |
         000000000000
@@ -165,28 +165,28 @@ examples:
         011111111110
         000000000000
         000000000000
-    # The playground reads these `controls` and renders one widget per
-    # entry. `type` selects the widget — defaults to `dropdown` for
-    # backwards-compat with the other examples. Picking an option fires
-    # an RPC on the agent participant: `rpc` is the method name,
-    # payload is `{"value": "…"}`. Defaults match the agent's
-    # DEFAULT_* constants in agent.py.
-    #
-    # Supported types:
-    #   - dropdown (default): pill with options list
-    #   - textarea: multiline string editor. Fires `rpc` with the
-    #     current text on every edit-commit (debounced by the FE)
-    #     so the agent can apply it live.
-    #   - link: a button-styled action. On click fires `rpc` on the
-    #     agent (no payload) and opens the returned string as a URL
-    #     in a new tab. The agent owns the URL — useful for deep
-    #     links into Builder, dashboards, etc. where the params
-    #     depend on the agent's current state.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     controls:
       - rpc: set_system_prompt
         type: textarea
         label: System prompt
-        # Keep in sync with INSTRUCTIONS in examples/inference/agent.py.
+
         default: "You're a friendly agent in the LiveKit Playground. The person talking to you is prototyping their own voice agent — they can edit this prompt in the side panel and swap the STT / LLM / TTS models live. Keep replies short, natural, and conversational. If asked which models you're using, answer honestly."
         rows: 8
       - rpc: set_stt_model
@@ -273,21 +273,21 @@ examples:
           - { value: rime/mistv2, label: Rime Mist v2 }
           - { value: rime/mistv3, label: Rime Mist v3 }
           - { value: xai/tts-1, label: xAI Text-to-Speech }
-      # "Open in Builder" CTA. `type: link` fires `rpc` on the agent
-      # and opens the returned string as a URL in a new tab. The
-      # agent (examples/inference/agent.py :: open_in_builder) reads
-      # its current instructions + STT/LLM/TTS model strings and
-      # builds the Cloud Builder deep-link from there, so the
-      # frontend doesn't have to know the schema.
+
+
+
+
+
+
       - rpc: open_in_builder
         type: link
         label: "Open in Builder \u2192"
         primary: true
-    # Live conversation transcript. The agent doesn't push to this view
-    # by RPC the way other examples push markdown cards — the frontend
-    # subscribes to LiveKit `TranscriptionReceived` events and renders
-    # both sides of the conversation as text. `source: transcript` is
-    # the trigger; `rpc` is a sentinel value and isn't actually called.
+
+
+
+
+
     views:
       - rpc: __transcript
         source: transcript
@@ -296,20 +296,20 @@ examples:
   avatar:
     title: Avatar
     description: Talk to a LemonSlice avatar. Pick anyone from the dropdown to swap who you're chatting with, from Leila to a Pixar fox.
-    # LemonSlice brand \u2014 yellow-500 from the LK palette.
+
     accent: "#F9E71F"
     agent_id: CA_dzjZwsBsRKzZ
     entry: agent.py
     github: "https://github.com/livekit/agents/tree/main/examples/avatar"
     tags: [avatar, video, multi-persona]
-    # Tells the jukebox frontend to render the AvatarFrame and drive
-    # the connect-time orb \u2192 video reveal animation. Without this
-    # flag the example renders like every other one (orb only).
+
+
+
     avatar: true
     icon:
-      # Head + shoulders. Head is filled with '2' (highlight tone) and
-      # the shoulders are '1' (full accent), so the two regions read as
-      # two distinct shades instead of a single blob.
+
+
+
       size: 12
       pixels: |
         000000000000
@@ -324,11 +324,11 @@ examples:
         001111111100
         011111111110
         111111111111
-    # The playground reads these `controls` and renders one widget
-    # per entry. The persona dropdown fires `set_avatar` on the
-    # agent with the chosen id as the payload value. The agent
-    # updates voice + system prompt live; the avatar image stays
-    # on the current persona until the session reconnects.
+
+
+
+
+
     controls:
       - rpc: set_avatar
         label: Persona

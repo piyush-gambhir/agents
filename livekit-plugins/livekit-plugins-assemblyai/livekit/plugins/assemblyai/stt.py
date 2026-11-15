@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -97,7 +97,7 @@ class STT(stt.STT):
         http_session: aiohttp.ClientSession | None = None,
         buffer_size_seconds: float = 0.05,
         base_url: str = "wss://streaming.assemblyai.com",
-        # Deprecated — use min_turn_silence instead
+
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ):
         """
@@ -152,9 +152,9 @@ class STT(stt.STT):
                 "The 'interruption_delay' parameter is only supported with the 'u3-rt-pro' model."
             )
 
-        # LiveKit defaults continuous_partials to True (vs. AssemblyAI's server default of
-        # False) for steady-cadence partials. This parameter is only supported for
-        # u3-rt-pro, enforced by the validation above.
+
+
+
         if not is_given(continuous_partials) and model == "u3-rt-pro":
             continuous_partials = True
 
@@ -168,7 +168,7 @@ class STT(stt.STT):
             )
         self._api_key = assemblyai_api_key
 
-        # Handle deprecated min_end_of_turn_silence_when_confident
+
         if is_given(min_end_of_turn_silence_when_confident):
             logger.warning(
                 "'min_end_of_turn_silence_when_confident' is deprecated, "
@@ -177,8 +177,8 @@ class STT(stt.STT):
             if not is_given(min_turn_silence):
                 min_turn_silence = min_end_of_turn_silence_when_confident
 
-        # we want to minimize latency as much as possible, it's ok if the phrase arrives in multiple final transcripts
-        # designed to work with LK's end of turn models
+
+
         if not is_given(min_turn_silence):
             min_turn_silence = 100
 
@@ -257,7 +257,7 @@ class STT(stt.STT):
         vad_threshold: NotGivenOr[float] = NOT_GIVEN,
         continuous_partials: NotGivenOr[bool] = NOT_GIVEN,
         interruption_delay: NotGivenOr[int] = NOT_GIVEN,
-        # Deprecated — use min_turn_silence instead
+
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ) -> None:
         if is_given(min_end_of_turn_silence_when_confident):
@@ -302,7 +302,7 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-    # Used to close websocket
+
     _CLOSE_MSG: str = json.dumps({"type": "Terminate"})
 
     def __init__(
@@ -353,7 +353,7 @@ class SpeechStream(stt.SpeechStream):
         vad_threshold: NotGivenOr[float] = NOT_GIVEN,
         continuous_partials: NotGivenOr[bool] = NOT_GIVEN,
         interruption_delay: NotGivenOr[int] = NOT_GIVEN,
-        # Deprecated — use min_turn_silence instead
+
         min_end_of_turn_silence_when_confident: NotGivenOr[int] = NOT_GIVEN,
     ) -> None:
         if is_given(min_end_of_turn_silence_when_confident):
@@ -383,7 +383,7 @@ class SpeechStream(stt.SpeechStream):
         if is_given(interruption_delay):
             self._opts.interruption_delay = interruption_delay
 
-        # Send UpdateConfiguration message over the active websocket
+
         config_msg: dict = {"type": "UpdateConfiguration"}
         if is_given(prompt):
             config_msg["prompt"] = prompt
@@ -424,9 +424,9 @@ class SpeechStream(stt.SpeechStream):
                 samples_per_channel=samples_per_buffer,
             )
 
-            # forward inputs to AssemblyAI
-            # if we receive a close message, signal it to AssemblyAI and break.
-            # the recv task will then make sure to process the remaining audio and stop
+
+
+
             async for data in self._input_ch:
                 if isinstance(data, self._FlushSentinel):
                     frames = audio_bstream.flush()
@@ -435,10 +435,10 @@ class SpeechStream(stt.SpeechStream):
 
                 for frame in frames:
                     if not anchored:
-                        # Anchor the stream's wall-clock to the moment just
-                        # before the first frame is sent — aligned with the
-                        # server's stream-relative zero used by
-                        # SpeechStarted.timestamp.
+
+
+
+
                         self.start_time = time.time()
                         anchored = True
                     self._speech_duration += frame.duration
@@ -460,17 +460,17 @@ class SpeechStream(stt.SpeechStream):
                     if closing_ws:
                         break
                     consecutive_timeouts += 1
-                    # First warning at 15s, then every 15s while silence continues.
-                    # `session=None` here means WS connected but AAI never sent `Begin`.
+
+
                     if consecutive_timeouts % 3 == 0:
                         logger.warning(
                             "AssemblyAI no messages received for %ds session=%s",
                             consecutive_timeouts * 5,
                             self._session_id,
                         )
-                        # If the send side is also idle, the stall is upstream
-                        # of this plugin (no audio reaching us). Otherwise
-                        # frames are flowing and the stall is downstream.
+
+
+
                         if self._last_frame_sent_at is not None:
                             send_idle_s = time.time() - self._last_frame_sent_at
                             if send_idle_s >= 15:
@@ -486,7 +486,7 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    if closing_ws:  # close is expected, see SpeechStream.aclose
+                    if closing_ws:
                         return
 
                     logger.warning(
@@ -542,7 +542,7 @@ class SpeechStream(stt.SpeechStream):
                 await ws.close()
 
     async def _connect_ws(self) -> aiohttp.ClientWebSocketResponse:
-        # u3-rt-pro defaults: min=100, max=min (so both 100 unless overridden)
+
         min_silence: int | None
         max_silence: int | None
         if self._opts.speech_model == "u3-rt-pro":
@@ -635,11 +635,11 @@ class SpeechStream(stt.SpeechStream):
             return
 
         if message_type == "SpeechStarted":
-            # SpeechStarted can arrive well after actual speech onset. The
-            # `timestamp` field carries the server VAD's onset time in stream-
-            # relative ms. Convert to wall-clock by adding self.start_time
-            # (the stream's wall-clock anchor) so the framework records an
-            # accurate _speech_start_time instead of message arrival.
+
+
+
+
+
             timestamp_ms = data.get("timestamp")
             speech_start_time: float | None = None
             if timestamp_ms is not None:
@@ -678,17 +678,17 @@ class SpeechStream(stt.SpeechStream):
         transcript = data.get("transcript", "")
         language = LanguageCode(data.get("language_code", "en"))
 
-        # Extract speaker label for diarization (returns "A", "B", ... or "UNKNOWN")
+
         speaker_label = data.get("speaker_label")
         speaker_id = speaker_label if speaker_label and speaker_label != "UNKNOWN" else None
 
-        # transcript (final) and words (interim) are cumulative
-        # utterance (preflight) is chunk based
+
+
         start_time: float = 0
         end_time: float = 0
         confidence: float = 0
-        # word timestamps are in milliseconds
-        # https://www.assemblyai.com/docs/api-reference/streaming-api/streaming-api#receive.receiveTurn.words
+
+
         timed_words: list[TimedString] = [
             TimedString(
                 text=word.get("text", ""),
@@ -700,7 +700,7 @@ class SpeechStream(stt.SpeechStream):
             for word in words
         ]
 
-        # words are cumulative
+
         if timed_words:
             interim_text = " ".join(word for word in timed_words)
             start_time = timed_words[0].start_time or start_time
@@ -732,8 +732,8 @@ class SpeechStream(stt.SpeechStream):
             if self._last_preflight_start_time == 0.0:
                 self._last_preflight_start_time = start_time
 
-            # utterance is chunk based so we need to filter the words to
-            # only include the ones that are part of the current utterance
+
+
             utterance_words = [
                 word
                 for word in timed_words

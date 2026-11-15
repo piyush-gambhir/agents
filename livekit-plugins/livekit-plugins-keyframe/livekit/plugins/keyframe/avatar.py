@@ -53,7 +53,7 @@ class AvatarSession(BaseAvatarSession):
             else _AVATAR_AGENT_NAME
         )
 
-        # Resolve persona
+
         has_id = utils.is_given(persona_id)
         has_slug = utils.is_given(persona_slug)
         if has_id == has_slug:
@@ -66,7 +66,7 @@ class AvatarSession(BaseAvatarSession):
         if utils.is_given(persona_slug):
             self._persona_slug = persona_slug
 
-        # Resolve API config
+
         api_url_val = (
             api_url if utils.is_given(api_url) else os.getenv("KEYFRAME_API_URL", DEFAULT_API_URL)
         )
@@ -111,7 +111,7 @@ class AvatarSession(BaseAvatarSession):
         job_ctx = get_job_context()
         local_participant_identity = job_ctx.local_participant_identity
 
-        # Mint a LiveKit token for the avatar worker with publish_on_behalf
+
         livekit_token = (
             api.AccessToken(
                 api_key=livekit_api_key,
@@ -132,7 +132,7 @@ class AvatarSession(BaseAvatarSession):
             .to_jwt()
         )
 
-        # Call API to create a reservation and dispatch
+
         async with KeyframeAPI(
             api_key=self._api_key,
             api_url=self._api_url,

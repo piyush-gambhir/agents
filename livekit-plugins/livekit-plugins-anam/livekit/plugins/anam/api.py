@@ -88,7 +88,7 @@ class AnamAPI:
             "livekitToken": livekit_token,
         }
         headers = {
-            "Authorization": f"Bearer {self._api_key}",  # Use API Key here
+            "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
         }
         response_data = await self._post("/v1/auth/session-token", payload, headers)
@@ -114,7 +114,7 @@ class AnamAPI:
             The session details, including sessionId and engine host info.
         """
         headers = {
-            "Authorization": f"Bearer {session_token}",  # Use Session Token here
+            "Authorization": f"Bearer {session_token}",
             "Content-Type": "application/json",
         }
         return await self._post("/v1/engine/session", {}, headers)
@@ -153,7 +153,7 @@ class AnamAPI:
                         raise APIConnectionError(f"Failed to connect to Anam API at {url}") from e
                     await asyncio.sleep(self._conn_options.retry_interval)
         finally:
-            if not self._session:  # if we created the session, we close it
+            if not self._session:
                 await session.close()
 
         raise APIConnectionError("Failed to call Anam API after all retries.")

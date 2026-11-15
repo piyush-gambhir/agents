@@ -1,6 +1,6 @@
 from typing import Literal
 
-# Speech to Text (v1 and v2)
+
 
 SpeechModels = Literal[
     "long",
@@ -14,7 +14,7 @@ SpeechModels = Literal[
     "latest_long",
     "latest_short",
 ]
-# https://docs.cloud.google.com/speech-to-text/docs/transcription-model
+
 
 SpeechModelsV2 = Literal[
     "telephony",
@@ -199,7 +199,7 @@ EndpointingSensitivity = Literal[
     "ENDPOINTING_SENSITIVITY_SHORT",
     "ENDPOINTING_SENSITIVITY_SUPERSHORT",
 ]
-# https://docs.cloud.google.com/speech-to-text/docs/models/chirp-3#sensitivity_levels
+
 
 Gender = Literal["male", "female", "neutral"]
 

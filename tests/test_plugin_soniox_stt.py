@@ -28,9 +28,9 @@ from livekit.agents.stt import SpeechData, SpeechEventType
 
 pytestmark = pytest.mark.plugin("soniox")
 
-# ---------------------------------------------------------------------------
-# SpeechData.__post_init__: target_languages coercion
-# ---------------------------------------------------------------------------
+
+
+
 
 
 def test_speech_data_target_languages_coerces_strings_to_language_code():
@@ -61,9 +61,9 @@ def test_speech_data_target_languages_preserves_existing_language_code_instances
     assert sd.target_languages[0] is code
 
 
-# ---------------------------------------------------------------------------
-# _TokenAccumulator._lang_segments coalescing
-# ---------------------------------------------------------------------------
+
+
+
 
 
 def test_token_accumulator_coalesces_consecutive_same_language_runs():
@@ -95,9 +95,9 @@ def test_token_accumulator_lang_segments_empty_initially():
     assert accumulator._lang_segments == []
 
 
-# ---------------------------------------------------------------------------
-# _lang_segments_to_fields helper
-# ---------------------------------------------------------------------------
+
+
+
 
 
 def test_lang_segments_to_fields_empty_returns_none_pair():
@@ -118,9 +118,9 @@ def test_lang_segments_to_fields_coerces_to_language_code():
     assert all(isinstance(lang, LanguageCode) for lang in langs)
 
 
-# ---------------------------------------------------------------------------
-# _recv_messages_task end-to-end via a fake WebSocket
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class _FakeWSMessage:
@@ -225,7 +225,7 @@ def _nonfinal_token(text: str, language: str, translation_status: str | None = N
 END_TOKEN_FINAL: dict[str, Any] = {"text": "<end>", "is_final": True}
 
 
-# --- Two-way translation, code-switched input -------------------------------
+
 
 
 async def test_final_transcript_two_way_code_switched():
@@ -273,7 +273,7 @@ async def test_final_transcript_two_way_code_switched():
     assert "".join(sd.target_texts) == sd.text
 
 
-# --- One-way translation ----------------------------------------------------
+
 
 
 async def test_final_transcript_one_way_translation_single_target_run():
@@ -305,7 +305,7 @@ async def test_final_transcript_one_way_translation_single_target_run():
     assert sd.target_texts == ["Hola mundo."]
 
 
-# --- "none" untranslated chunk ---------------------------------------------
+
 
 
 async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
@@ -335,9 +335,9 @@ async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
     final = next(e for e in events if e.type == SpeechEventType.FINAL_TRANSCRIPT)
     sd = final.alternatives[0]
 
-    # The "Bonjour à tous." fr chunk sits between two en chunks, so the source
-    # per-run breakdown is three entries (en, fr, en) — the same coalescing
-    # behavior as the target side, just driven by different `language` runs.
+
+
+
     assert sd.source_languages == [
         LanguageCode("en"),
         LanguageCode("fr"),
@@ -349,17 +349,17 @@ async def test_final_transcript_untranslated_chunk_yields_asymmetric_lists():
         "How are you?",
     ]
 
-    # Both translation tokens are German → single coalesced target run.
+
     assert sd.target_languages == [LanguageCode("de")]
     assert sd.target_texts == ["Guten Morgen. Wie geht's?"]
 
-    # The two per-run lists are independent — different lengths are legitimate.
+
     assert sd.source_languages is not None
     assert sd.target_languages is not None
     assert len(sd.source_languages) != len(sd.target_languages)
 
 
-# --- Interim transcript shape ----------------------------------------------
+
 
 
 async def test_interim_transcript_merges_final_and_non_final_per_run():
@@ -447,7 +447,7 @@ async def test_recv_messages_raises_on_server_error_frame():
     assert exc_info.value.body is not None
 
 
-# --- Non-translation mode -------------------------------------------------
+
 
 
 async def test_final_transcript_no_translation_single_language_populates_source():
@@ -503,10 +503,10 @@ async def test_final_transcript_no_translation_code_switched_populates_source_ru
     sd = final.alternatives[0]
 
     assert sd.text == "こんにちは、君の名前は何だ。 My name is Sam."
-    # `sd.language` is the plugin's opinionated lossy summary (currently
-    # most-chars-wins) and isn't what this test is exercising -- the per-run
-    # `source_languages` / `source_texts` are. Don't assert on `language`
-    # here so the test stays decoupled from upstream's summary heuristic.
+
+
+
+
     assert sd.source_languages == [LanguageCode("ja"), LanguageCode("en")]
     assert sd.source_texts == [
         "こんにちは、君の名前は何だ。",

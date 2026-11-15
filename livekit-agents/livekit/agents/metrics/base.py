@@ -128,7 +128,7 @@ class RealtimeModelMetrics(_BaseMetrics):
     class OutputTokenDetails(BaseModel):
         text_tokens: int = 0
         audio_tokens: int = 0
-        # image_tokens is deprecated, Realtime models no longer emit this metric
+
         image_tokens: int = 0
 
     type: Literal["realtime_model_metrics"] = "realtime_model_metrics"

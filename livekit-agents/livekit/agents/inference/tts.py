@@ -147,21 +147,21 @@ class CartesiaOptions(TypedDict, total=False):
 
 
 class DeepgramOptions(TypedDict, total=False):
-    mip_opt_out: bool  # default: False
+    mip_opt_out: bool
 
 
 class ElevenlabsOptions(TypedDict, total=False):
-    inactivity_timeout: int  # default: 60, range 5-180
-    apply_text_normalization: Literal["auto", "off", "on"]  # default: "auto"
+    inactivity_timeout: int
+    apply_text_normalization: Literal["auto", "off", "on"]
     auto_mode: bool
     enable_logging: bool
     enable_ssml_parsing: bool
     sync_alignment: bool
     language_code: str
-    stability: float  # range 0-1
-    similarity_boost: float  # range 0-1
-    style: float  # range 0-1
-    speed: float  # range 0.25-4
+    stability: float
+    similarity_boost: float
+    style: float
+    speed: float
     use_speaker_boost: bool
     chunk_length_schedule: list[float]
     preferred_alignment: str
@@ -172,16 +172,16 @@ class RimeOptions(TypedDict, total=False):
     See: https://docs.rime.ai/api-reference/endpoint/websockets-json
     """
 
-    speed_alpha: float  # default 1.0, <1 = faster, >1 = slower
-    pause_between_brackets: bool  # default False
-    phonemize_between_brackets: bool  # default False
-    inline_speed_alpha: str  # comma-separated speed factors for [bracketed] words
-    no_text_normalization: bool  # default False
+    speed_alpha: float
+    pause_between_brackets: bool
+    phonemize_between_brackets: bool
+    inline_speed_alpha: str
+    no_text_normalization: bool
 
 
 class InworldOptions(TypedDict, total=False):
-    speaking_rate: float  # range >0.5, <=1.5
-    temperature: float  # range 0-2
+    speaking_rate: float
+    temperature: float
     timestamp_type: Literal["TIMESTAMP_TYPE_UNSPECIFIED", "WORD", "CHARACTER"]
     apply_text_normalization: Literal["APPLY_TEXT_NORMALIZATION_UNSPECIFIED", "ON", "OFF"]
 
@@ -388,7 +388,7 @@ class TTS(tts.TTS):
         """
         sample_rate = sample_rate if is_given(sample_rate) else DEFAULT_SAMPLE_RATE
 
-        # Parse voice from model string if provided: "provider/model:voice"
+
         if isinstance(model, str):
             parsed_model, parsed_voice = _parse_model_string(model)
             model = parsed_model
@@ -651,7 +651,7 @@ class SynthesizeStream(tts.SynthesizeStream):
                 "type": "session.flush",
             }
             await ws.send_str(json.dumps(end_pkt))
-            # needed in case empty input is sent
+
             input_sent_event.set()
 
         async def _recv_task(ws: aiohttp.ClientWebSocketResponse) -> None:

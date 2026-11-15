@@ -175,16 +175,16 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
     )
 
-    # Track token usage to observe prompt caching behavior.
-    # With ToolProxyToolset, the tool list is constant, so prompt_cached_tokens
-    # should increase after the first turn as the provider caches tool definitions.
+
+
+
     usage_collector = metrics.UsageCollector()
 
     @session.on("metrics_collected")
     def _on_metrics_collected(ev: MetricsCollectedEvent):
         usage_collector.collect(ev.metrics)
 
-        # Log cache hit ratio for LLM requests
+
         if isinstance(ev.metrics, LLMMetrics) and ev.metrics.prompt_tokens > 0:
             metrics.log_metrics(ev.metrics)
             cache_ratio = ev.metrics.prompt_cached_tokens / ev.metrics.prompt_tokens

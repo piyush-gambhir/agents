@@ -22,8 +22,8 @@ load_dotenv()
 logger = logging.getLogger("transcriber")
 
 
-# This example demonstrates how to transcribe audio from a remote participant.
-# It creates agent session with only STT enabled and publishes transcripts to the room.
+
+
 
 
 class Transcriber(Agent):
@@ -49,7 +49,7 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
     session = AgentSession(
-        # vad is needed for non-streaming STT implementations
+
         vad=silero.VAD.load(min_silence_duration=0.3),
     )
 
@@ -62,7 +62,7 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_options=room_io.RoomOptions(
             text_output=True,
-            # disable audio output if it's not needed
+
             audio_output=False,
         ),
     )

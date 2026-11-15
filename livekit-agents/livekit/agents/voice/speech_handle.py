@@ -11,7 +11,7 @@ from opentelemetry import context as otel_context
 from .. import llm, utils
 from ..log import logger
 
-INTERRUPTION_TIMEOUT = 5.0  # seconds
+INTERRUPTION_TIMEOUT = 5.0
 
 
 @dataclass
@@ -44,7 +44,7 @@ class SpeechHandle:
 
         self._generations: list[asyncio.Future[None]] = []
 
-        # internal tasks used by this generation
+
         self._tasks: list[asyncio.Task] = []
         self._chat_items: list[llm.ChatItem] = []
         self._num_steps = 1
@@ -63,7 +63,7 @@ class SpeechHandle:
                     logger.warning(f"error in done_callback: {cb}", exc_info=e)
 
         self._done_fut.add_done_callback(_on_done)
-        self._maybe_run_final_output: Any = None  # kept private
+        self._maybe_run_final_output: Any = None
 
     @staticmethod
     def create(
@@ -161,7 +161,7 @@ class SpeechHandle:
         This is appropriate to call when you want to ensure the speech output
         has entirely played out, including any tool calls and response follow-ups."""
 
-        # raise an error to avoid developer mistakes
+
         from .agent import _get_activity_task_info
 
         if task := asyncio.current_task():
@@ -199,7 +199,7 @@ class SpeechHandle:
         self._done_callbacks.discard(callback)
 
     async def wait_if_not_interrupted(self, aw: list[asyncio.futures.Future[Any]]) -> None:
-        # wrap each future in shield so we don't cancel them when we cancel the gather future
+
         gather_fut = asyncio.gather(*[asyncio.shield(fut) for fut in aw], return_exceptions=True)
         fs: set[asyncio.Future[Any]] = {gather_fut, self._interrupt_fut}
         _, pending = await asyncio.wait(fs, return_when=asyncio.FIRST_COMPLETED)
@@ -277,9 +277,9 @@ class SpeechHandle:
         with contextlib.suppress(asyncio.InvalidStateError):
             self._done_fut.set_result(None)
 
-        # must be outside the _done_fut suppress block: if _done_fut is already
-        # done, InvalidStateError would suppress the entire block and skip this,
-        # leaving the generation future unresolved and _wait_for_generation stuck.
+
+
+
         if self._generations:
             self._mark_generation_done()
 

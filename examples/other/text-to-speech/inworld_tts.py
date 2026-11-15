@@ -19,9 +19,9 @@ server = AgentServer()
 async def entrypoint(job: JobContext):
     logger.info("starting tts example agent")
 
-    # Using LiveKit inference for TTS, to use inworld with your own API key, you can change it to:
-    # from livekit.plugins import inworld
-    # tts = inworld.TTS(model="inworld/inworld-tts-1", voice="Alex")
+
+
+
     tts = inference.TTS("inworld/inworld-tts-1", voice="Alex")
 
     source = rtc.AudioSource(tts.sample_rate, tts.num_channels)
@@ -33,11 +33,11 @@ async def entrypoint(job: JobContext):
     publication = await job.room.local_participant.publish_track(track, options)
     await publication.wait_for_subscription()
 
-    # --- Example 1: Using synthesize() (HTTP streaming) ---
+
     text = "Hello from Inworld. I hope you are having a spectacular and /ˈwʌn.dɚ.fəl/ day."
     logger.info(f'synthesizing (HTTP): "{text}"')
     async for audio in tts.synthesize(text):
-        # Print timestamp information if available
+
         timed_strings = audio.frame.userdata.get(USERDATA_TIMED_TRANSCRIPT, [])
         for ts in timed_strings:
             start = (
@@ -52,7 +52,7 @@ async def entrypoint(job: JobContext):
 
     await asyncio.sleep(1)
 
-    # --- Example 2: Using stream() (WebSocket streaming) ---
+
     streamed_text = (
         "This is an example using WebSocket streaming for lower latency real-time synthesis."
     )
@@ -62,12 +62,12 @@ async def entrypoint(job: JobContext):
     stream.push_text(streamed_text)
     stream.end_input()
 
-    # Consume streamed audio
+
     playout_q: asyncio.Queue[rtc.AudioFrame | None] = asyncio.Queue()
 
     async def _synth_task():
         async for ev in stream:
-            # Print timestamp information if available
+
             timed_strings = ev.frame.userdata.get(USERDATA_TIMED_TRANSCRIPT, [])
             for ts in timed_strings:
                 start = (

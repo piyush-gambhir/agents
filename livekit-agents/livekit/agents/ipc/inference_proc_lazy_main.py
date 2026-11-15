@@ -5,7 +5,7 @@ from multiprocessing import current_process
 if current_process().name == "agents_inference_process":
     import signal
 
-    # ignore signals in the jobs process (the parent process will handle them)
+
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
@@ -45,14 +45,14 @@ def proc_main(args: ProcStartArgs) -> None:
     try:
         client.initialize()
     except Exception:
-        return  # initialization failed, exit (initialize will send an error to the worker)
+        return
 
     client.run()
 
 
 class _InferenceProc:
     def __init__(self, runners: _RunnersDict) -> None:
-        # create an instance of each runner (the ctor must not requires any argument)
+
         self._runners = {name: runner() for name, runner in runners.items()}
         self._executor = ThreadPoolExecutor(max_workers=math.ceil(hw.get_cpu_monitor().cpu_count()))
 

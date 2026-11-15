@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -191,7 +191,7 @@ class ChunkedStream(tts.ChunkedStream):
         self._opts = replace(tts._opts)
 
     async def _run(self, output_emitter: tts.AudioEmitter) -> None:
-        # TODO(laurent): once we support the POST requests, we should use it here rather than the websocket API.
+
         try:
             async with self._tts._ensure_session().ws_connect(
                 self._tts._model_endpoint,
@@ -231,15 +231,15 @@ class ChunkedStream(tts.ChunkedStream):
                         aiohttp.WSMsgType.CLOSED,
                         aiohttp.WSMsgType.CLOSING,
                     ):
-                        # TODO(laurent): once we support returning eos in the api, we should enable this back.
-                        # raise APIStatusError("Gradium websocket connection closed unexpectedly")
+
+
                         break
 
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         msg_data = json.loads(msg.data)
                         type_ = msg_data.get("type")
                         if type_ == "text":
-                            # TODO(laurent): handle text timestamps?
+
                             pass
                         elif type_ == "ready":
                             pass
@@ -282,7 +282,7 @@ class SynthesizeStream(tts.SynthesizeStream):
         )
 
         async def _tokenize_input() -> None:
-            # Converts incoming text into WordStreams and sends them into _segments_ch
+
             word_stream = None
             async for input in self._input_ch:
                 if isinstance(input, str):
@@ -357,8 +357,8 @@ class SynthesizeStream(tts.SynthesizeStream):
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    # TODO(laurent): once we support returning eos in the api, we should enable this back.
-                    # raise APIStatusError("Gradium websocket connection closed unexpectedly")
+
+
                     output_emitter.end_segment()
                     break
 
@@ -366,7 +366,7 @@ class SynthesizeStream(tts.SynthesizeStream):
                     msg_data = json.loads(msg.data)
                     type_ = msg_data.get("type")
                     if type_ == "text":
-                        # TODO(laurent): handle text timestamps?
+
                         pass
                     elif type_ == "ready":
                         pass

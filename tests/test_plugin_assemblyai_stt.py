@@ -90,15 +90,15 @@ async def test_vad_threshold_partial_update():
     assert stt._opts.max_turn_silence == 500
 
 
-# ---------------------------------------------------------------------------
-# SpeechStarted → speech_start_time conversion
-#
-# The plugin anchors the stream's wall-clock via the base-class `start_time`
-# property (which it overrides in send_task on the first ws.send_bytes). The
-# server emits SpeechStarted with a stream-relative `timestamp` in ms, which
-# the plugin converts to wall-clock by `self.start_time + timestamp_ms/1000`
-# and surfaces via `SpeechEvent.speech_start_time`.
-# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 def _make_stream_for_unit_test():
@@ -113,9 +113,9 @@ def _make_stream_for_unit_test():
     stt = STT(api_key="test-key")
 
     def _fake_create_task(coro, *args, **kwargs):
-        # Close the coroutine so we don't get RuntimeWarning about it never
-        # being awaited. Return a benign mock so callers that chain
-        # add_done_callback / cancel don't break.
+
+
+
         coro.close()
         task = MagicMock()
         return task
@@ -138,12 +138,12 @@ async def test_speech_started_uses_start_time_anchor():
     speech_start_time."""
     stream = _make_stream_for_unit_test()
 
-    # Override the stream anchor to a known value — simulates what send_task
-    # would do on the first ws.send_bytes.
+
+
     anchor = 1_700_000_000.0
     stream.start_time = anchor
 
-    # Simulate the server sending a SpeechStarted message 500ms into the stream.
+
     stream._process_stream_event({"type": "SpeechStarted", "timestamp": 500})
 
     ev = stream._event_ch.recv_nowait()
@@ -171,7 +171,7 @@ async def test_speech_started_without_timestamp_leaves_field_none():
     to message-arrival time (pre-PR behavior)."""
     stream = _make_stream_for_unit_test()
 
-    # Server sends SpeechStarted with no timestamp field.
+
     stream._process_stream_event({"type": "SpeechStarted"})
 
     ev = stream._event_ch.recv_nowait()
@@ -185,8 +185,8 @@ async def test_start_time_has_default_before_plugin_override():
     conversion to use."""
     stream = _make_stream_for_unit_test()
 
-    # start_time should already be a recent wall-clock value from the base
-    # class __init__, without any explicit override.
+
+
     assert time.time() - stream.start_time < 5.0
 
 
@@ -253,7 +253,7 @@ async def test_continuous_partials_update_from_default():
     """Test continuous_partials can be updated via update_options away from LiveKit default."""
     from livekit.plugins.assemblyai import STT
 
-    # LiveKit defaults this to True for u3-rt-pro
+
     stt = STT(api_key="test-key", model="u3-rt-pro")
     assert stt._opts.continuous_partials is True
 

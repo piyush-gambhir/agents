@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -89,7 +89,7 @@ class STT(stt.STT):
         no_delay: bool = True,
         endpointing_ms: int = 25,
         enable_diarization: bool = False,
-        # enable filler words by default to improve turn detector accuracy
+
         filler_words: bool = True,
         keywords: NotGivenOr[list[tuple[str, float]]] = NOT_GIVEN,
         keyterm: NotGivenOr[str | list[str]] = NOT_GIVEN,
@@ -102,7 +102,7 @@ class STT(stt.STT):
         numerals: bool = False,
         mip_opt_out: bool = False,
         vad_events: bool = True,
-        # deprecated
+
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         """Create a new instance of Deepgram STT.
@@ -307,7 +307,7 @@ class STT(stt.STT):
         vad_events: NotGivenOr[bool] = NOT_GIVEN,
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-        # deprecated
+
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(language):
@@ -422,10 +422,10 @@ class SpeechStream(stt.SpeechStream):
 
         self._request_id = ""
         self._reconnect_event = asyncio.Event()
-        # Track how much duration has already been reported so we can emit
-        # the connection-lifetime remainder on close, matching what Deepgram
-        # actually bills (which includes WebSocket open/teardown overhead
-        # beyond the pushed audio frames).
+
+
+
+
         self._reported_duration: float = 0.0
 
     def update_options(
@@ -450,7 +450,7 @@ class SpeechStream(stt.SpeechStream):
         vad_events: NotGivenOr[bool] = NOT_GIVEN,
         tags: NotGivenOr[list[str]] = NOT_GIVEN,
         endpoint_url: NotGivenOr[str] = NOT_GIVEN,
-        # deprecated
+
         keyterms: NotGivenOr[list[str]] = NOT_GIVEN,
     ) -> None:
         if is_given(language):
@@ -503,9 +503,9 @@ class SpeechStream(stt.SpeechStream):
         closing_ws = False
 
         async def keepalive_task(ws: aiohttp.ClientWebSocketResponse) -> None:
-            # if we want to keep the connection alive even if no audio is sent,
-            # Deepgram expects a keepalive message.
-            # https://developers.deepgram.com/reference/listen-live#stream-keepalive
+
+
+
             try:
                 while True:
                     await ws.send_str(SpeechStream._KEEPALIVE_MSG)
@@ -518,7 +518,7 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-            # forward audio to deepgram in chunks of 50ms
+
             samples_50ms = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
@@ -544,7 +544,7 @@ class SpeechStream(stt.SpeechStream):
                         await ws.send_str(SpeechStream._FINALIZE_MSG)
                         has_ended = False
 
-            # tell deepgram we are done sending audio/inputs
+
             closing_ws = True
             await ws.send_str(SpeechStream._CLOSE_MSG)
 
@@ -558,12 +558,12 @@ class SpeechStream(stt.SpeechStream):
                     aiohttp.WSMsgType.CLOSE,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    # close is expected, see SpeechStream.aclose
-                    # or when the agent session ends, the http session is closed
+
+
                     if closing_ws or self._session.closed:
                         return
 
-                    # this will trigger a reconnection, see the _run loop
+
                     raise APIStatusError(
                         message="deepgram connection closed unexpectedly",
                         status_code=ws.close_code or -1,
@@ -599,7 +599,7 @@ class SpeechStream(stt.SpeechStream):
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-                    # propagate exceptions from completed tasks
+
                     for task in done:
                         if task != wait_reconnect_task:
                             task.result()
@@ -611,15 +611,15 @@ class SpeechStream(stt.SpeechStream):
                 finally:
                     await utils.aio.gracefully_cancel(*tasks, wait_reconnect_task)
                     tasks_group.cancel()
-                    tasks_group.exception()  # retrieve the exception
+                    tasks_group.exception()
             finally:
                 if ws is not None:
                     await ws.close()
-                    # Deepgram bills WebSocket lifetime, not just audio
-                    # frames pushed.  Emit the remainder between the
-                    # connection's wall-clock lifetime and the frame
-                    # durations we've already reported so usage reflects
-                    # what the provider actually charges for.
+
+
+
+
+
                     if conn_start_time:
                         self._audio_duration_collector.flush()
                         lifetime = time.perf_counter() - conn_start_time
@@ -695,10 +695,10 @@ class SpeechStream(stt.SpeechStream):
         assert self._opts.language is not None
 
         if data["type"] == "SpeechStarted":
-            # This is a normal case. Deepgram's SpeechStarted events
-            # are not correlated with speech_final or utterance end.
-            # It's possible that we receive two in a row without an endpoint
-            # It's also possible we receive a transcript without a SpeechStarted event.
+
+
+
+
             if self._speaking:
                 return
 
@@ -706,9 +706,9 @@ class SpeechStream(stt.SpeechStream):
             start_event = stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
             self._event_ch.send_nowait(start_event)
 
-        # see this page:
-        # https://developers.deepgram.com/docs/understand-endpointing-interim-results#using-endpointing-speech_final
-        # for more information about the different types of events
+
+
+
         elif data["type"] == "Results":
             metadata = data["metadata"]
             request_id = metadata["request_id"]
@@ -722,9 +722,9 @@ class SpeechStream(stt.SpeechStream):
                 is_final=is_final_transcript,
                 start_time_offset=self.start_time_offset,
             )
-            # If, for some reason, we didn't get a SpeechStarted event but we got
-            # a transcript with text, we should start speaking. It's rare but has
-            # been observed.
+
+
+
             if len(alts) > 0 and alts[0].text:
                 if not self._speaking:
                     self._speaking = True
@@ -746,15 +746,15 @@ class SpeechStream(stt.SpeechStream):
                     )
                     self._event_ch.send_nowait(interim_event)
 
-            # if we receive an endpoint, only end the speech if
-            # we either had a SpeechStarted event or we have a seen
-            # a non-empty transcript (deepgram doesn't have a SpeechEnded event)
+
+
+
             if is_endpoint and self._speaking:
                 self._speaking = False
                 self._event_ch.send_nowait(stt.SpeechEvent(type=stt.SpeechEventType.END_OF_SPEECH))
 
         elif data["type"] == "Metadata":
-            pass  # metadata is too noisy
+            pass
         else:
             logger.warning("received unexpected message from deepgram %s", data)
 
@@ -770,7 +770,7 @@ def live_transcription_to_speech_data(
             speakers = [word["speaker"] for word in alt["words"] if "speaker" in word]
             speaker = Counter(speakers).most_common(1)[0][0] if speakers else None
         else:
-            # interim result doesn't have correct speaker information?
+
             speaker = None
 
         sd = stt.SpeechData(
@@ -793,22 +793,22 @@ def live_transcription_to_speech_data(
             else None,
         )
         if language == "multi" and "languages" in alt:
-            sd.language = LanguageCode(alt["languages"][0])  # TODO: handle multiple languages
+            sd.language = LanguageCode(alt["languages"][0])
         speech_data.append(sd)
     return speech_data
 
 
 def prerecorded_transcription_to_speech_event(
-    language: str | None,  # language should be None when 'detect_language' is enabled
+    language: str | None,
     data: dict,
 ) -> stt.SpeechEvent:
-    # We only support one channel for now
+
     request_id = data["metadata"]["request_id"]
     channel: dict = data["results"]["channels"][0]
     dg_alts = channel["alternatives"]
 
-    # Use the detected language if enabled
-    # https://developers.deepgram.com/docs/language-detection
+
+
     detected_language = LanguageCode(channel.get("detected_language", ""))
 
     return stt.SpeechEvent(

@@ -9,8 +9,8 @@ from livekit import rtc
 _SAMPLE_RATE = 48000
 _BLOCK = 4800
 
-_ROOT_HZ = 174.61  # F3
-_CHORD_SEMITONES = (0, 4, 7)  # F major triad
+_ROOT_HZ = 174.61
+_CHORD_SEMITONES = (0, 4, 7)
 
 _BEAT_S = 0.28
 _NOTE_DUR_S = 0.34

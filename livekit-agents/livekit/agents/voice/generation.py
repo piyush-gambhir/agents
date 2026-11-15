@@ -123,9 +123,9 @@ async def _llm_inference_task(
     if asyncio.iscoroutine(llm_node):
         llm_node = await llm_node
 
-    # store any updated tools, to ensure subsequent tool calls in the same turn (nested calls)
-    # are using the newer tools.
-    # tool_ctx here is ephemeral for this turn, and we allow manipulations
+
+
+
     tool_ctx.update_tools(tools)
     tools_snapshot = tools.copy()
 
@@ -138,13 +138,13 @@ async def _llm_inference_task(
     if not isinstance(llm_node, AsyncIterable):
         return False
 
-    # forward llm stream to output channels
+
     try:
         async for chunk in llm_node:
             if data.ttft is None:
                 data.ttft = time.perf_counter() - start_time
 
-            # io.LLMNode can either return a string or a ChatChunk
+
             if isinstance(chunk, str):
                 data.generated_text += chunk
                 text_ch.send_nowait(chunk)
@@ -158,7 +158,7 @@ async def _llm_inference_task(
                         if tool.type != "function":
                             continue
 
-                        # lazily update the tool_ctx in case tools changed in the middle of `llm_node`
+
                         if (
                             tool_ctx.get_function_tool(tool.name) is None
                             and tools != tools_snapshot
@@ -356,7 +356,7 @@ def perform_audio_forwarding(
     tts_output: AsyncIterable[rtc.AudioFrame],
 ) -> tuple[asyncio.Task[None], _AudioOutput]:
     out = _AudioOutput(audio=[], first_frame_fut=asyncio.Future())
-    # out.first_frame_fut should be cancelled in the caller after the playout is finished or interrupted
+
     audio_output.on("playback_started", out._resolve_first_frame_fut)
     out.first_frame_fut.add_done_callback(
         lambda _: audio_output.off("playback_started", out._resolve_first_frame_fut)
@@ -497,7 +497,7 @@ async def forward_generation(
                     out.played = "partial"
                     out.playback_position = playback_ev.playback_position
                     out.synchronized_transcript = playback_ev.synchronized_transcript
-                # else: audio never reached the speakers, stays "skipped"
+
             elif text_out is not None and text_out.text:
                 out.played = "partial"
             return out
@@ -583,8 +583,8 @@ async def _execute_tools_task(
         )
         return
 
-    # AsyncToolset members route to their own executor for per-toolset
-    # update/reply coalescing; the rest fall back to the activity executor
+
+
     executor_by_name = _build_executor_map(
         toolsets=tool_ctx.toolsets, default=activity._tool_executor
     )
@@ -602,7 +602,7 @@ async def _execute_tools_task(
                 )
                 continue
 
-            # TODO(theomonnom): assert other tool_choice values
+
 
             if (function_tool := tool_ctx.function_tools.get(fnc_call.name)) is None:
                 logger.warning(
@@ -638,10 +638,10 @@ async def _execute_tools_task(
                 )
                 continue
 
-            # parse up front so the executor doesn't repeat the work, and so
-            # invalid JSON surfaces as a tool error instead of inside the lock.
-            # parse_function_arguments adds json_repair fallback + chat-template
-            # token cleanup for misbehaving open-weight models.
+
+
+
+
             json_args = fnc_call.arguments or "{}"
             try:
                 raw_args = llm_utils.parse_function_arguments(json_args)
@@ -663,8 +663,8 @@ async def _execute_tools_task(
                 )
                 continue
 
-            # write canonical JSON back so subsequent LLM turns see valid JSON
-            # even if the original was repaired
+
+
             canonical = json.dumps(raw_args, default=str)
             if canonical != json_args:
                 fnc_call.arguments = canonical
@@ -744,12 +744,12 @@ async def _execute_tools_task(
                             trace_types.ATTR_FUNCTION_TOOL_IS_ERROR, fnc_call_out.is_error
                         )
 
-                    # TODO(theomonnom): Add the agent handoff inside the current_span
+
                     _tool_completed(output)
 
                 task = asyncio.create_task(
                     _traceable_fnc_tool(function_callable, fnc_call),
-                    name=f"func_exec_{fnc_call.name}",  # task name is used for logging when the task is cancelled
+                    name=f"func_exec_{fnc_call.name}",
                 )
                 _set_activity_task_info(
                     task, speech_handle=speech_handle, function_call=fnc_call, inline_task=True
@@ -757,9 +757,9 @@ async def _execute_tools_task(
                 tasks.append(task)
                 task.add_done_callback(lambda task: tasks.remove(task))
             except Exception as e:
-                # catching exceptions here because even though the function is asynchronous,
-                # errors such as missing or incompatible arguments can still occur at
-                # invocation time.
+
+
+
                 logger.exception(
                     "exception occurred while executing tool",
                     extra={
@@ -869,14 +869,14 @@ def make_tool_output(
     return ToolExecutionOutput(
         fnc_call=fnc_call.model_copy(),
         fnc_call_out=base_result.fnc_call_out,
-        reply_required=fnc_out is not None,  # require a reply if the tool returned an output
+        reply_required=fnc_out is not None,
         agent_task=task,
         raw_output=output,
         raw_exception=exception,
     )
 
 
-INSTRUCTIONS_MESSAGE_ID = "lk.agent_task.instructions"  #  value must not change
+INSTRUCTIONS_MESSAGE_ID = "lk.agent_task.instructions"
 """
 The ID of the instructions message in the chat context. (only for stateless LLMs)
 """
@@ -897,7 +897,7 @@ def update_instructions(
     idx = chat_ctx.index_by_id(INSTRUCTIONS_MESSAGE_ID)
     if idx is not None:
         if chat_ctx.items[idx].type == "message":
-            # create a new instance to avoid mutating the original
+
             chat_ctx.items[idx] = llm.ChatMessage(
                 id=INSTRUCTIONS_MESSAGE_ID,
                 role="system",
@@ -909,7 +909,7 @@ def update_instructions(
                 "expected the instructions inside the chat_ctx to be of type 'message'"
             )
     elif add_if_missing:
-        # insert the instructions at the beginning of the chat context
+
         chat_ctx.items.insert(
             0,
             llm.ChatMessage(id=INSTRUCTIONS_MESSAGE_ID, role="system", content=[instructions]),
@@ -925,7 +925,7 @@ def apply_instructions_modality(
         if not has_modality_specific:
             return
 
-        # ChatContext.copy shadows the original item, create a new instance to avoid mutating the original
+
         new_item = item.model_copy()
         new_item.content = [
             c.as_modality(modality) if isinstance(c, Instructions) else c for c in new_item.content
@@ -934,7 +934,7 @@ def apply_instructions_modality(
 
 
 def remove_instructions(chat_ctx: ChatContext) -> None:
-    # loop in case there are items with the same id (shouldn't happen!)
+
     while True:
         if msg := chat_ctx.get_by_id(INSTRUCTIONS_MESSAGE_ID):
             chat_ctx.items.remove(msg)

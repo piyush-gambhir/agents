@@ -21,11 +21,11 @@ class TestDebounce:
         debouncer = Debounced(test_func, 0.1)
         task = debouncer.schedule()
 
-        # Should not execute immediately
+
         assert len(result) == 0
         assert debouncer.is_running()
 
-        # Wait for execution
+
         value = await task
         assert value == "success"
         assert len(result) == 1
@@ -43,20 +43,20 @@ class TestDebounce:
 
         debouncer = Debounced(test_func, 0.1)
 
-        # Schedule multiple times rapidly
+
         task1 = debouncer.schedule()
-        await asyncio.sleep(0.05)  # Wait less than delay
+        await asyncio.sleep(0.05)
         task2 = debouncer.schedule()
-        await asyncio.sleep(0.05)  # Wait less than delay
+        await asyncio.sleep(0.05)
         task3 = debouncer.schedule()
 
-        # First two tasks should be cancelled
+
         await asyncio.gather(task1, task2, task3, return_exceptions=True)
 
         assert task1.cancelled()
         assert task2.cancelled()
 
-        # Only the last task should complete
+
         result = await task3
         assert result == 1
         assert execution_count == 1
@@ -92,7 +92,7 @@ class TestDebounce:
             return "result"
 
         debouncer = Debounced(test_func, 0.05)
-        task = debouncer()  # Using __call__
+        task = debouncer()
 
         value = await task
         assert value == "result"
@@ -107,14 +107,14 @@ class TestDebounce:
 
         debouncer = Debounced(test_func, 0.02)
 
-        # Initially not running
+
         assert not debouncer.is_running()
 
-        # Running after schedule
+
         task = debouncer.schedule()
         assert debouncer.is_running()
 
-        # Not running after completion
+
         await task
         assert not debouncer.is_running()
 
@@ -184,10 +184,10 @@ class TestDebounceDecorator:
             execution_count += 1
             return f"executed_{execution_count}"
 
-        # The decorator returns a Debounce instance
+
         assert isinstance(decorated_func, Debounced)
 
-        # Schedule execution
+
         task = decorated_func.schedule()
         result = await task
 
@@ -204,14 +204,14 @@ class TestDebounceDecorator:
             execution_count += 1
             return execution_count
 
-        # Multiple rapid calls
+
         task1 = decorated_func.schedule()
         await asyncio.sleep(0.05)
         task2 = decorated_func.schedule()
         await asyncio.sleep(0.05)
         task3 = decorated_func.schedule()
 
-        # Wait for final execution
+
         result = await task3
 
         assert result == 1
@@ -228,7 +228,7 @@ class TestDebounceDecorator:
             results.append("executed")
             return "success"
 
-        # Call using () operator
+
         task = decorated_func()
         result = await task
 
@@ -238,15 +238,15 @@ class TestDebounceDecorator:
     async def test_decorator_with_parameters(self) -> None:
         """Test decorator with different delay parameters."""
 
-        @debounced(0.01)  # Very short delay
+        @debounced(0.01)
         async def fast_func() -> str:
             return "fast"
 
-        @debounced(0.1)  # Longer delay
+        @debounced(0.1)
         async def slow_func() -> str:
             return "slow"
 
-        # Both should work with their respective delays
+
         fast_task = fast_func.schedule()
         slow_task = slow_func.schedule()
 
@@ -263,7 +263,7 @@ class TestDebounceDecorator:
             """Original docstring."""
             return "original_result"
 
-        # The Debounce should wrap the original function
+
         task = original_func.schedule()
         result = await task
         assert result == "original_result"

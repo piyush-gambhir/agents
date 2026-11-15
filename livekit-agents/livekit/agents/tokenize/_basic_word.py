@@ -21,12 +21,12 @@ def split_words(
     """
     words: list[tuple[str, int, int]] = []
 
-    # CJK: \u4e00-\u9fff, \u3040-\u30ff, \u3400-\u4dbf
-    # Thai: \u0E00-\u0E7F
+
+
     char_based_codes = (
         re.compile(
-            r"[\u4e00-\u9fff\u3040-\u30ff\u3400-\u4dbf"  # CJK scripts
-            r"\u0E00-\u0E7F]"  # Thai
+            r"[\u4e00-\u9fff\u3040-\u30ff\u3400-\u4dbf"
+            r"\u0E00-\u0E7F]"
         )
         if split_character
         else None
@@ -52,7 +52,7 @@ def split_words(
             if retain_format and not text[word_start:pos].strip():
                 continue
 
-            # reached whitespace, commit current word
+
             _add_current_word(word_start, pos)
             word_start = pos if retain_format else pos + 1
 
@@ -60,11 +60,11 @@ def split_words(
             if word_start < pos:
                 _add_current_word(word_start, pos)
 
-            # commit character as a word
+
             _add_current_word(pos, pos + 1)
             word_start = pos + 1
 
-    # add the last word if there is one
+
     _add_current_word(word_start, len(text))
 
     return words

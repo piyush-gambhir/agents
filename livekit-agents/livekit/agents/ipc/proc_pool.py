@@ -91,8 +91,8 @@ class ProcPool(utils.EventEmitter[EventTypes]):
         self._main_atask = asyncio.create_task(self._main_task())
 
         if self._default_num_idle_processes > 0:
-            # wait for the idle processes to be warmed up (by the main task)
-            # use a timeout so start() doesn't block forever if initialization fails
+
+
             try:
                 await asyncio.wait_for(
                     self._idle_ready.wait(),
@@ -116,7 +116,7 @@ class ProcPool(utils.EventEmitter[EventTypes]):
                 self._warmed_proc_queue.empty()
                 and len(self._spawn_tasks) < self._jobs_waiting_for_process
             ):
-                # spawn a new process if there are no idle processes
+
                 task = asyncio.create_task(self._proc_spawn_task())
                 self._spawn_tasks.add(task)
                 task.add_done_callback(self._spawn_tasks.discard)
@@ -127,13 +127,13 @@ class ProcPool(utils.EventEmitter[EventTypes]):
                     extra={"job_id": job_id},
                 )
 
-            # race the queue against every in-flight spawn task
+
             while True:
                 if not self._warmed_proc_queue.empty():
                     return self._warmed_proc_queue.get_nowait()
 
                 spawns = [t for t in self._spawn_tasks if not t.done()]
-                # retry if all in-flight spawns have completed without producing a proc
+
                 if not spawns:
                     break
 

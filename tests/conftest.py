@@ -14,10 +14,10 @@ from .toxic_proxy import Toxiproxy
 
 TEST_CONNECT_OPTIONS = dataclasses.replace(DEFAULT_API_CONNECT_OPTIONS, retry_interval=0.0)
 
-# Category names are the pytest markers declared in pyproject.toml — the single
-# source of truth. They're read from the file rather than via config.getini()
-# because the --<category> options are registered in pytest_addoption, which runs
-# before pytest has parsed the ini file.
+
+
+
+
 _PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 
@@ -31,10 +31,10 @@ def _load_categories() -> tuple[str, ...]:
 
 CATEGORIES = _load_categories()
 
-# matches `pytest.mark.<category>` anywhere in a module's source (module-level
-# `pytestmark = ...` or per-test `@pytest.mark.<category>` decorators).
+
+
 _CATEGORY_RE = re.compile(r"pytest\.mark\.(" + "|".join(CATEGORIES) + r")\b")
-# a module "has tests" if it declares any (non-commented) test function or Test class.
+
 _HAS_TESTS_RE = re.compile(r"^\s*(?:async\s+)?def test|^\s*class Test", re.MULTILINE)
 
 _CATEGORY_HINT = (
@@ -102,7 +102,7 @@ def _uncategorized_modules(config: pytest.Config) -> list[Path]:
     for path in _iter_test_files(config):
         source = _read_source(path)
         if not _HAS_TESTS_RE.search(source):
-            continue  # empty / fully-commented module: nothing to categorize
+            continue
         if not _module_categories(source):
             offenders.append(path)
     return offenders
@@ -155,7 +155,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 def _selected_categories(config: pytest.Config) -> dict[str, object]:
-    # category -> True (whole category) or a provider string (single target)
+
     selected: dict[str, object] = {}
     for category in CATEGORIES:
         value = config.getoption(f"--{category}")
@@ -184,8 +184,8 @@ def pytest_ignore_collect(collection_path: Path, config: pytest.Config) -> bool 
     except OSError:
         return None
 
-    # ignore the module only if it carries none of the selected categories' markers;
-    # otherwise return None (defer) so --ignore and other plugins still apply.
+
+
     if any(f"pytest.mark.{category}" in source for category in selected):
         return None
     return True
@@ -233,7 +233,7 @@ def configure_test():
 @pytest.fixture(scope="session", autouse=True)
 def _logging_baseline():
     """Pristine logging state, snapshotted once before any test runs."""
-    loggers = [logging.getLogger()]  # root
+    loggers = [logging.getLogger()]
     loggers += [
         logging.getLogger(name)
         for name in logging.root.manager.loggerDict
@@ -270,8 +270,8 @@ def logger():
 def _is_ignorable_task(task) -> bool:
     try:
         coro = task.get_coro()
-        # async_generator_athrow tasks are created by Python's GC when finalizing
-        # async generators (e.g. httpx/httpcore streaming generators)
+
+
         coro_name = getattr(coro, "__qualname__", "") or type(coro).__name__
         if "async_generator_athrow" in coro_name:
             return True

@@ -21,7 +21,7 @@ class FallbackAdapterTester(FallbackAdapter):
         self,
         tts: list[TTS],
         *,
-        max_retry_per_tts: int = 1,  # only retry once by default
+        max_retry_per_tts: int = 1,
         sample_rate: int | None = None,
     ) -> None:
         super().__init__(
@@ -86,7 +86,7 @@ async def test_no_audio() -> None:
             async for _ in stream:
                 pass
 
-    # stream
+
     fake1.update_options(fake_audio_duration=5.0)
 
     async def _input_task(stream: SynthesizeStream, text: str):
@@ -218,7 +218,7 @@ async def test_audio_resampled() -> None:
         assert frames[-1].is_final is True, "last frame should be final"
 
         combined_frame = rtc.combine_audio_frames([f.frame for f in frames])
-        assert combined_frame.duration == 5.01  # 5.0 + 0.01 final flag
+        assert combined_frame.duration == 5.01
         assert combined_frame.sample_rate == 48000
 
     await fallback_adapter.aclose()
@@ -247,7 +247,7 @@ async def test_timeout():
     assert await asyncio.wait_for(fake1.synthesize_ch.recv(), 1.0)
     assert await asyncio.wait_for(fake2.synthesize_ch.recv(), 1.0)
 
-    # stream
+
     with pytest.raises(APIConnectionError):
         async with fallback_adapter.stream(
             conn_options=APIConnectOptions(timeout=0.1, max_retry=0)

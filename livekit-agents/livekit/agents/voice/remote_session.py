@@ -455,7 +455,7 @@ class SessionHost:
     def _on_user_state_changed(self, event: UserStateChangedEvent) -> None:
         old_pb = _USER_STATE_MAP.get(event.old_state, agent_pb.US_LISTENING)
         new_pb = _USER_STATE_MAP.get(event.new_state, agent_pb.US_LISTENING)
-        # use the original timestamp which is adjusted for VAD latency
+
         self._send_event(
             agent_pb.AgentSessionEvent(
                 user_state_changed=agent_pb.AgentSessionEvent.UserStateChanged(
@@ -556,7 +556,7 @@ class SessionHost:
             )
         )
 
-    # TODO: @chenghao-mou add EOT prediction event
+
 
     def _on_session_usage_updated(self, event: SessionUsageUpdatedEvent) -> None:
         self._send_event(

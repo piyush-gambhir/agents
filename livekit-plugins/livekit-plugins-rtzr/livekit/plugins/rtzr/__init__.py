@@ -22,7 +22,7 @@ class RTZRPlugin(Plugin):
 
 Plugin.register_plugin(RTZRPlugin())
 
-# Cleanup docs of unexported modules
+
 _module = dir()
 NOT_IN_ALL = [m for m in _module if m not in __all__]
 

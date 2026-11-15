@@ -1,14 +1,14 @@
 # Copyright 202 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -46,7 +46,7 @@ from .langs import TTSLangs
 from .log import logger
 from .models import ArcanaVoices, DefaultCodaVoice, DefaultMistVoice, TTSModels
 
-# arcana can take as long as 80% of the total duration of the audio it's synthesizing.
+
 ARCANA_MODEL_TIMEOUT = 60 * 4
 MIST_MODEL_TIMEOUT = 30
 RIME_BASE_URL = "https://users.rime.ai/v1/rime-tts"
@@ -138,7 +138,7 @@ def _model_params(opts: _TTSOptions) -> dict[str, object]:
             params["pauseBetweenBrackets"] = mo.pause_between_brackets
         if is_given(mo.phonemize_between_brackets):
             params["phonemizeBetweenBrackets"] = mo.phonemize_between_brackets
-        # time_scale_factor is supported by mistv3 but not mistv2.
+
         if is_given(mo.time_scale_factor) and opts.model != "mistv2":
             params["timeScaleFactor"] = mo.time_scale_factor
     return params
@@ -161,14 +161,14 @@ class TTS(tts.TTS):
         model: TTSModels | str = "arcana",
         speaker: NotGivenOr[ArcanaVoices | str] = NOT_GIVEN,
         lang: TTSLangs | str = "eng",
-        # Arcana options
+
         repetition_penalty: NotGivenOr[float] = NOT_GIVEN,
         temperature: NotGivenOr[float] = NOT_GIVEN,
         top_p: NotGivenOr[float] = NOT_GIVEN,
         max_tokens: NotGivenOr[int] = NOT_GIVEN,
-        # Shared by arcana, mistv3, and coda
+
         time_scale_factor: NotGivenOr[float] = NOT_GIVEN,
-        # Mistv2 options
+
         sample_rate: int = 22050,
         speed_alpha: NotGivenOr[float] = NOT_GIVEN,
         reduce_latency: NotGivenOr[bool] = NOT_GIVEN,
@@ -181,7 +181,7 @@ class TTS(tts.TTS):
         tokenizer: NotGivenOr[tokenize.SentenceTokenizer] = NOT_GIVEN,
     ) -> None:
         if is_given(base_url):
-            # Infer streaming mode from URL prefix; an explicit use_websocket=True still wins.
+
             use_websocket = use_websocket or base_url.startswith(("ws://", "wss://"))
             resolved_base_url = base_url
         else:
@@ -345,15 +345,15 @@ class TTS(tts.TTS):
         model: NotGivenOr[TTSModels | str] = NOT_GIVEN,
         speaker: NotGivenOr[str] = NOT_GIVEN,
         lang: NotGivenOr[TTSLangs | str] = NOT_GIVEN,
-        # Arcana parameters
+
         repetition_penalty: NotGivenOr[float] = NOT_GIVEN,
         temperature: NotGivenOr[float] = NOT_GIVEN,
         top_p: NotGivenOr[float] = NOT_GIVEN,
         max_tokens: NotGivenOr[int] = NOT_GIVEN,
         sample_rate: NotGivenOr[int] = NOT_GIVEN,
-        # Coda parameters
+
         time_scale_factor: NotGivenOr[float] = NOT_GIVEN,
-        # Mistv2 parameters
+
         speed_alpha: NotGivenOr[float] = NOT_GIVEN,
         reduce_latency: NotGivenOr[bool] = NOT_GIVEN,
         pause_between_brackets: NotGivenOr[bool] = NOT_GIVEN,
@@ -363,7 +363,7 @@ class TTS(tts.TTS):
         effective_model = model if is_given(model) else self._opts.model
         _check_time_scale_factor_supported(effective_model, time_scale_factor)
 
-        # WS URL is bound at pool connect; invalidate if any URL-affecting param changed.
+
         prev_ws_url = self._ws_url() if self._use_websocket else None
         if is_given(base_url):
             self._base_url = base_url

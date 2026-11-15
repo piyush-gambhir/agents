@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -42,7 +42,7 @@ from .log import logger
 
 STTEncoding = Literal["pcm_s16le"]
 
-# Define bytes per frame for different encoding types
+
 bytes_per_frame = {
     "pcm_s16le": 2,
 }
@@ -57,12 +57,12 @@ class STTOptions:
     buffer_size_seconds: float = 0.08
     encoding: str = "pcm_s16le"
     temperature: float | None = None
-    # TODO(laurent): support language detection
+
     language: LanguageCode = LanguageCode("en")
     vad_threshold: float = 0.6
     vad_bucket: int | None = 2
-    # When set, we flush the stt state on the first time the VAD triggers
-    # in order to recover the text currently being processed as soon as possible.
+
+
     vad_flush: bool = True
 
 
@@ -86,8 +86,8 @@ class STT(stt.STT):
         super().__init__(
             capabilities=stt.STTCapabilities(
                 streaming=True,
-                interim_results=True,  # only final transcripts
-                aligned_transcript=False,  # only chunk start times are available
+                interim_results=True,
+                aligned_transcript=False,
                 offline_recognize=False,
             ),
         )
@@ -191,7 +191,7 @@ class STT(stt.STT):
 
 
 class SpeechStream(stt.SpeechStream):
-    # Used to close websocket
+
     _CLOSE_MSG: str = json.dumps({"terminate_session": True})
 
     def __init__(
@@ -371,7 +371,7 @@ class SpeechStream(stt.SpeechStream):
                     elif type_ == "ready":
                         self._ready_msg = data
                     elif type_ == "end_text":
-                        # This message provides the end timestamp of the previous word in the stop_s field.
+
                         pass
                     else:
                         logger.warning(f"Unknown message type from Gradium {type_}")
@@ -417,7 +417,7 @@ class SpeechStream(stt.SpeechStream):
 
         ws = await self._session.ws_connect(self._model_endpoint, headers=headers)
 
-        # Build and send the setup payload as the first message
+
         setup_msg: dict[str, Any] = {
             "type": "setup",
             "model_name": self._model_name,

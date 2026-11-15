@@ -13,7 +13,7 @@ def find_micro_track_id(room: rtc.Room, identity: str) -> str:
     if p is None:
         raise ValueError(f"participant {identity} not found")
 
-    # find first micro track
+
     track_id = None
     for track in p.track_publications.values():
         if track.source == rtc.TrackSource.SOURCE_MICROPHONE:

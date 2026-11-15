@@ -39,7 +39,7 @@ async def entrypoint(job: JobContext):
 
     text = "hello from Cartesia. I hope you are having a great day."
 
-    # split into two word chunks to simulate LLM streaming
+
     words = text.split()
     for i in range(0, len(words), 2):
         chunk = " ".join(words[i : i + 2])
@@ -47,7 +47,7 @@ async def entrypoint(job: JobContext):
             logger.info(f'pushing chunk: "{chunk} "')
             stream.push_text(chunk + " ")
 
-    # Mark end of input segment
+
     stream.flush()
     stream.end_input()
     await asyncio.gather(task)

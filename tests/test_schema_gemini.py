@@ -8,10 +8,10 @@ from livekit.plugins.google import utils
 
 pytestmark = pytest.mark.unit
 
-#  Gemini Schema Tests
 
 
-# Test for inlining $ref definitions
+
+
 async def test_json_def_replaced():
     class Location(BaseModel):
         lat: float
@@ -21,7 +21,7 @@ async def test_json_def_replaced():
         locations: list[Location]
 
     json_schema = Locations.model_json_schema()
-    # Original schema with $defs as produced by Pydantic.
+
     expected_schema = {
         "$defs": {
             "Location": {
@@ -69,7 +69,7 @@ async def test_json_def_replaced():
     assert gemini_schema == expected_gemini_schema
 
 
-# Test for handling anyOf (optional field)
+
 async def test_json_def_replaced_any_of():
     class Location(BaseModel):
         lat: float
@@ -82,8 +82,8 @@ async def test_json_def_replaced_any_of():
 
     gemini_schema = utils._GeminiJsonSchema(json_schema).simplify()
 
-    # The anyOf containing the Location ref and {"type": "null"} is merged,
-    # so op_location becomes the inlined Location with "nullable": True.
+
+
     expected_gemini_schema = {
         "properties": {
             "op_location": {
@@ -101,7 +101,7 @@ async def test_json_def_replaced_any_of():
     assert gemini_schema == expected_gemini_schema
 
 
-# Test for recursive $ref – should raise ValueError
+
 async def test_json_def_recursive():
     class Location(BaseModel):
         lat: float
@@ -138,7 +138,7 @@ async def test_json_def_recursive():
         utils._GeminiJsonSchema(json_schema).simplify()
 
 
-# Test for preserving format, and description on string fields
+
 async def test_json_def_date():
     class FormattedStringFields(BaseModel):
         d: datetime.date

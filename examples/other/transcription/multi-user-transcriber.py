@@ -25,8 +25,8 @@ load_dotenv()
 logger = logging.getLogger("transcriber")
 
 
-# This example demonstrates how to transcribe audio from multiple remote participants.
-# It creates agent sessions for each participant and transcribes their audio.
+
+
 
 
 class Transcriber(Agent):
@@ -104,9 +104,9 @@ class MultiUserTranscriber:
                 text_output=True,
                 audio_output=False,
                 participant_identity=participant.identity,
-                # text input is not supported for multiple room participants
-                # if needed, register the text stream handler by yourself
-                # and route the text to different sessions based on the participant identity
+
+
+
                 text_input=False,
             ),
         )
@@ -127,7 +127,7 @@ async def entrypoint(ctx: JobContext):
 
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     for participant in ctx.room.remote_participants.values():
-        # handle all existing participants
+
         transcriber.on_participant_connected(participant)
 
     async def cleanup():

@@ -28,8 +28,8 @@ Never invent or assume details the user did not provide — ask for them instead
 The current date is {current_date}.
 """
 
-# Voice users speak in approximate, self-correcting natural language.
-# The LLM needs guidance on how to parse what was said, not how to say things back.
+
+
 AUDIO_SPECIFIC = """
 The user is speaking — their input arrives as voice transcription and may be imperfect.
 When interpreting what the user said:
@@ -40,7 +40,7 @@ When interpreting what the user said:
 - Always confirm the resolved date and time out loud before booking, since spoken input is inherently ambiguous.
 """
 
-# Text users type precise values — no need to normalise spoken patterns.
+
 TEXT_SPECIFIC = """
 The user is typing — take their input literally.
 When interpreting what the user wrote:

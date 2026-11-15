@@ -132,19 +132,19 @@ class RoomOptions:
     def get_text_input_options(self) -> TextInputOptions | None:
         if isinstance(self.text_input, TextInputOptions):
             return self.text_input
-        # if text_input is not given, default to enabled
+
         return TextInputOptions() if self.text_input is not False else None
 
     def get_audio_input_options(self) -> AudioInputOptions | None:
         if isinstance(self.audio_input, AudioInputOptions):
             return self.audio_input
-        # if audio_input is not given, default to enabled
+
         return AudioInputOptions() if self.audio_input is not False else None
 
     def get_video_input_options(self) -> VideoInputOptions | None:
         if isinstance(self.video_input, VideoInputOptions):
             return self.video_input
-        # if video_input is not given, default to disabled
+
         return VideoInputOptions() if self.video_input is True else None
 
     def get_audio_output_options(self) -> AudioOutputOptions | None:
@@ -233,7 +233,7 @@ class RoomOptions:
         return opts
 
 
-# RoomInputOptions and RoomOutputOptions are deprecated
+
 
 
 @dataclass
@@ -288,7 +288,3 @@ class RoomOutputOptions:
     transcription_speed_factor: float = 1.0
     """Speed factor of transcription synchronization with audio output.
     Only effective if `sync_transcription` is True."""
-
-
-# DEFAULT_ROOM_INPUT_OPTIONS = RoomInputOptions()
-# DEFAULT_ROOM_OUTPUT_OPTIONS = RoomOutputOptions()

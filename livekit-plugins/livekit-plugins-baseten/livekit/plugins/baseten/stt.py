@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -45,7 +45,7 @@ from .log import logger
 
 STTEncoding = Literal["pcm_s16le", "pcm_mulaw"]
 
-# Define bytes per frame for different encoding types
+
 bytes_per_frame = {
     "pcm_s16le": 2,
     "pcm_mulaw": 1,
@@ -61,15 +61,15 @@ class STTOptions:
     encoding: str = "pcm_s16le"
     language: LanguageCode = LanguageCode("en")
 
-    # Streaming params – controls how transcripts are delivered
+
     enable_partial_transcripts: bool = True
     partial_transcript_interval_s: float = 1.0
     final_transcript_max_duration_s: int = 30
 
-    # Whisper params
+
     show_word_timestamps: bool = True
 
-    # Server-side VAD params (sent as streaming_vad_config)
+
     vad_threshold: float = 0.5
     vad_min_silence_duration_ms: int = 300
     vad_speech_pad_ms: int = 30
@@ -163,8 +163,8 @@ class STT(stt.STT):
 
         self._api_key = api_key
 
-        # Resolve the WebSocket endpoint URL.
-        # Priority: model_endpoint > model_id > chain_id > env var
+
+
         endpoint: str | None = None
         if model_endpoint:
             endpoint = model_endpoint
@@ -277,7 +277,7 @@ class STT(stt.STT):
 class SpeechStream(stt.SpeechStream):
     """A streaming speech-to-text session connected to Baseten via WebSocket."""
 
-    # Used to close websocket
+
     _CLOSE_MSG: str = json.dumps({"terminate_session": True})
 
     def __init__(
@@ -298,7 +298,7 @@ class SpeechStream(stt.SpeechStream):
         self._session = http_session
         self._speech_duration: float = 0
 
-        # keep a list of final transcripts to combine them inside the END_OF_SPEECH event
+
         self._final_events: list[SpeechEvent] = []
         self._reconnect_event = asyncio.Event()
 
@@ -384,7 +384,7 @@ class SpeechStream(stt.SpeechStream):
                 try:
                     data = json.loads(msg.data)
 
-                    # Skip non-transcription messages (e.g. error, status)
+
                     msg_type = data.get("type")
                     if msg_type and msg_type not in ("transcription",):
                         logger.debug("Ignoring message type: %s", msg_type)
@@ -393,8 +393,8 @@ class SpeechStream(stt.SpeechStream):
                     is_final = data.get("is_final", True)
                     segments = data.get("segments", [])
 
-                    # Build transcript text: prefer top-level "transcript" if present,
-                    # otherwise concatenate segment texts (Baseten standard format).
+
+
                     text = (
                         data.get("transcript")
                         or " ".join(seg.get("text", "") for seg in segments).strip()
@@ -402,8 +402,8 @@ class SpeechStream(stt.SpeechStream):
 
                     confidence = data.get("confidence", 0.0)
 
-                    # Build timed words – prefer word-level timestamps when available,
-                    # fall back to segment-level timing.
+
+
                     timed_words: list[TimedString] = []
                     for segment in segments:
                         word_timestamps = segment.get("word_timestamps", [])
@@ -526,8 +526,8 @@ class SpeechStream(stt.SpeechStream):
 
         ws = await self._session.ws_connect(self._model_endpoint, headers=headers, ssl=ssl_context)
 
-        # Build metadata matching Baseten's StreamingWhisperInput schema.
-        # See: https://docs.baseten.co/reference/inference-api/predict-endpoints/streaming-transcription-api
+
+
         metadata = {
             "whisper_params": {
                 "audio_language": self._opts.language,

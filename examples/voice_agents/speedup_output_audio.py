@@ -31,7 +31,7 @@ logging.getLogger("numba").setLevel(logging.WARNING)
 
 load_dotenv()
 
-## This example demonstrates how to add post-processing to the output audio of the agent.
+
 
 
 class MyAgent(Agent):
@@ -62,9 +62,9 @@ class MyAgent(Agent):
                 stream = utils.audio.AudioByteStream(
                     sample_rate=frame.sample_rate,
                     num_channels=frame.num_channels,
-                    samples_per_channel=frame.sample_rate // 10,  # 100ms
+                    samples_per_channel=frame.sample_rate // 10,
                 )
-            # TODO: find a streamed way to process the audio
+
             for f in stream.push(frame.data):
                 yield self._process_audio(f)
 
@@ -72,7 +72,7 @@ class MyAgent(Agent):
             yield self._process_audio(f)
 
     def _process_audio(self, frame: rtc.AudioFrame) -> rtc.AudioFrame:
-        # time-stretch without pitch change
+
         audio_data = np.frombuffer(frame.data, dtype=np.int16)
 
         stretched = librosa.effects.time_stretch(
@@ -94,7 +94,7 @@ server = AgentServer()
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
 
-    # warmup the librosa JIT
+
     librosa.effects.time_stretch(np.random.randn(16000).astype(np.float32), rate=1.2)
 
 
@@ -103,7 +103,7 @@ server.setup_fnc = prewarm
 
 @server.rtc_session()
 async def entrypoint(ctx: JobContext):
-    # each log entry will include these fields
+
     ctx.log_context_fields = {
         "room": ctx.room.name,
         "user_id": "your user_id",

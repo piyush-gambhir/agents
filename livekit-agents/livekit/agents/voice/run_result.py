@@ -100,7 +100,7 @@ class RunResult(Generic[Run_T]):
         Returns:
             RunAssert: Assertion interface for run events.
         """
-        # TODO(theomonnom): probably not the best place to log
+
         if lk_evals_verbose:
             events_str = "\n    ".join(_format_events(self.events))
             print(
@@ -614,7 +614,7 @@ class EventAssert:
         if not isinstance(self._event, FunctionCallEvent):
             self._raise("Expected FunctionCallEvent")
 
-        assert isinstance(self._event, FunctionCallEvent)  # type check
+        assert isinstance(self._event, FunctionCallEvent)
 
         if is_given(name) and self._event.item.name != name:
             self._raise(f"Expected call name '{name}', got '{self._event.item.name}'")
@@ -650,7 +650,7 @@ class EventAssert:
         if not isinstance(self._event, FunctionCallOutputEvent):
             self._raise("Expected FunctionCallOutputEvent")
 
-        assert isinstance(self._event, FunctionCallOutputEvent)  # type check
+        assert isinstance(self._event, FunctionCallOutputEvent)
 
         if is_given(output) and self._event.item.output != output:
             self._raise(f"Expected output '{output}', got '{self._event.item.output}'")
@@ -679,7 +679,7 @@ class EventAssert:
         if not isinstance(self._event, ChatMessageEvent):
             self._raise("Expected ChatMessageEvent")
 
-        assert isinstance(self._event, ChatMessageEvent)  # type check
+        assert isinstance(self._event, ChatMessageEvent)
 
         if is_given(role) and self._event.item.role != role:
             self._raise(f"Expected role '{role}', got '{self._event.item.role}'")
@@ -708,7 +708,7 @@ class EventAssert:
         if not isinstance(self._event, AgentHandoffEvent):
             self._raise("Expected AgentHandoffEvent")
 
-        assert isinstance(self._event, AgentHandoffEvent)  # type check
+        assert isinstance(self._event, AgentHandoffEvent)
 
         if is_given(new_agent_type) and not isinstance(self._event.new_agent, new_agent_type):
             self._raise(
@@ -937,12 +937,12 @@ class ChatMessageAssert:
         usage: llm.CompletionUsage | None = None
 
         extra_kwargs = {}
-        excluded_models_temperature = ["gpt-5"]  # Add model names here to exclude temperature
+        excluded_models_temperature = ["gpt-5"]
 
         if not any(excluded_model in llm_v.model for excluded_model in excluded_models_temperature):
             extra_kwargs["temperature"] = 0.0
 
-        # TODO(theomonnom): LLMStream should provide utilities to make function calling easier.
+
         async for chunk in llm_v.chat(
             chat_ctx=chat_ctx,
             tools=[check_intent],
@@ -962,7 +962,7 @@ class ChatMessageAssert:
         if not arguments:
             self._raise("LLM did not return any arguments for evaluation.")
 
-        assert isinstance(arguments, str)  # type check
+        assert isinstance(arguments, str)
 
         fnc_args, fnc_kwargs = llm_utils.prepare_function_arguments(
             fnc=check_intent, json_arguments=arguments
@@ -1025,7 +1025,7 @@ class AgentHandoffAssert:
         return self._event
 
 
-# to make testing easier, we allow sync Callable too
+
 if TYPE_CHECKING:
     MockTools = dict[type[Agent], dict[str, Callable]]
 _MockToolsContextVar = contextvars.ContextVar["MockTools"]("agents_mock_tools")
@@ -1041,7 +1041,7 @@ def mock_tools(agent: type[Agent], mocks: dict[str, Callable]) -> Generator[None
             # inside this block, MyAgentClass will see the given mocks
     """  # noqa: E501
     current = _MockToolsContextVar.get({})
-    updated = {**current, agent: mocks}  # create a new dict
+    updated = {**current, agent: mocks}
     token = _MockToolsContextVar.set(updated)
     try:
         yield

@@ -133,7 +133,7 @@ class RTZROpenAPIClient:
             raise ValueError("RTZR_CLIENT_ID and RTZR_CLIENT_SECRET must be set")
 
         self._http_session = http_session
-        self._owns_session = http_session is None  # Track if we own the session
+        self._owns_session = http_session is None
         self._token: _Token | None = None
         self._api_base = "https://openapi.vito.ai"
         self._ws_base = "wss://" + self._api_base.split("://", 1)[1]
@@ -206,11 +206,11 @@ class RTZROpenAPIClient:
         self, config: dict[str, str], headers: dict[str, str] | None = None
     ) -> aiohttp.ClientWebSocketResponse:
         """Connect to the streaming WebSocket endpoint."""
-        # Build URL like reference client
+
         query_string = "&".join(f"{k}={v}" for k, v in config.items())
         url = f"{self._ws_base}/v1/transcribe:streaming?{query_string}"
 
-        # Prepare headers
+
         token = await self.get_token()
         ws_headers = {"Authorization": f"bearer {token}"}
         if headers:

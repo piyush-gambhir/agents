@@ -39,10 +39,10 @@ def to_chat_ctx(
         elif msg.type == "function_call":
             role = "model"
         elif msg.type == "function_call_output":
-            # tool output shouldn't be mixed with other messages
+
             role = "tool"
 
-        # if the effective role changed, finalize the previous turn.
+
         if role != current_role:
             if current_role is not None and parts:
                 turns.append({"role": current_role, "parts": parts})
@@ -65,7 +65,7 @@ def to_chat_ctx(
                     "args": json.loads(msg.arguments or "{}"),
                 }
             }
-            # Inject thought_signature if available (Gemini 3 multi-turn function calling)
+
             if thought_signatures and (sig := thought_signatures.get(msg.call_id)):
                 fc_part["thought_signature"] = sig
             parts.append(fc_part)
@@ -84,13 +84,13 @@ def to_chat_ctx(
     if current_role is not None and parts:
         turns.append({"role": current_role, "parts": parts})
 
-    # convert role tool to user for gemini
+
     for turn in turns:
         if turn["role"] == "tool":
             turn["role"] = "user"
 
-    # Gemini requires the last message to end with user's turn before they can generate
-    # allow tool role since we update it to user in the previous step
+
+
     if inject_dummy_user_message and current_role not in ("user", "tool"):
         turns.append({"role": "user", "parts": [{"text": "."}]})
 
@@ -134,8 +134,8 @@ def to_fnc_ctx(
             if use_parameters_json_schema:
                 schema["parameters_json_schema"] = info.raw_schema.get("parameters", {})
             else:
-                # Gemini Live doesn't support parameters_json_schema, use the simplified JSON Schema instead
-                # see: https://github.com/googleapis/python-genai/issues/1147
+
+
                 from livekit.plugins.google.utils import _GeminiJsonSchema
 
                 schema["parameters"] = (

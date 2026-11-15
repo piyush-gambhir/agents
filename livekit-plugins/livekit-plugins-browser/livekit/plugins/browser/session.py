@@ -34,7 +34,7 @@ class BrowserSession:
 
         self._focus_identity: str | None = None
 
-        # Event set when a human interrupts the agent's focus
+
         self._agent_interrupted = asyncio.Event()
 
     @property
@@ -87,10 +87,10 @@ class BrowserSession:
 
         self._video_task = asyncio.create_task(self._video_loop(opts.framerate))
 
-        # Single persistent task for sending input events to subprocess
+
         self._input_task = asyncio.create_task(self._input_sender_loop())
 
-        # Register RPC methods for focus management
+
         @self._room.local_participant.register_rpc_method("browser/request-focus")  # type: ignore[arg-type]
         async def _handle_request_focus(
             data: rtc.rpc.RpcInvocationData,
@@ -101,7 +101,7 @@ class BrowserSession:
                 await self._broadcast_focus()
                 return json.dumps({"granted": True})
 
-            # If agent has focus, allow human to interrupt
+
             if self._focus_identity == "__agent__":
                 self._focus_identity = data.caller_identity
                 self._agent_interrupted.set()
@@ -146,7 +146,7 @@ class BrowserSession:
             self._queue_input(self._page.go_forward())
             return json.dumps({"status": "ok"})
 
-        # Listen for input data from participants
+
         @self._room.on("data_received")
         def _on_data_received(packet: rtc.DataPacket) -> None:
             if packet.topic != "browser-input":
@@ -164,7 +164,7 @@ class BrowserSession:
 
         self._on_data_received = _on_data_received
 
-        # Release focus when the holder disconnects
+
         @self._room.on("participant_disconnected")
         def _on_participant_disconnected(participant: rtc.RemoteParticipant) -> None:
             if participant.identity == self._focus_identity:
@@ -278,31 +278,31 @@ class BrowserSession:
             pass
 
     _CEF_CURSOR_MAP: dict[int, str] = {
-        0: "default",  # CT_POINTER
-        1: "crosshair",  # CT_CROSS
-        2: "pointer",  # CT_HAND
-        3: "text",  # CT_IBEAM
-        4: "wait",  # CT_WAIT
-        5: "help",  # CT_HELP
-        6: "ew-resize",  # CT_EASTRESIZE
-        7: "ns-resize",  # CT_NORTHRESIZE
-        8: "nesw-resize",  # CT_NORTHEASTRESIZE
-        9: "nwse-resize",  # CT_NORTHWESTRESIZE
-        10: "ns-resize",  # CT_SOUTHRESIZE
-        11: "nwse-resize",  # CT_SOUTHEASTRESIZE
-        12: "nesw-resize",  # CT_SOUTHWESTRESIZE
-        13: "ew-resize",  # CT_WESTRESIZE
-        14: "ns-resize",  # CT_NORTHSOUTHRESIZE
-        15: "ew-resize",  # CT_EASTWESTRESIZE
-        16: "nesw-resize",  # CT_NORTHEASTSOUTHWESTRESIZE
-        17: "nwse-resize",  # CT_NORTHWESTSOUTHEASTRESIZE
-        18: "ew-resize",  # CT_COLUMNRESIZE
-        19: "ns-resize",  # CT_ROWRESIZE
-        20: "move",  # CT_MIDDLEPANNING
-        28: "not-allowed",  # CT_NOTALLOWED
-        29: "grab",  # CT_GRAB
-        30: "grabbing",  # CT_GRABBING
-        32: "move",  # CT_MOVE
+        0: "default",
+        1: "crosshair",
+        2: "pointer",
+        3: "text",
+        4: "wait",
+        5: "help",
+        6: "ew-resize",
+        7: "ns-resize",
+        8: "nesw-resize",
+        9: "nwse-resize",
+        10: "ns-resize",
+        11: "nwse-resize",
+        12: "nesw-resize",
+        13: "ew-resize",
+        14: "ns-resize",
+        15: "ew-resize",
+        16: "nesw-resize",
+        17: "nwse-resize",
+        18: "ew-resize",
+        19: "ns-resize",
+        20: "move",
+        28: "not-allowed",
+        29: "grab",
+        30: "grabbing",
+        32: "move",
     }
 
     def _on_url_changed(self, url: str) -> None:
@@ -373,4 +373,4 @@ class BrowserSession:
             if self._audio_track:
                 await self._room.local_participant.unpublish_track(self._audio_track.sid)
         except Exception:
-            pass  # tracks may already be gone if room disconnected first
+            pass

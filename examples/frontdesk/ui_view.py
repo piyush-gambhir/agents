@@ -24,8 +24,8 @@ from livekit.agents import JobContext
 
 logger = logging.getLogger("frontdesk.ui")
 
-# The playground reads `views[].rpc` from playground.yaml and registers
-# an RPC handler with this exact method name. Keep both in sync.
+
+
 _VIEW_METHOD = "set_appointment_status"
 
 
@@ -61,9 +61,9 @@ class UIView:
         if not slots:
             self._push("")
             return
-        # The agent's tool reply already walks the LLM through specific
-        # options; the card just summarises the window it searched so
-        # the caller has a visual anchor without an overwhelming list.
+
+
+
         if range_days <= 14:
             window = "Next 2 weeks"
         elif range_days <= 30:
@@ -81,7 +81,7 @@ class UIView:
             f"**Booked: {local.strftime('%A, %B %d, %Y')}**\n\nat [[{local.strftime('%H:%M %Z')}]]"
         )
 
-    # ---- internals ----
+
 
     def _push(self, payload: str) -> None:
         for p in list(self._ctx.room.remote_participants.values()):

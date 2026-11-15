@@ -17,7 +17,7 @@ from .base import (
 
 class _BaseModelUsage(BaseModel):
     def __repr__(self) -> str:
-        # skip zeros for concise display
+
         fields = {k: v for k, v in self.model_dump().items() if v != 0 and v != 0.0}
         fields_str = ", ".join(f"{k}={v!r}" for k, v in fields.items())
         return f"{self.__class__.__name__}({fields_str})"

@@ -1,17 +1,17 @@
-/*
- * blockguard.c
- *
- * Watchdog thread that detects asyncio event-loop blocking.
- * Polls the loop thread's current frame every poll_ms ms; fires if the
- * same (code object, line) is seen for >= threshold_ms ms.
- *
- * Output goes via write(2)/WriteFile -- deliberately NOT through logging
- * or fprintf, both of which can hold locks that the stuck loop thread
- * may already own, causing a deadlock.
- *
- * Compatible with CPython 3.10-3.14, POSIX and Windows.
- * PyFrameObject fields are opaque from 3.11; only public API is used.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -100,10 +100,10 @@ snap_clear(FrameSnap *s)
     s->lineno = -1;
 }
 
-/*
- * Returns a snapshot with a new strong reference to the code object.
- * Caller must call snap_clear() when done. Must be called with the GIL held.
- */
+
+
+
+
 static FrameSnap
 snap_frame(PyThreadState *tstate)
 {
@@ -125,11 +125,11 @@ snap_eq(const FrameSnap *a, const FrameSnap *b)
     return (a->code != NULL) && (a->code == b->code) && (a->lineno == b->lineno);
 }
 
-/*
- * The idle event loop sits in selectors.py:select() called from
- * base_events.py:_run_once(). We only skip this specific call chain,
- * not arbitrary selectors.py:select() calls (which would be a real block).
- */
+
+
+
+
+
 static int
 snap_is_idle_select(PyThreadState *tstate)
 {
@@ -187,11 +187,11 @@ append_str(PyObject *parts, PyObject *s)
     return 0;
 }
 
-/*
- * Builds the traceback as a Python unicode string then emits it with
- * a single write. Individual frames that fail are skipped rather than
- * aborting the whole warning.
- */
+
+
+
+
+
 static void
 emit_warning(PyThreadState *tstate, double stuck_ms)
 {

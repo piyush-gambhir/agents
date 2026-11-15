@@ -361,10 +361,10 @@ def _rime_lang_from_variant(variant: str | None) -> str | None:
     """
     if not variant:
         return None
-    # Plain language code (e.g., "en", "es", "fr")
+
     if variant in RIME_DEFAULT_SPEAKER_BY_LANG:
         return variant
-    # Versioned variant (e.g., "3-en", "3-es") — extract suffix after first hyphen
+
     if "-" in variant:
         lang = variant.split("-", 1)[1]
         if lang in RIME_DEFAULT_SPEAKER_BY_LANG:
@@ -510,7 +510,7 @@ def _validate_tts_voice_for_ref(ref: ModelRef, voice: str) -> list[str]:
                     f"allowed speakers: {allowed_speakers}"
                 )
 
-    # Generic check for all other models: warn if voice is empty
+
     if not errors and not cleaned and not is_aura and not is_arcana:
         errors.append(f"tts_voice is empty for {model}; a voice identifier should be provided")
 

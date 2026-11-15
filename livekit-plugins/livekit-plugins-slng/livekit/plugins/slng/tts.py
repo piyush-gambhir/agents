@@ -37,9 +37,9 @@ from .log import logger
 
 NUM_CHANNELS = 1
 
-# End-of-stream event names we accept on {"type":"event","data":{...}} messages.
-# Sarvam Bulbul emits these when synthesis completes (spec field: data.event_type;
-# some internal gateway paths also surface it as data.event, so we accept both).
+
+
+
 _EndEventType = Literal["complete", "completed", "done", "end", "final"]
 _END_EVENT_TYPES: frozenset[str] = frozenset(get_args(_EndEventType))
 
@@ -55,9 +55,9 @@ def _is_end_event(resp: dict[str, object]) -> bool:
     return isinstance(raw, str) and raw.lower() in _END_EVENT_TYPES
 
 
-# Canonical event kinds emitted by the dispatch helper. Mirrors what the WS
-# loops actually need to act on; keeps call sites free of provider-specific
-# message shapes.
+
+
+
 _EventKind = Literal["audio_chunk", "audio_end", "error", "ignore"]
 
 _AUDIO_CHUNK_TYPES = frozenset({"Audio", "audio", "audio_chunk", "chunk"})
@@ -185,7 +185,7 @@ class TTS(tts.TTS):
             word_tokenizer (tokenize.WordTokenizer): Tokenizer for processing text. Defaults to basic WordTokenizer.
             http_session (aiohttp.ClientSession): Optional aiohttp session to use for requests.
         """
-        # Resolve api_key from parameter or SLNG_API_KEY env var
+
         resolved_key = api_key or os.environ.get("SLNG_API_KEY")
         if not resolved_key:
             raise ValueError("api_key is required, or set SLNG_API_KEY environment variable")
@@ -206,8 +206,8 @@ class TTS(tts.TTS):
 
         voice = normalize_tts_voice(model, voice)
 
-        # _TTSOptions.encoding defaults to "linear16" because LiveKit expects raw PCM and
-        # some SLNG models default to MP3 unless explicitly requested.
+
+
         self._opts = _TTSOptions(
             model_endpoint=resolved_model_endpoint,
             model=model,
@@ -226,7 +226,7 @@ class TTS(tts.TTS):
         self._pool = utils.ConnectionPool[aiohttp.ClientWebSocketResponse](
             connect_cb=self._connect_ws,
             close_cb=self._close_ws,
-            max_session_duration=3600,  # 1 hour
+            max_session_duration=3600,
             mark_refreshed_on_get=False,
         )
 
@@ -241,7 +241,7 @@ class TTS(tts.TTS):
     async def _connect_ws(self, timeout: float) -> aiohttp.ClientWebSocketResponse:
         session = self._ensure_session()
 
-        # Connect to WebSocket
+
         model_endpoint = self._opts.model_endpoint
         headers = {
             "Authorization": f"Bearer {self._opts.api_key}",
@@ -257,7 +257,7 @@ class TTS(tts.TTS):
             timeout,
         )
 
-        # SLNG-specific: Send init and wait for ready
+
         init_payload = build_tts_init_payload(
             model=self._opts.model,
             voice=self._opts.voice,
@@ -278,12 +278,12 @@ class TTS(tts.TTS):
 
     async def _close_ws(self, ws: aiohttp.ClientWebSocketResponse) -> None:
         try:
-            # Send final flush (similar to Deepgram's Flush+Close pattern).
-            # Arcana-specific cancel/EOS is handled in the streaming send_task when bypassing
-            # the connection pool.
+
+
+
             await ws.send_str(SynthesizeStream._FLUSH_MSG)
 
-            # Wait for server acknowledgment
+
             with contextlib.suppress(asyncio.TimeoutError):
                 await asyncio.wait_for(ws.receive(), timeout=5.0)
         except Exception as e:
@@ -459,7 +459,7 @@ class ChunkedStream(tts.ChunkedStream):
 
 
 class SynthesizeStream(tts.SynthesizeStream):
-    # SLNG protocol messages (different from Deepgram)
+
     _FLUSH_MSG: str = json.dumps({"type": "flush"})
     _CANCEL_MSG: str = json.dumps({"type": "cancel"})
 
@@ -469,8 +469,8 @@ class SynthesizeStream(tts.SynthesizeStream):
         self._opts = replace(tts._opts)
 
     async def _run(self, output_emitter: tts.AudioEmitter) -> None:
-        # Create segments_ch per run so base-class retries after an error get a
-        # fresh channel (matching the Deepgram plugin pattern).
+
+
         segments_ch = utils.aio.Chan[tokenize.WordStream]()
         request_id = utils.shortuuid()
         output_emitter.initialize(
@@ -482,7 +482,7 @@ class SynthesizeStream(tts.SynthesizeStream):
         )
 
         async def _tokenize_input() -> None:
-            # Converts incoming text into WordStreams and sends them into segments_ch
+
             word_stream = None
             async for the_input in self._input_ch:
                 if isinstance(the_input, str):
@@ -533,19 +533,19 @@ class SynthesizeStream(tts.SynthesizeStream):
 
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             async for word in word_stream:
-                # SLNG: Use "text" type instead of "Speak"
+
                 text_msg = {"type": "text", "text": f"{word.token} "}
                 self._mark_started()
                 await ws.send_str(json.dumps(text_msg))
                 input_sent_event.set()
 
             if is_rime_arcana:
-                # Rime Arcana supports EOS: synthesize remaining buffer and then close the socket.
-                # The gateway maps SLNG "cancel" -> "<EOS>" for Arcana.
+
+
                 await ws.send_str(self._CANCEL_MSG)
             else:
-                # Always flush after a segment
-                # SLNG: Use "flush" type instead of "Flush"
+
+
                 await ws.send_str(self._FLUSH_MSG)
             input_sent_event.set()
 
@@ -558,14 +558,14 @@ class SynthesizeStream(tts.SynthesizeStream):
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.CLOSING,
                 ):
-                    # Rime Arcana EOS closes the socket after sending the final audio.
-                    # Treat that close as a normal end-of-segment, otherwise LiveKit will error.
+
+
                     if is_rime_arcana:
                         output_emitter.end_segment()
                         break
                     raise APIStatusError("SLNG websocket connection closed unexpectedly")
 
-                # SLNG: Handle both binary (legacy) and JSON audio_chunk messages
+
                 if msg.type == aiohttp.WSMsgType.BINARY:
                     output_emitter.push(msg.data)
                 elif msg.type == aiohttp.WSMsgType.TEXT:
@@ -619,15 +619,15 @@ class SynthesizeStream(tts.SynthesizeStream):
                         if event.audio is not None:
                             output_emitter.push(event.audio)
                     elif event.kind == "audio_end":
-                        # SLNG: "audio_end" or "end" instead of "Flushed"
+
                         output_emitter.end_segment()
                         break
                     elif event.kind == "error":
                         raise APIStatusError(f"SLNG TTS error: {event.error_message}")
 
         if is_rime_arcana:
-            # EOS closes the websocket; avoid pooling to prevent any cross-segment leakage or reuse
-            # of a server-closed socket.
+
+
             ws = await self._tts._connect_ws(timeout=self._conn_options.timeout)
             tasks = [
                 asyncio.create_task(send_task(ws)),

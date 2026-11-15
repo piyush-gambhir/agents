@@ -19,7 +19,7 @@ HUMAN_SILENCE_THRESHOLD = 0.5
 MACHINE_SILENCE_THRESHOLD = 1.5
 NO_SPEECH_THRESHOLD = 10.0
 TIMEOUT = 20.0
-MAX_ENDPOINTING_DELAY = 3.0  # fallback endpointing delay
+MAX_ENDPOINTING_DELAY = 3.0
 
 MAX_EXTENSIONS = 3
 MAX_EXTENSION_SECS = 10.0
@@ -54,7 +54,7 @@ class AMDPredictionEvent(BaseModel):
         )
 
 
-# region: prompt
+
 AMD_PROMPT = """Task:
 Classify the call greeting transcript into exactly one of these categories:
 
@@ -84,7 +84,7 @@ Output: machine-vm
 Input: "Hello, this is Lisa."
 Output: human"""
 
-# endregion
+
 
 
 def _listening_guard(method: Callable[..., Any]) -> Callable[..., Any]:
@@ -207,7 +207,7 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
         self._speech_ended_at = time.time() - silence_duration
         speech_duration = self._speech_ended_at - self._speech_started_at
 
-        # arm the fallback eot timer in case the turn detector is too slow or fails
+
         if self._eot_timer is not None:
             self._eot_timer.cancel()
         self._eot_timer = asyncio.get_running_loop().call_later(
@@ -382,7 +382,7 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
         if self._input_ch.closed:
             logger.debug("push_text called after close")
             return
-        # ignore text from other sources (e.g. when both session and AMD have STT specified)
+
         if source != self._source:
             return
 
@@ -391,7 +391,7 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
             self._silence_timer = None
             self._silence_timer_trigger = None
 
-            # invariant: trigger == "short_speech" implies on_user_speech_ended ran
+
             assert self._speech_ended_at is not None
             remaining = (self._speech_ended_at + self._machine_silence_threshold) - time.time()
             self._silence_timer = asyncio.get_running_loop().call_later(
@@ -450,15 +450,15 @@ class _AMDClassifier(EventEmitter[Literal["amd_prediction"]]):
             loop = asyncio.get_running_loop()
 
             def _on_postpone_elapsed() -> None:
-                # the extension window expired without another postpone: treat this as
-                # silence reached so any pending verdict (or one produced by the
-                # re-classification below) can emit instead of waiting on the
-                # detection timeout.
+
+
+
+
                 self._silence_reached = True
                 if not self._input_ch.closed:
-                    # re-trigger classification with the latest transcript; on the
-                    # next run, postpone is unavailable once extensions are
-                    # exhausted, forcing the LLM to commit to save_prediction.
+
+
+
                     self._input_ch.send_nowait("")
                 self._try_emit_result()
 

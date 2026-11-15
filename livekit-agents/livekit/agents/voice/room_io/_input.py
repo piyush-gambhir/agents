@@ -94,7 +94,7 @@ class _ParticipantInputStream(Generic[T], ABC):
         self._attached = False
 
     def set_participant(self, participant: rtc.RemoteParticipant | str | None) -> None:
-        # set_participant can be called before the participant is connected
+
         participant_identity = (
             participant.identity if isinstance(participant, rtc.RemoteParticipant) else participant
         )
@@ -152,7 +152,7 @@ class _ParticipantInputStream(Generic[T], ABC):
         logger.debug("start reading stream", extra=extra)
         async for event in stream:
             if not self._attached:
-                # drop frames if the stream is detached
+
                 continue
             frame = cast(T, event.frame)
             self._process_frame(frame)
@@ -231,7 +231,7 @@ class _ParticipantInputStream(Generic[T], ABC):
 
         self._close_stream()
 
-        # subscribe to the first available track
+
         for publication in participant.track_publications.values():
             if publication.track is None:
                 continue
@@ -354,7 +354,7 @@ class _ParticipantAudioInputStream(_ParticipantInputStream[rtc.AudioFrame], Audi
 
         await super()._forward_task(old_task, stream, publication, participant)
 
-        # push a silent frame to flush the stt final result if any
+
         silent_samples = int(self._sample_rate * 0.5)
         await self._data_ch.send(
             rtc.AudioFrame(

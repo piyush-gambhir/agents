@@ -12,7 +12,7 @@ from typing import Any
 
 from ..plugin import Plugin
 
-# noisy loggers are set to warn by default
+
 NOISY_LOGGERS = [
     "httpx",
     "httpcore",
@@ -36,8 +36,8 @@ def _silence_noisy_loggers() -> None:
             logger.setLevel(logging.WARN)
 
 
-# skip default LogRecord attributes
-# http://docs.python.org/library/logging.html#logrecord-attributes
+
+
 _RESERVED_ATTRS: tuple[str, ...] = (
     "args",
     "asctime",
@@ -98,7 +98,7 @@ class JsonFormatter(logging.Formatter):
             elif type(o) is Exception or isinstance(o, Exception) or type(o) is type:
                 return str(o)
 
-            # extra values are formatted as str() if the encoder raises TypeError
+
             try:
                 return super().default(o)
             except TypeError:
@@ -206,9 +206,9 @@ def setup_logging(log_level: str, devmode: bool, console: bool) -> None:
 
     handler = logging.StreamHandler(sys.stdout)
     if devmode:
-        # colorful logs for dev (improves readability)
+
         if console:
-            # reset the line before each log message
+
             colored_formatter = ColoredFormatter(
                 "\r%(asctime)s - %(esc_levelcolor)s%(levelname)-4s%(esc_reset)s %(name)s - %(message)s %(esc_gray)s%(extra)s"  # noqa: E501
             )
@@ -219,7 +219,7 @@ def setup_logging(log_level: str, devmode: bool, console: bool) -> None:
 
         handler.setFormatter(colored_formatter)
     else:
-        # production logs (serialized of json)
+
         json_formatter = JsonFormatter()
         handler.setFormatter(json_formatter)
 

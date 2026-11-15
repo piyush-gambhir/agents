@@ -14,7 +14,7 @@ class Plugin(ABC):  # noqa: B024
     registered_plugins: list[Plugin] = []
     emitter: utils.EventEmitter[EventTypes] = utils.EventEmitter()
 
-    # TODO(theomonnom): make logger mandatory once all plugins have been updated
+
     def __init__(
         self,
         title: str,
@@ -35,7 +35,7 @@ class Plugin(ABC):  # noqa: B024
         cls.registered_plugins.append(plugin)
         cls.emitter.emit("plugin_registered", plugin)
 
-    # plugin can implement an optional download_files method
+
     def download_files(self) -> None:  # noqa: B027
         pass
 

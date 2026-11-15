@@ -8,14 +8,14 @@ __all__ = ["readchar", "readkey", "key"]
 
 
 class _BaseKey:
-    # Common control characters
+
     LF: ClassVar[str] = "\x0a"
     CR: ClassVar[str] = "\x0d"
     SPACE: ClassVar[str] = "\x20"
     ESC: ClassVar[str] = "\x1b"
     TAB: ClassVar[str] = "\x09"
 
-    # CTRL keys – mapping from letter to control code
+
     CTRL_A: ClassVar[str] = "\x01"
     CTRL_B: ClassVar[str] = "\x02"
     CTRL_C: ClassVar[str] = "\x03"
@@ -24,11 +24,11 @@ class _BaseKey:
     CTRL_F: ClassVar[str] = "\x06"
     CTRL_G: ClassVar[str] = "\x07"
     CTRL_H: ClassVar[str] = "\x08"
-    CTRL_I: ClassVar[str] = TAB  # Alias for TAB
-    CTRL_J: ClassVar[str] = LF  # Alias for LF
+    CTRL_I: ClassVar[str] = TAB
+    CTRL_J: ClassVar[str] = LF
     CTRL_K: ClassVar[str] = "\x0b"
     CTRL_L: ClassVar[str] = "\x0c"
-    CTRL_M: ClassVar[str] = CR  # Alias for CR
+    CTRL_M: ClassVar[str] = CR
     CTRL_N: ClassVar[str] = "\x0e"
     CTRL_O: ClassVar[str] = "\x0f"
     CTRL_P: ClassVar[str] = "\x10"
@@ -51,16 +51,16 @@ class _PosixKey(_BaseKey):
     module.  All attributes from :class:`_BaseKey` are inherited.
     """
 
-    # Common additional control character
+
     BACKSPACE: ClassVar[str] = "\x7f"
 
-    # Cursor movement (escape sequences)
+
     UP: ClassVar[str] = "\x1b\x5b\x41"
     DOWN: ClassVar[str] = "\x1b\x5b\x42"
     LEFT: ClassVar[str] = "\x1b\x5b\x44"
     RIGHT: ClassVar[str] = "\x1b\x5b\x43"
 
-    # Navigation keys
+
     INSERT: ClassVar[str] = "\x1b\x5b\x32\x7e"
     SUPR: ClassVar[str] = "\x1b\x5b\x33\x7e"
     HOME: ClassVar[str] = "\x1b\x5b\x48"
@@ -68,7 +68,7 @@ class _PosixKey(_BaseKey):
     PAGE_UP: ClassVar[str] = "\x1b\x5b\x35\x7e"
     PAGE_DOWN: ClassVar[str] = "\x1b\x5b\x36\x7e"
 
-    # Function keys
+
     F1: ClassVar[str] = "\x1b\x4f\x50"
     F2: ClassVar[str] = "\x1b\x4f\x51"
     F3: ClassVar[str] = "\x1b\x4f\x52"
@@ -82,17 +82,17 @@ class _PosixKey(_BaseKey):
     F11: ClassVar[str] = "\x1b\x5b\x32\x33\x7e"
     F12: ClassVar[str] = "\x1b\x5b\x32\x34\x7e"
 
-    # Shift/other combinations
+
     SHIFT_TAB: ClassVar[str] = "\x1b\x5b\x5a"
     CTRL_ALT_SUPR: ClassVar[str] = "\x1b\x5b\x33\x5e"
 
-    # ALT combinations
+
     ALT_A: ClassVar[str] = "\x1b\x61"
 
-    # CTRL+ALT combinations
+
     CTRL_ALT_A: ClassVar[str] = "\x1b\x01"
 
-    # Aliases to improve readability
+
     ENTER: ClassVar[str] = _BaseKey.LF
     DELETE: ClassVar[str] = SUPR
 
@@ -104,16 +104,16 @@ class _WinKey(_BaseKey):
     module.  All attributes from :class:`_BaseKey` are inherited.
     """
 
-    # Additional common control character on Windows
+
     BACKSPACE: ClassVar[str] = "\x08"
 
-    # Cursor movement (two‑byte scan codes)
+
     UP: ClassVar[str] = "\x00\x48"
     DOWN: ClassVar[str] = "\x00\x50"
     LEFT: ClassVar[str] = "\x00\x4b"
     RIGHT: ClassVar[str] = "\x00\x4d"
 
-    # Navigation keys
+
     INSERT: ClassVar[str] = "\x00\x52"
     SUPR: ClassVar[str] = "\x00\x53"
     HOME: ClassVar[str] = "\x00\x47"
@@ -121,7 +121,7 @@ class _WinKey(_BaseKey):
     PAGE_UP: ClassVar[str] = "\x00\x49"
     PAGE_DOWN: ClassVar[str] = "\x00\x51"
 
-    # Function keys
+
     F1: ClassVar[str] = "\x00\x3b"
     F2: ClassVar[str] = "\x00\x3c"
     F3: ClassVar[str] = "\x00\x3d"
@@ -132,23 +132,23 @@ class _WinKey(_BaseKey):
     F8: ClassVar[str] = "\x00\x42"
     F9: ClassVar[str] = "\x00\x43"
     F10: ClassVar[str] = "\x00\x44"
-    # F11 and F12 values are taken from FreePascal documentation
+
     F11: ClassVar[str] = "\x00\x85"
     F12: ClassVar[str] = "\x00\x86"
 
-    # Other special sequences
+
     ESC_2: ClassVar[str] = "\x00\x01"
     ENTER_2: ClassVar[str] = "\x00\x1c"
 
-    # Aliases to improve readability
+
     ENTER: ClassVar[str] = _BaseKey.CR
     DELETE: ClassVar[str] = SUPR
 
 
-# Use the CTRL+C definition from the base key set.  The choice of
-# base key here mirrors the upstream behaviour: on both Windows and
-# POSIX, pressing CTRL+C should raise KeyboardInterrupt instead of
-# being returned by readkey().
+
+
+
+
 INTERRUPT_KEYS: list[str] = [_BaseKey.CTRL_C]
 
 
@@ -200,26 +200,26 @@ def _posix_readkey() -> str:
     if c1 in INTERRUPT_KEYS:
         raise KeyboardInterrupt
 
-    # Not an escape sequence; return immediately
+
     if c1 != "\x1b":
         return c1
 
-    # Escape sequence – read second byte
+
     c2 = _posix_readchar()
     if c2 not in "\x4f\x5b":
         return c1 + c2
 
-    # Third byte distinguishes between simple arrows and multi‑byte
+
     c3 = _posix_readchar()
     if c3 not in "\x31\x32\x33\x35\x36":
         return c1 + c2 + c3
 
-    # Fourth byte for multi‑byte function/navigation keys
+
     c4 = _posix_readchar()
     if c4 not in "\x30\x31\x33\x34\x35\x37\x38\x39":
         return c1 + c2 + c3 + c4
 
-    # Fifth byte for the remainder of the sequence
+
     c5 = _posix_readchar()
     return c1 + c2 + c3 + c4 + c5
 
@@ -253,11 +253,11 @@ def _win_readkey() -> str:
     if ch in "\x00\xe0":
         ch = "\x00" + _win_readchar()
 
-    # Handle UTF‑16 surrogate pairs (high surrogate from \uD800 to \uDFFF)
-    # See https://docs.python.org/3/c-api/unicode.html#c.Py_UNICODE_IS_SURROGATE
+
+
     if "\ud800" <= ch <= "\udfff":
         ch += _win_readchar()
-        # Combine surrogate pair into a single UTF‑16 character
+
         ch = ch.encode("utf-16", errors="surrogatepass").decode("utf-16")
 
     return ch

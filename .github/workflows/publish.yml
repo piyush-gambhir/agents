@@ -33,7 +33,7 @@ permissions:
   actions: write
 
 jobs:
-  # ── Create a version bump PR ────────────────────────────────
+
   bump:
     name: Create release PR
     if: |
@@ -41,7 +41,7 @@ jobs:
       && !startsWith(inputs.version, 'republish')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.branch }}
 
@@ -59,7 +59,7 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.10"
 
@@ -131,8 +131,8 @@ jobs:
             --title "livekit-agents@${VERSION}" \
             --body "Merging this PR will publish all packages as **${VERSION}** to PyPI."
 
-  # ── Discover, build, publish ────────────────────────────────
-  # Triggered by: merging a release PR OR republish dispatch
+
+
   discover:
     name: Discover packages
     if: |
@@ -145,7 +145,7 @@ jobs:
     outputs:
       packages: ${{ steps.list.outputs.packages }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.branch || github.event.pull_request.merge_commit_sha }}
 
@@ -185,7 +185,7 @@ jobs:
       && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
@@ -228,7 +228,7 @@ jobs:
       id-token: write
     steps:
       - name: Download build artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: dist-${{ matrix.package }}
           path: dist/
@@ -237,7 +237,7 @@ jobs:
         run: ls -la dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
 
   docs:
     name: Publish docs
@@ -258,9 +258,9 @@ jobs:
   dispatch-downstream-bumps:
     name: Bump livekit-agents in downstream repos
     needs: [publish]
-    # Only fire for stable releases merged via a release/vX.Y.Z PR.
-    # RC head refs look like release/v1.5.13rc1 and won't match the regex below.
-    # Republish retries should use internal-actions' workflow_dispatch fallback.
+
+
+
     if: |
       always()
       && needs.publish.result == 'success'

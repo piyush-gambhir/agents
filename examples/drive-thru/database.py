@@ -583,7 +583,7 @@ class FakeDB:
         return sauces
 
 
-# The code below is optimized for ease of use instead of efficiency.
+
 
 
 def map_by_sizes(
@@ -629,7 +629,7 @@ def _drink_menu_instructions(items: list[MenuItem]) -> str:
             menu_lines.append(line)
 
     for item in leftovers:
-        # explicitely saying there is no `size` for this item, otherwise the LLM seems to hallucinate quite often
+
         line = f"  - {item.name}: {item.calories} Cal, ${item.price:.2f} (id:{item.id}) - Not size-selectable`"
         if not item.available:
             line += " UNAVAILABLE"
@@ -682,7 +682,7 @@ def _sauce_menu_instructions(items: list[MenuItem]) -> str:
     return "# Sauces:\n" + "\n".join(menu_lines)
 
 
-# regular/a la carte
+
 def _regular_menu_instructions(items: list[MenuItem]) -> str:
     available_sizes, leftovers = map_by_sizes(items)
     menu_lines = []

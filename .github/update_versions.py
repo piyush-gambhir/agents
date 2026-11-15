@@ -146,7 +146,7 @@ def update_agents_pyproject_optional_dependencies(plugin_versions: Dict[str, str
     
     for pypi_name, new_version in plugin_versions.items():
         if pypi_name.startswith("livekit-plugins-"):
-            # Match any dep key that references this PyPI package name
+
             pattern = rf'(\w[\w-]*\s*=\s*\["{re.escape(pypi_name)}>=)([\w\.\-]+)(\"])'
 
             def replacer(m: re.Match, _new_version=new_version) -> str:

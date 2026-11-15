@@ -31,8 +31,8 @@ DEFAULT_BASE_URL = "https://api.fish.audio"
 NUM_CHANNELS = 1
 USER_AGENT = f"livekit-plugins-fishaudio/{__version__}"
 
-# Fish Audio's default sample rate per output format. Opus only supports 48 kHz;
-# the other formats default to 24 kHz, which matches the previous plugin default.
+
+
 _DEFAULT_SAMPLE_RATE: dict[OutputFormat, int] = {
     "opus": 48000,
     "pcm": 24000,
@@ -136,9 +136,9 @@ class TTS(tts.TTS):
         )
 
         self._session = http_session
-        # min_sentence_len=1 emits each sentence as soon as the next one starts,
-        # rather than batching short sentences together — minimizes TTFB on the
-        # first sentence and keeps Fish synthesizing continuously.
+
+
+
         self._sentence_tokenizer = (
             tokenizer
             if is_given(tokenizer)
@@ -214,10 +214,10 @@ class TTS(tts.TTS):
 
 
 def _build_tts_request(opts: _TTSOptions, *, text: str = "") -> dict[str, Any]:
-    # Send the same field set the upstream Fish Audio Python SDK sends so the
-    # server doesn't fall back to its own (larger) defaults — in particular the
-    # docs default of `chunk_length=300` produces large bursts that leave audible
-    # gaps between Fish's chunk boundaries.
+
+
+
+
     return {
         "text": text,
         "chunk_length": opts.chunk_length,
@@ -226,8 +226,8 @@ def _build_tts_request(opts: _TTSOptions, *, text: str = "") -> dict[str, Any]:
         "mp3_bitrate": 64,
         "opus_bitrate": 64000,
         "references": [],
-        # Fish Audio's wire field is `reference_id`; we expose it as `voice_id` on
-        # the plugin for consistency with other TTS plugins.
+
+
         "reference_id": opts.voice_id if is_given(opts.voice_id) else None,
         "normalize": True,
         "latency": opts.latency_mode,
@@ -339,11 +339,11 @@ class SynthesizeStream(tts.SynthesizeStream):
         ws: aiohttp.ClientWebSocketResponse,
         output_emitter: tts.AudioEmitter,
     ) -> None:
-        # Tokenize incoming text by sentence and flush after each sentence so
-        # Fish synthesizes immediately at sentence boundaries instead of waiting
-        # for `chunk_length` characters to accumulate. The result is much smoother
-        # audio: gaps line up with sentence breaks (where pauses are natural)
-        # rather than mid-clause.
+
+
+
+
+
         sent_stream = self._tts._sentence_tokenizer.stream()
 
         async def input_task() -> None:
@@ -378,9 +378,9 @@ class SynthesizeStream(tts.SynthesizeStream):
             await ws.send_bytes(msgpack.packb({"event": "stop"}, use_bin_type=True))
 
         async def recv_task() -> None:
-            # No per-receive timeout: Fish has natural inter-sentence gaps that
-            # can exceed `_conn_options.timeout` when the LLM is slow. Dead
-            # connections are detected by aiohttp's ws heartbeat (see ws_connect).
+
+
+
             while True:
                 msg = await ws.receive()
                 if msg.type in (

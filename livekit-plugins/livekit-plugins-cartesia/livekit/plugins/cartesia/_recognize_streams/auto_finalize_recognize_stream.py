@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -230,7 +230,7 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
         self._speaking = False
         self._speech_duration: float = 0.0
         self._closing_ws = False
-        # cumulative transcript for the current turn; used to re-emit on turn.resume
+
         self._current_transcript = ""
 
     async def _run(self) -> None:
@@ -303,12 +303,12 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
                 else:
                     self._process_stream_event(data)
 
-        # Reset per-connection state so a transport-error retry (a new _run
-        # invocation by the base class) starts fresh. Without this, stale
-        # `_speaking=True` silently drops the next turn.start,
-        # `_current_transcript` can leak into turn.eager_end / turn.end
-        # transcript fallbacks, and a stale `_closing_ws=True` makes recv_task
-        # suppress legitimate unexpected-close failures on the new connection.
+
+
+
+
+
+
         self._speaking = False
         self._current_transcript = ""
         self._speech_duration = 0.0
@@ -323,18 +323,18 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             keepalive = asyncio.create_task(keepalive_task(ws))
             tasks = [send, recv, keepalive]
             try:
-                # Only wait on send/recv. keepalive_task sleeps up to 30s
-                # between pings, so awaiting it here would keep gather() (and
-                # the teardown/finalization below) blocked for up to 30s after
-                # send/recv have already finished.
+
+
+
+
                 await asyncio.gather(send, recv)
             finally:
                 await utils.aio.gracefully_cancel(*tasks)
                 self._send_recognition_usage_event()
-                # If the websocket dropped mid-turn, flush the partial
-                # transcript as a FINAL_TRANSCRIPT so the consumer can finalize
-                # the turn instead of losing it. In the normal close path the
-                # server sends turn.end first and _speaking is already False.
+
+
+
+
                 if self._speaking:
                     if not self._event_ch.closed:
                         if self._current_transcript:
@@ -433,8 +433,8 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             transcript = data["transcript"]
             if not transcript:
                 return
-            # only send interim transcript events if there's a change
-            # this avoids canceling the preflight transcript if there's no change
+
+
             if self._current_transcript == transcript:
                 return
             self._current_transcript = transcript
@@ -452,8 +452,8 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
             return
 
         if data["type"] == "turn.resume":
-            # turn.resume has no transcript; re-emit the most recent cumulative
-            # transcript as an interim so the pipeline cancels the preflight.
+
+
             if not self._speaking or not self._current_transcript:
                 return
             self._send_transcript_event(
@@ -501,7 +501,7 @@ class AutoFinalizeRecognizeStream(CartesiaRecognizeStream):
         if utils.is_given(language):
             self._language = LanguageCode(language)
 
-        # not changing the model and reconnecting since that is likely unexpected behavior
+
         logger.warning(
             f"Cartesia STT model={self._model} does not currently support update_options()."
         )

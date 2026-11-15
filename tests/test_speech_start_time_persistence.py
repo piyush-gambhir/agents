@@ -40,17 +40,17 @@ class TestUserTurnStartPersistence:
         with patch.object(AudioRecognition, "__init__", lambda self, *args, **kwargs: None):
             audio_recognition = AudioRecognition.__new__(AudioRecognition)
 
-        # state read/written by _on_vad_event SOS/EOS branches
+
         audio_recognition._speech_start_time = None
         audio_recognition._vad_speech_started = False
-        # _speaking is a property backed by this event (set == silent/not speaking)
+
         audio_recognition._user_silence_ev = asyncio.Event()
         audio_recognition._speaking = False
         audio_recognition._end_of_turn_task = None
         audio_recognition._user_turn_span = None
         audio_recognition._user_turn_start = None
         audio_recognition._user_turn_committed = False
-        # disable EOU detection from EOS branch — we're testing VAD state, not EOT
+
         audio_recognition._vad_base_turn_detection = False
         audio_recognition._turn_detection_mode = None
         audio_recognition._stt = None
@@ -59,7 +59,7 @@ class TestUserTurnStartPersistence:
         audio_recognition._audio_transcript = ""
         audio_recognition._last_speaking_time = None
 
-        # collaborators
+
         audio_recognition._hooks = MagicMock()
         audio_recognition._session = MagicMock()
         audio_recognition._session.amd = None
@@ -119,22 +119,22 @@ class TestUserTurnStartPersistence:
         """
         audio_recognition = self._create_audio_recognition()
 
-        # Burst 1 — speech started ~5s before this event fired
+
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=5.0)
         )
         first_burst_start = audio_recognition._user_turn_start
         assert first_burst_start is not None
 
-        # End of burst 1
+
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.END_OF_SPEECH, speech_duration=5.0, silence_duration=0.6)
         )
 
-        # Brief silence between bursts — same logical turn (no EOT yet)
+
         await asyncio.sleep(0.05)
 
-        # Burst 2 — speech started "right now" (speech_duration=0)
+
         await audio_recognition._on_vad_event(
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=0.0)
         )
@@ -170,6 +170,6 @@ class TestUserTurnStartPersistence:
             self._vad_event(VADEventType.START_OF_SPEECH, speech_duration=0.0)
         )
 
-        # _speech_start_time should now reflect the second burst's start, not the first
+
         assert audio_recognition._speech_start_time is not None
         assert audio_recognition._speech_start_time > first_burst_speech_start

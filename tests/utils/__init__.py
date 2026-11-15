@@ -69,7 +69,7 @@ async def read_audio_file(path) -> rtc.AudioFrame:
 async def make_test_speech(
     *,
     chunk_duration_ms: int | None = None,
-    sample_rate: int | None = None,  # resample if not None
+    sample_rate: int | None = None,
 ) -> tuple[list[rtc.AudioFrame], str, float]:
     input_audio = await read_audio_file(TEST_AUDIO_FILEPATH)
 

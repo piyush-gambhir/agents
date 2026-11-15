@@ -5,7 +5,7 @@ Support for Chromium Embedded Framework (CEF).
 
 from livekit.agents import Plugin
 
-# Re-export from livekit-browser for convenience
+
 from livekit.browser import (  # type: ignore[import-untyped]
     AudioData,
     BrowserContext,
@@ -42,7 +42,7 @@ class BrowserPlugin(Plugin):
 
 Plugin.register_plugin(BrowserPlugin())
 
-# Cleanup docs of unexported modules
+
 _module = dir()
 NOT_IN_ALL = [m for m in _module if m not in __all__]
 

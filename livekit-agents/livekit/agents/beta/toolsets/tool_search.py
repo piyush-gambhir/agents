@@ -29,7 +29,7 @@ class SearchItem:
     source: Tool | Toolset
     name: str
     description: str
-    parameters: dict[str, str] = field(default_factory=dict)  # {name: description}
+    parameters: dict[str, str] = field(default_factory=dict)
     index_data: Any = field(default=None, repr=False)
 
 
@@ -109,7 +109,7 @@ class ToolSearchToolset(Toolset):
             if not reload and self._initialized:
                 return self
 
-            # setup wrapped toolsets
+
             toolsets = [t for t in self._tools if isinstance(t, Toolset)]
             if toolsets:
                 await asyncio.gather(*(ts.setup() for ts in toolsets))
@@ -278,17 +278,17 @@ class BM25SearchStrategy:
 
         for item in items:
             tokens = self._tokenize(item)
-            # build term frequency map
+
             tf: dict[str, float] = {}
             for token in tokens:
                 tf[token] = tf.get(token, 0.0) + 1.0
             item.index_data = {"tokens": tokens, "tf": tf, "dl": len(tokens)}
 
-        # compute average document length
+
         total_dl = sum(item.index_data["dl"] for item in items)
         self._avg_dl = total_dl / len(items) if items else 0.0
 
-        # compute IDF for all terms
+
         n = len(items)
         df: dict[str, int] = {}
         for item in items:
@@ -300,7 +300,7 @@ class BM25SearchStrategy:
 
         self._idf = {}
         for term, freq in df.items():
-            # standard BM25 IDF: log((N - df + 0.5) / (df + 0.5) + 1)
+
             self._idf[term] = math.log((n - freq + 0.5) / (freq + 0.5) + 1.0)
 
     def search(self, query: str, items: list[SearchItem], max_results: int) -> list[SearchItem]:
@@ -330,7 +330,7 @@ class BM25SearchStrategy:
             param_tokens.extend(k.lower().replace("_", " ").split())
             param_tokens.extend(v.lower().split())
 
-        # weight by repeating tokens
+
         return name_tokens * 3 + desc_tokens * 2 + param_tokens
 
     def _score(self, item: SearchItem, query_terms: list[str]) -> float:
@@ -346,7 +346,7 @@ class BM25SearchStrategy:
                 continue
             idf = self._idf[term]
             term_freq = tf.get(term, 0.0)
-            # BM25 scoring formula
+
             numerator = term_freq * (self._k1 + 1.0)
             denominator = term_freq + self._k1 * (
                 1.0 - self._b + self._b * dl / self._avg_dl if self._avg_dl > 0 else 1.0

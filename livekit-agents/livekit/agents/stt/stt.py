@@ -56,7 +56,7 @@ class SpeechData:
     text: str
     start_time: float = 0.0
     end_time: float = 0.0
-    confidence: float = 0.0  # [0, 1]
+    confidence: float = 0.0
     speaker_id: str | None = None
     is_primary_speaker: bool | None = None
     words: list[TimedString] | None = None
@@ -387,8 +387,8 @@ class RecognizeStream(ABC):
 
     async def _main_task(self) -> None:
         max_retries = self._conn_options.max_retry
-        # we need to record last start time for each run/connection
-        # so that returned transcripts can have linear timestamps
+
+
         last_start_time = time.time()
 
         while self._num_retries <= max_retries:
@@ -462,7 +462,7 @@ class RecognizeStream(ABC):
 
                 self._stt.emit("metrics_collected", stt_metrics)
             elif ev.type == SpeechEventType.FINAL_TRANSCRIPT:
-                # reset the retry count after a successful recognition
+
                 self._num_retries = 0
 
     def push_frame(self, frame: rtc.AudioFrame) -> None:
@@ -552,4 +552,4 @@ class RecognizeStream(ABC):
         await self.aclose()
 
 
-SpeechStream = RecognizeStream  # deprecated alias
+SpeechStream = RecognizeStream

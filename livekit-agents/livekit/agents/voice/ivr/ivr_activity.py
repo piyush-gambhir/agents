@@ -143,12 +143,12 @@ class TfidfLoopDetector:
 
         vectorizer = TfidfVectorizer()
 
-        # Need at least two chunks to compute similarity against the last chunk
+
         if len(self._transcribed_chunks) < 2:
             return False
 
-        # NOTE: currently this is O(n^2) in the number of chunks, let's figure out a more efficient
-        # way if this become a bottleneck later.
+
+
         doc_matrix = vectorizer.fit_transform(self._transcribed_chunks)
         doc_similarity = cosine_similarity(doc_matrix)
         last_chunk_similarity = doc_similarity[-1][:-1]

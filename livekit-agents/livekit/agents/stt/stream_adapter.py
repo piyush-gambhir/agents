@@ -9,7 +9,7 @@ from ..types import DEFAULT_API_CONNECT_OPTIONS, NOT_GIVEN, APIConnectOptions, N
 from ..vad import VAD, VADEventType
 from .stt import STT, RecognizeStream, SpeechEvent, SpeechEventType, STTCapabilities
 
-# already a retry mechanism in STT.recognize, don't retry in stream adapter
+
 DEFAULT_STREAM_ADAPTER_API_CONNECT_OPTIONS = APIConnectOptions(
     max_retry=0, timeout=DEFAULT_API_CONNECT_OPTIONS.timeout
 )
@@ -21,13 +21,13 @@ class StreamAdapter(STT):
             capabilities=STTCapabilities(
                 streaming=True,
                 interim_results=False,
-                diarization=False,  # diarization requires streaming STT
+                diarization=False,
             )
         )
         self._vad = vad
         self._stt = stt
 
-        # TODO(theomonnom): The segment_id needs to be populated!
+
         self._stt.on("metrics_collected", self._on_metrics_collected)
 
     @property

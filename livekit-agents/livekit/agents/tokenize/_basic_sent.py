@@ -1,7 +1,7 @@
 import re
 
 
-# rule based segmentation based on https://stackoverflow.com/a/31505798, works surprisingly well
+
 def split_sentences(
     text: str, min_sentence_len: int = 20, retain_format: bool = False
 ) -> list[tuple[str, int, int]]:
@@ -26,9 +26,9 @@ def split_sentences(
     text = re.sub(prefixes,"\\1<prd>", text)
     text = re.sub(websites,"<prd>\\1", text)
     text = re.sub(digits + "[.]" + digits,"\\1<prd>\\2",text)
-    # text = re.sub(multiple_dots, lambda match: "<prd>" * len(match.group(0)) + "<stop>", text)
+
     # TODO(theomonnom): need improvement for ""..." dots", check capital + next sentence should not be  # noqa: E501
-    # small
+
     text = re.sub(multiple_dots, lambda match: "<prd>" * len(match.group(0)), text)
     if "Ph.D" in text:
         text = text.replace("Ph.D.","Ph<prd>D<prd>")
@@ -40,7 +40,7 @@ def split_sentences(
     text = re.sub(r" "+suffixes+"[.]"," \\1<prd>",text)
     text = re.sub(r" " + alphabets + "[.]"," \\1<prd>",text)
 
-    # mark end of sentence punctuations with <stop>
+
     text = re.sub(r"([.!?。！？])([\"”])", "\\1\\2<stop>", text)
     text = re.sub(r"([.!?。！？])(?![\"”])", "\\1<stop>", text)
 

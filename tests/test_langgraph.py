@@ -18,7 +18,7 @@ from livekit.plugins.langchain import LLMAdapter
 
 pytestmark = pytest.mark.unit
 
-# --- State definitions ---
+
 
 
 class MessagesState(TypedDict):
@@ -30,7 +30,7 @@ class CustomState(TypedDict):
     custom_output: str
 
 
-# --- Graph builders ---
+
 
 
 def build_messages_graph():
@@ -85,7 +85,7 @@ def build_combined_graph():
     return graph.compile()
 
 
-# --- Helper ---
+
 
 
 async def collect_chunks(stream) -> list[str]:
@@ -97,7 +97,7 @@ async def collect_chunks(stream) -> list[str]:
     return chunks
 
 
-# --- Tests: messages mode ---
+
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_messages_mode():
     stream = adapter.chat(chat_ctx=chat_ctx)
     chunks = await collect_chunks(stream)
 
-    # GenericFakeChatModel splits "Hello world from fake" on whitespace
+
     assert len(chunks) > 0
     combined = "".join(chunks)
     assert "Hello" in combined
@@ -122,7 +122,7 @@ async def test_messages_mode():
 async def test_messages_mode_is_default():
     """Test that messages mode is the default behavior."""
     graph = build_messages_graph()
-    adapter = LLMAdapter(graph)  # No stream_mode specified
+    adapter = LLMAdapter(graph)
 
     chat_ctx = ChatContext()
     chat_ctx.add_message(role="user", content="Hi")
@@ -134,7 +134,7 @@ async def test_messages_mode_is_default():
     assert "Hello" in combined
 
 
-# --- Tests: custom mode ---
+
 
 
 @pytest.mark.asyncio
@@ -163,11 +163,11 @@ async def test_custom_mode_dict():
     stream = adapter.chat(chat_ctx=chat_ctx)
     chunks = await collect_chunks(stream)
 
-    # {"content": "chunk3"} should be converted to "chunk3"
+
     assert "chunk3" in chunks
 
 
-# --- Tests: multi mode ---
+
 
 
 @pytest.mark.asyncio
@@ -182,12 +182,12 @@ async def test_multi_mode():
     chunks = await collect_chunks(stream)
 
     combined = "".join(chunks)
-    # Should have chunks from both messages mode (LLM) and custom mode (StreamWriter)
-    assert "LLM" in combined or "response" in combined  # From fake LLM
-    assert "custom chunk" in combined  # From StreamWriter
+
+    assert "LLM" in combined or "response" in combined
+    assert "custom chunk" in combined
 
 
-# --- Tests: validation ---
+
 
 
 def test_validation_rejects_unsupported_mode():
@@ -210,19 +210,19 @@ def test_validation_accepts_supported_modes():
     """Test that supported modes are accepted."""
     graph = build_messages_graph()
 
-    # Should not raise
+
     LLMAdapter(graph, stream_mode="messages")
     LLMAdapter(graph, stream_mode="custom")
     LLMAdapter(graph, stream_mode=["messages", "custom"])
 
 
-# --- Tests: mode isolation ---
+
 
 
 @pytest.mark.asyncio
 async def test_empty_stream_mode_disables_streaming():
     """Test stream_mode=[] produces no output (opt-out of streaming)."""
-    graph = build_combined_graph()  # Has both LLM and StreamWriter
+    graph = build_combined_graph()
     adapter = LLMAdapter(graph, stream_mode=[])
 
     chat_ctx = ChatContext()
@@ -236,7 +236,7 @@ async def test_empty_stream_mode_disables_streaming():
 @pytest.mark.asyncio
 async def test_custom_mode_no_messages_output():
     """Test stream_mode='custom' produces nothing when graph only has LLM."""
-    graph = build_messages_graph()  # LLM only, no StreamWriter
+    graph = build_messages_graph()
     adapter = LLMAdapter(graph, stream_mode="custom")
 
     chat_ctx = ChatContext()
@@ -250,7 +250,7 @@ async def test_custom_mode_no_messages_output():
 @pytest.mark.asyncio
 async def test_messages_mode_no_custom_output():
     """Test stream_mode='messages' produces nothing when graph only has StreamWriter."""
-    graph = build_custom_graph()  # StreamWriter only, no LLM
+    graph = build_custom_graph()
     adapter = LLMAdapter(graph, stream_mode="messages")
 
     chat_ctx = ChatContext()

@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
 ]
 
-# Supply Smart Turn dependencies directly so the SDK's v4 cap does not retain vulnerable Transformers.
+
 dependencies = [
     "livekit-agents>=1.5.17",
     "speechmatics-voice>=0.2.8",

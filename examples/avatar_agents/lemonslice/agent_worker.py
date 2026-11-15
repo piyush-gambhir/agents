@@ -41,7 +41,7 @@ async def entrypoint(ctx: JobContext):
         raise ValueError("LEMONSLICE_IMAGE_URL must be set")
     avatar = lemonslice.AvatarSession(
         agent_image_url=lemonslice_image_url,
-        # Prompt to guide the avatar's movements
+
         agent_prompt="Be expressive in your movements and use your hands while talking.",
     )
     await avatar.start(session, room=ctx.room)

@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from ..voice.agent_session import AgentSession
     from ..voice.events import RunContext as AsyncRunContext  # noqa: F401
 
-# AsyncRunContext is a deprecated alias for RunContext kept for one release so user
-# tools typing ``ctx: AsyncRunContext`` keep working. __getattr__ surfaces a runtime
-# warning to nudge migration to ``RunContext``.
+
+
+
 __all__ = ["AsyncRunContext", "AsyncToolset"]
 
 
@@ -60,7 +60,7 @@ class AsyncToolset(Toolset):
         id: str,
         tools: Sequence[Tool] | None = None,
         tool_handling: ToolHandlingOptions | None = None,
-        # deprecated
+
         on_duplicate_call: DuplicateMode | None = None,
     ) -> None:
         if on_duplicate_call is not None:

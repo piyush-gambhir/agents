@@ -1,14 +1,14 @@
 # Copyright 2023 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -140,8 +140,8 @@ class TTS(tts.TTS):
         ssml_gender = _gender_from_str(DEFAULT_GENDER if not is_given(gender) else gender)
 
         if not is_given(model_name):
-            # chirp3 voice name format: <locale>-<model>-<voice>
-            # only chirp 3 model can support voice cloning
+
+
             if not is_given(prompt) and (
                 is_given(voice_cloning_key)
                 or (is_given(voice_name) and "chirp" in voice_name.lower())
@@ -158,7 +158,7 @@ class TTS(tts.TTS):
             language_code=lang,
             ssml_gender=ssml_gender,
         )
-        if model_name != "chirp_3":  #  voice_params.model_name must not be set for Chirp 3
+        if model_name != "chirp_3":
             voice_params.model_name = model_name
 
         if is_given(voice_cloning_key):
@@ -429,7 +429,7 @@ class SynthesizeStream(tts.SynthesizeStream):
                 is_first_input = True
                 async for input in input_stream:
                     self._mark_started()
-                    # prompt is only supported in the first input chunk (for Gemini TTS)
+
                     synthesis_input = texttospeech.StreamingSynthesisInput(
                         markup=input.token if self._opts.use_markup else None,
                         text=None if self._opts.use_markup else input.token,

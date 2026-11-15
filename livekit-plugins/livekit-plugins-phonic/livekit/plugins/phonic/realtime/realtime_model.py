@@ -378,8 +378,8 @@ class RealtimeSession(llm.RealtimeSession):
         self._tools = llm.ToolContext(tools)
         self._tool_definitions = []
         for tool_schema in self._tools.parse_function_tools("openai", strict=True):
-            # We disallow tool chaining and tool calls during agent speech to reduce complexity
-            # of managing state while operating within the LiveKit Realtime generations framework
+
+
             self._tool_definitions.append(
                 {
                     "type": "custom_websocket",
@@ -480,8 +480,8 @@ class RealtimeSession(llm.RealtimeSession):
         self._close_current_generation(interrupted=False)
 
         if self._pending_generate_reply_fut and not self._pending_generate_reply_fut.done():
-            # clear the slot first so the done callback doesn't see this as an
-            # external cancellation of the currently-pending generation.
+
+
             old_fut = self._pending_generate_reply_fut
             self._pending_generate_reply_fut = None
             old_fut.cancel()
@@ -501,7 +501,7 @@ class RealtimeSession(llm.RealtimeSession):
             if is_current:
                 self._pending_generate_reply_fut = None
             if f.cancelled() and is_current:
-                # external cancel: drop the queued send if it hasn't gone out yet
+
                 if not send_task.done():
                     send_task.cancel()
 
@@ -566,13 +566,13 @@ class RealtimeSession(llm.RealtimeSession):
     async def _main_task(self) -> None:
         try:
             logger.debug("Connecting to Phonic Realtime API...")
-            # The Phonic Python SDK uses an async context manager for connect()
+
             t0 = time.perf_counter()
             self._socket_ctx = self._client.conversations.connect()
             self._socket = await self._socket_ctx.__aenter__()
             self._report_connection_acquired(time.perf_counter() - t0)
 
-            # Need to wait for instructions and tools before sending config
+
             await self._instructions_ready.wait()
             await self._tools_ready.wait()
 
@@ -612,7 +612,7 @@ class RealtimeSession(llm.RealtimeSession):
                 "no_input_poke_text": self._opts.no_input_poke_text,
                 "no_input_end_conversation_sec": self._opts.no_input_end_conversation_sec,
             }
-            # Filter out NOT_GIVEN values
+
             config_filtered = typing.cast(
                 dict[str, typing.Any],
                 {k: v for k, v in config.items() if v is not NOT_GIVEN},
@@ -770,8 +770,8 @@ class RealtimeSession(llm.RealtimeSession):
         self._current_generation = None
 
     def _handle_audio_chunk(self, message: AudioChunkResponsePayload) -> None:
-        # In Phonic, audio chunks can come in when assistant isn't explicitly active.
-        # We start a generation if text is present to align with the framework pattern.
+
+
         if self._current_generation is None and message.text:
             logger.debug("Starting new generation due to text in audio chunk")
             self._start_new_assistant_turn()
@@ -786,7 +786,7 @@ class RealtimeSession(llm.RealtimeSession):
         if message.audio:
             try:
                 audio_bytes = base64.b64decode(message.audio)
-                sample_count = len(audio_bytes) // 2  # 16-bit PCM = 2 bytes per sample
+                sample_count = len(audio_bytes) // 2
                 if sample_count > 0:
                     frame = rtc.AudioFrame(
                         data=audio_bytes,
@@ -840,8 +840,8 @@ class RealtimeSession(llm.RealtimeSession):
             )
         )
 
-        # At most 1 tool call is supported per turn due to `allow_tool_chaining: False`,
-        # allowing us to close the generation.
+
+
         self._close_current_generation(interrupted=False)
 
     def _handle_tool_call_interrupted(self, message: ToolCallInterruptedPayload) -> None:

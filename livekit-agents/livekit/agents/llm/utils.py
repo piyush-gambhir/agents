@@ -52,7 +52,7 @@ def _compute_lcs(old_ids: list[str], new_ids: list[str]) -> list[str]:
     n, m = len(old_ids), len(new_ids)
     dp = [[0] * (m + 1) for _ in range(n + 1)]
 
-    # Fill DP table
+
     for i in range(1, n + 1):
         for j in range(1, m + 1):
             if old_ids[i - 1] == new_ids[j - 1]:
@@ -60,7 +60,7 @@ def _compute_lcs(old_ids: list[str], new_ids: list[str]) -> list[str]:
             else:
                 dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
 
-    # Backtrack to find the actual LCS sequence
+
     lcs_ids = []
     i, j = n, m
     while i > 0 and j > 0:
@@ -81,15 +81,15 @@ class DiffOps:
     to_remove: list[str]
     to_create: list[
         tuple[str | None, str]
-    ]  # (previous_item_id, id), if previous_item_id is None, add to the root
+    ]
     to_update: list[
         tuple[str | None, str]
-    ]  # (previous_item_id, id), the items with the same id but different content
+    ]
 
 
 def compute_chat_ctx_diff(old_ctx: ChatContext, new_ctx: ChatContext) -> DiffOps:
     """Computes the minimal list of create/remove operations to transform old_ctx into new_ctx."""
-    # TODO(theomonnom): Make ChatMessage hashable and also add update ops
+
 
     old_ids = [m.id for m in old_ctx.items]
     new_ids = [m.id for m in new_ctx.items]
@@ -101,17 +101,17 @@ def compute_chat_ctx_diff(old_ctx: ChatContext, new_ctx: ChatContext) -> DiffOps
     to_create: list[tuple[str | None, str]] = []
     to_update: list[tuple[str | None, str]] = []
 
-    prev_id: str | None = None  # None means root
+    prev_id: str | None = None
     for new_msg in new_ctx.items:
         if new_msg.id not in lcs_ids:
             to_create.append((prev_id, new_msg.id))
         else:
-            # check if the content is different
+
             old_msg = old_ctx_by_id[new_msg.id]
             if new_msg.type == "message" and old_msg.type == "message":
                 if new_msg.text_content != old_msg.text_content:
                     to_update.append((prev_id, new_msg.id))
-                # TODO: check other content types
+
 
         prev_id = new_msg.id
 
@@ -147,7 +147,7 @@ class SerializedImage:
 
 
 def serialize_image(image: ImageContent, *, use_cache: bool = True) -> SerializedImage:
-    cache_key = "serialized_image"  # TODO(long): use hash of encoding options if available
+    cache_key = "serialized_image"
     if use_cache and cache_key in image._cache:
         return cast(SerializedImage, image._cache[cache_key])
 
@@ -259,23 +259,23 @@ def is_typed_dict(cls: type | Any) -> bool:
     return isinstance(cls, type) and issubclass(cls, dict) and hasattr(cls, "__annotations__")
 
 
-# mostly from https://github.com/openai/openai-python/blob/main/src/openai/lib/_parsing/_completions.py
-# and https://github.com/instructor-ai/instructor/blob/be7821e34fb10f7dabf658d684135297a2e40ef3/instructor/process_response.py#L812C1-L816C10
+
+
 
 
 def to_response_format_param(
     response_format: type | dict[str, Any],
 ) -> tuple[str, type[BaseModel] | TypeAdapter[Any]]:
     if isinstance(response_format, dict):
-        # TODO(theomonnom): better type validation, copy TypedDict from OpenAI
+
         if response_format.get("type", "") not in ("text", "json_schema", "json_object"):
             raise TypeError("Unsupported response_format type")
 
-        # TODO(long): fix return value
+
         raise TypeError("Unsupported response_format type")
         return response_format
 
-    # add support for TypedDict
+
     if is_typed_dict(response_format):
         response_format = create_model(
             response_format.__name__,
@@ -287,7 +287,7 @@ def to_response_format_param(
         json_schema_type = response_format
     elif inspect.isclass(response_format) and hasattr(
         response_format, "__pydantic_config__"
-    ):  # @pydantic.dataclass
+    ):
         name = response_format.__name__
         json_schema_type = TypeAdapter(response_format)
     else:
@@ -325,7 +325,7 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
     signature = inspect.signature(func)
     type_hints = get_type_hints(func, include_extras=True)
 
-    # field_name -> (type, FieldInfo or default)
+
     fields: dict[str, Any] = {}
 
     for param_name, param in signature.parameters.items():
@@ -338,7 +338,7 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
         field_info: FieldInfo | None = None
         field_attrs: dict[str, Any] = {}
 
-        # Annotated[str, Field(description="...")]
+
         if get_origin(type_hint) is Annotated:
             annotated_args = get_args(type_hint)
             type_hint = annotated_args[0]
@@ -346,12 +346,12 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
                 (x for x in annotated_args[1:] if isinstance(x, FieldInfo)), None
             )
             if annotated_field and hasattr(annotated_field, "asdict"):
-                # `asdict` is available after pydantic 2.12
+
                 field_dict = annotated_field.asdict()
                 field_attrs = field_dict["attributes"]
-                # Constraints (ge/le/gt/lt/multiple_of/min_length/pattern/...) live
-                # in `metadata`, not `attributes`. Re-attach them to the annotation
-                # so `Field(...)` constraints on a tool argument are preserved.
+
+
+
                 if field_dict["metadata"]:
                     type_hint = Annotated[(type_hint, *field_dict["metadata"])]
             elif annotated_field:
@@ -379,17 +379,17 @@ def function_arguments_to_pydantic_model(func: Callable[..., Any]) -> type[BaseM
     return create_model(model_name, **fields)
 
 
-# Patterns for chat-template tokens that sometimes leak into tool-call arguments
-# when the model fumbles its own special-token formatting. Ordered: well-formed
-# delimiters first (so we don't leave dangling halves), then stragglers.
-# Covers Qwen/ChatML-style (`<|im_start|>`, `<|tool_call|>`, the leaked `<|"|"`
-# we've seen from Gemma 4) and Gemma turn markers (`<start_of_turn>` /
-# `<end_of_turn>`).
+
+
+
+
+
+
 _TEMPLATE_TOKEN_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"<\|[^<>|]{0,40}\|>"),  # well-formed <|...|>
-    re.compile(r"<\|[^<>a-zA-Z0-9_]{0,10}"),  # dangling start <|"|" etc.
-    re.compile(r"[^<>a-zA-Z0-9_]{0,10}\|>"),  # dangling end
-    re.compile(r"<(?:start|end)_of_turn>"),  # Gemma turn markers
+    re.compile(r"<\|[^<>|]{0,40}\|>"),
+    re.compile(r"<\|[^<>a-zA-Z0-9_]{0,10}"),
+    re.compile(r"[^<>a-zA-Z0-9_]{0,10}\|>"),
+    re.compile(r"<(?:start|end)_of_turn>"),
 )
 
 
@@ -406,8 +406,8 @@ def _strip_template_tokens(value: Any) -> Any:
         return out.strip()
     if isinstance(value, list):
         cleaned = [_strip_template_tokens(v) for v in value]
-        # Drop empties that were left behind purely as separators between leaked
-        # tokens (e.g. `["<|", "X<|", ""]` -> `["X"]`).
+
+
         return [v for v in cleaned if v not in ("", None)]
     if isinstance(value, dict):
         return {k: _strip_template_tokens(v) for k, v in value.items()}
@@ -429,13 +429,13 @@ def parse_function_arguments(json_arguments: str) -> dict[str, Any]:
     except ValueError as strict_err:
         repaired = json_repair.loads(json_arguments)
         if repaired == "":
-            # json_repair returns "" when it can't recover anything meaningful.
+
             raise ValueError(
                 f"could not parse function arguments as JSON: {strict_err}: {json_arguments[:200]}"
             ) from strict_err
-        # After a repair, also strip leaked chat-template tokens — many of
-        # the failures we see are caused by `<|...|>` markers bleeding into
-        # the model's structured output.
+
+
+
         cleaned = _strip_template_tokens(repaired)
         logger.warning(
             "repaired malformed function-call JSON arguments",
@@ -447,8 +447,8 @@ def parse_function_arguments(json_arguments: str) -> dict[str, Any]:
         )
         args_dict = cleaned
 
-    # Some providers (e.g. Nova Sonic) double-encode tool arguments as nested
-    # JSON strings. Unwrap until we reach a non-string value.
+
+
     while isinstance(args_dict, str):
         try:
             args_dict = from_json(args_dict)
@@ -473,7 +473,7 @@ def prepare_function_arguments(
     json_arguments: str | dict[str, Any],
     call_ctx: RunContext[Any] | None = None,
     fnc_call: FunctionCall | None = None,
-) -> tuple[tuple[Any, ...], dict[str, Any]]:  # returns args, kwargs
+) -> tuple[tuple[Any, ...], dict[str, Any]]:
     """Create the positional and keyword arguments to call a function tool from
     the raw function output from the LLM.
 
@@ -485,8 +485,8 @@ def prepare_function_arguments(
     canonicalized JSON (post json_repair) is written back to
     ``fnc_call.arguments`` BEFORE validation runs.
     """
-    # phase 1: parse — raw JSON failures raise ToolError immediately (no
-    # canonical to provide since the input itself was unparseable)
+
+
     if isinstance(json_arguments, dict):
         args_dict = json_arguments
     else:
@@ -499,14 +499,14 @@ def prepare_function_arguments(
             )
             raise ToolError(f"Error parsing arguments for `{fnc.info.name}`: {e}") from e
 
-        # write canonical BEFORE validation so a downstream validation failure
-        # still leaves valid JSON in chat history
+
+
         if fnc_call is not None:
             canonical = json.dumps(args_dict, default=str)
             if canonical != json_arguments:
                 fnc_call.arguments = canonical
 
-    # phase 2: validate + bind
+
     try:
         return _prepare_function_arguments(fnc=fnc, args_dict=args_dict, call_ctx=call_ctx)
     except ToolError:
@@ -537,11 +537,11 @@ def _prepare_function_arguments(
     if isinstance(fnc, FunctionTool):
         model_type = function_arguments_to_pydantic_model(fnc)
 
-        # Function arguments with default values are treated as optional
-        # when converted to strict LLM function descriptions. (e.g., we convert default
-        # parameters to type: ["string", "null"]).
-        # The following make sure to use the default value when we receive None.
-        # (Only if the type can't be Optional)
+
+
+
+
+
         for param_name, param in signature.parameters.items():
             type_hint = type_hints[param_name]
             if param_name in args_dict and args_dict[param_name] is None:
@@ -554,18 +554,18 @@ def _prepare_function_arguments(
                             "this argument cannot be None and no default is available."
                         )
 
-        model = model_type.model_validate(args_dict)  # can raise ValidationError
+        model = model_type.model_validate(args_dict)
         raw_fields = _shallow_model_dump(model)
     elif isinstance(fnc, RawFunctionTool):
-        # e.g async def open_gate(self, raw_arguments: dict[str, object]):
-        # raw_arguments is required when using raw function tools
+
+
         raw_fields = {
             "raw_arguments": args_dict,
         }
     else:
         raise ValueError(f"Unsupported function tool type: {type(fnc)}")
 
-    # inject RunContext (or subclasses) if needed
+
     context_dict = {}
     for param_name, _ in signature.parameters.items():
         type_hint = type_hints[param_name]
@@ -783,7 +783,7 @@ async def execute_function_call(
             )
         out = make_function_call_output(fnc_call=fnc_call, output=None, exception=e)
 
-    # surface any ctx.update() calls so callers can inspect them
+
     if call_ctx is not None and call_ctx._updates:
         out.fnc_call_updates = list(call_ctx._updates)
     return out

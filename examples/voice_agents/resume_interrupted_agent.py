@@ -9,11 +9,11 @@ logger = logging.getLogger("resume-agent")
 
 load_dotenv()
 
-# This example shows how to resume an agent from a false interruption.
-# If `resume_false_interruption` is True, the agent will first pause the audio output
-# while not interrupting the speech before the `false_interruption_timeout` expires.
-# If there is not new user input after the pause, the agent will resume the output for the same speech.
-# If there is new user input, the agent will interrupt the speech immediately.
+
+
+
+
+
 
 server = AgentServer()
 

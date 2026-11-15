@@ -38,7 +38,7 @@ class EchoAgent(Agent):
         super().__init__(instructions="Your name is Echo. You would interact with users via voice.")
 
     async def on_enter(self) -> None:
-        # AgentSession.run will even capture this generate_reply!
+
         self.session.generate_reply(user_input="Say hello to the user!")
 
 
@@ -59,7 +59,7 @@ async def test_function_call():
 
         result = await sess.run(user_input="Can I speak to Echo?")
         result.expect.next_event().is_function_call()
-        result.expect.next_event().is_message(role="assistant")  # say `Hello world`!
+        result.expect.next_event().is_message(role="assistant")
         result.expect.next_event().is_function_call_output()
         result.expect.next_event().is_agent_handoff(new_agent_type=EchoAgent)
         result.expect.next_event().is_message(role="assistant")

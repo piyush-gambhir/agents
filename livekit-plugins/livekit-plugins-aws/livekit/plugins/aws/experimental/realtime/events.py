@@ -15,9 +15,9 @@ ROLE = Literal["USER", "ASSISTANT", "TOOL", "SYSTEM"]
 GENERATION_STAGE = Literal["SPECULATIVE", "FINAL"]
 STOP_REASON = Literal["PARTIAL_TURN", "END_TURN", "INTERRUPTED"]
 SAMPLE_RATE_HERTZ = Literal[8_000, 16_000, 24_000]
-AUDIO_ENCODING = Literal["base64"]  # all audio data must be base64 encoded
-SAMPLE_SIZE_BITS = Literal[16]  # only supports 16-bit audio
-CHANNEL_COUNT = Literal[1]  # only supports monochannel audio
+AUDIO_ENCODING = Literal["base64"]
+SAMPLE_SIZE_BITS = Literal[16]
+CHANNEL_COUNT = Literal[1]
 
 
 class BaseModel(_BaseModel):
@@ -322,8 +322,8 @@ class SonicEventBuilder:
         ]
 
         history_events: list[str] = []
-        # Nova Sonic requires strict USER/ASSISTANT alternation.
-        # Merge consecutive same-role messages and skip empty ones.
+
+
         messages = chat_ctx.messages()
         if messages:
             logger.debug("initiating session with chat context")
@@ -341,8 +341,8 @@ class SonicEventBuilder:
                 else:
                     merged.append((role, text))
 
-            # Nova Sonic rejects history that starts with ASSISTANT.
-            # Strip leading assistant messages (e.g. orphaned greetings from handoff).
+
+
             if merged and merged[0][0] == "ASSISTANT":
                 logger.debug("Stripping leading ASSISTANT message from history events")
                 merged.pop(0)

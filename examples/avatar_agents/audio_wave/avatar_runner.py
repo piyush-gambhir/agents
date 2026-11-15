@@ -38,7 +38,7 @@ class AudioWaveGenerator(VideoGenerator):
         self._canvas.fill(255)
         self._wave_visualizer = WaveformVisualizer(sample_rate=options.audio_sample_rate)
 
-        # use AudioByteStream to chunk the audio frames to expected frame size
+
         self._audio_bstream = utils.audio.AudioByteStream(
             sample_rate=options.audio_sample_rate,
             num_channels=options.audio_channels,
@@ -46,7 +46,7 @@ class AudioWaveGenerator(VideoGenerator):
         )
         self._frame_ts: deque[float] = deque(maxlen=options.video_fps)
 
-    # -- VideoGenerator abstract methods --
+
 
     async def push_audio(self, frame: rtc.AudioFrame | AudioSegmentEnd) -> None:
         """Called by the runner to push audio frames to the generator."""
@@ -75,27 +75,27 @@ class AudioWaveGenerator(VideoGenerator):
         """
         return self._video_generation_impl()
 
-    # -- End of VideoGenerator abstract methods --
+
 
     async def _video_generation_impl(
         self,
     ) -> AsyncGenerator[rtc.VideoFrame | rtc.AudioFrame | AudioSegmentEnd, None]:
         while True:
             try:
-                # timeout has to be shorter than the frame interval to avoid starvation
+
                 frame = await asyncio.wait_for(
                     self._audio_queue.get(), timeout=0.5 / self._options.video_fps
                 )
                 self._audio_queue.task_done()
             except asyncio.TimeoutError:
-                # generate frame without audio (e.g. silence state)
+
                 yield self._generate_frame(None)
                 self._frame_ts.append(time.time())
                 continue
 
             audio_frames: list[rtc.AudioFrame] = []
             if isinstance(frame, rtc.AudioFrame):
-                # resample audio if needed
+
                 if not self._audio_resampler and (
                     frame.sample_rate != self._options.audio_sample_rate
                     or frame.num_channels != self._options.audio_channels
@@ -118,14 +118,14 @@ class AudioWaveGenerator(VideoGenerator):
 
                 audio_frames += self._audio_bstream.flush()
 
-            # generate video frames
+
             for audio_frame in audio_frames:
                 video_frame = self._generate_frame(audio_frame)
                 yield video_frame
                 yield audio_frame
                 self._frame_ts.append(time.time())
 
-            # send the AudioSegmentEnd back to notify the playback finished
+
             if isinstance(frame, AudioSegmentEnd):
                 yield AudioSegmentEnd()
 
@@ -133,7 +133,7 @@ class AudioWaveGenerator(VideoGenerator):
         canvas = self._canvas.copy()
 
         if audio_frame is None:
-            # idle frame, no audio
+
             audio_data = np.zeros((1, self._options.audio_channels))
         else:
             audio_data = np.frombuffer(audio_frame.data, dtype=np.int16).reshape(
@@ -157,16 +157,16 @@ class AudioWaveGenerator(VideoGenerator):
 
 @utils.log_exceptions(logger=logger)
 async def main(api_url: str, api_token: str):
-    # connect to the room
+
     room = rtc.Room()
     await room.connect(api_url, api_token)
 
     def on_transcription_received(reader: rtc.TextStreamReader, participant_identity: str):
-        # ignore transcription from the room
+
         pass
 
     def on_session_messages_received(reader: rtc.ByteStreamReader, participant_identity: str):
-        # ignore session messages from the room
+
         pass
 
     room.register_text_stream_handler(TOPIC_TRANSCRIPTION, on_transcription_received)
@@ -174,7 +174,7 @@ async def main(api_url: str, api_token: str):
 
     should_stop = asyncio.Event()
 
-    # stop when disconnect from the room or the agent disconnects
+
     @room.on("participant_disconnected")
     def _on_participant_disconnected(participant: rtc.RemoteParticipant):
         if participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_AGENT:
@@ -186,7 +186,7 @@ async def main(api_url: str, api_token: str):
         logging.info("Room disconnected, stopping worker")
         should_stop.set()
 
-    # define the avatar options and start the runner
+
     avatar_options = AvatarOptions(
         video_width=1280,
         video_height=720,
@@ -201,7 +201,7 @@ async def main(api_url: str, api_token: str):
     try:
         await runner.start()
 
-        # run until stopped or the runner is complete/failed
+
         tasks = [
             asyncio.create_task(runner.wait_for_complete()),
             asyncio.create_task(should_stop.wait()),

@@ -24,7 +24,7 @@ from . import proto
 def _find_watchable_paths(main_file: pathlib.Path) -> list[pathlib.Path]:
     packages: list[Distribution] = []
 
-    # also watch agents plugins in editable mode
+
     def _try_add(name: str) -> bool:
         nonlocal packages
         try:
@@ -43,7 +43,7 @@ def _find_watchable_paths(main_file: pathlib.Path) -> list[pathlib.Path]:
 
     paths: list[pathlib.Path] = [main_file.absolute()]
     for pkg in packages:
-        # https://packaging.python.org/en/latest/specifications/direct-url/
+
         durl = pkg.read_text("direct_url.json")
         if not durl:
             continue
@@ -124,7 +124,7 @@ class WatchServer:
             await channel.asend_message(self._pch, proto.ActiveJobsRequest())
             self._recv_jobs_fut = asyncio.Future()
             with contextlib.suppress(asyncio.TimeoutError):
-                # wait max 1.5s to get the active jobs
+
                 await asyncio.wait_for(self._recv_jobs_fut, timeout=1.5)
         finally:
             self._cli_args.reload_count += 1
@@ -184,7 +184,7 @@ class WatchClient:
                         ),
                     )
                 elif isinstance(msg, proto.ReloadJobsResponse):
-                    # TODO(theomonnom): wait for the worker to be fully initialized/connected
+
                     await self._worker._reload_jobs(msg.jobs)
                     await channel.asend_message(self._cch, proto.Reloaded())
         except utils.aio.duplex_unix.DuplexClosed:

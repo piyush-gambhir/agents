@@ -1,14 +1,14 @@
 # Copyright 2025 LiveKit, Inc.
-#
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
+
+
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -328,7 +328,7 @@ class SpeechStream(stt.SpeechStream):
         async def send_task(ws: aiohttp.ClientWebSocketResponse) -> None:
             nonlocal closing_ws
 
-            samples_per_buffer = self._opts.sample_rate // 20  # 50ms chunk
+            samples_per_buffer = self._opts.sample_rate // 20
             audio_bstream = utils.audio.AudioByteStream(
                 sample_rate=self._opts.sample_rate,
                 num_channels=1,
@@ -473,8 +473,8 @@ class SpeechStream(stt.SpeechStream):
                 if local_segment_id > max_segment_id:
                     del self._transcript_state[local_segment_id]
 
-            # The state dictionary may not be sorted, so we must sort it by the segment ID
-            # before joining the text.
+
+
             sorted_segments = sorted(self._transcript_state.items(), key=lambda item: int(item[0]))
             full_transcript = " ".join([text for _, text in sorted_segments])
 

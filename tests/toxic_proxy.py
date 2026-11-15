@@ -1,4 +1,4 @@
-# based on https://github.com/douglas/toxiproxy-python.
+
 
 import socket
 from collections.abc import Iterator
@@ -99,7 +99,7 @@ class Proxy:
         toxics_list = response.json()
         toxics_dict: dict[str, Toxic] = {}
         for toxic_data in toxics_list:
-            toxic_data["proxy"] = self.name  # optionally add proxy info if needed elsewhere
+            toxic_data["proxy"] = self.name
             toxic_name = toxic_data.get(
                 "name", f"{toxic_data.get('type')}_{toxic_data.get('stream', 'downstream')}"
             )
@@ -202,7 +202,7 @@ class Toxiproxy:
         for proxy_conf in proxies:
             name = proxy_conf["name"]
             existing = self.get_proxy(name)
-            # If an existing proxy is found and its configuration differs, destroy it first.
+
             if existing and (
                 existing.upstream != proxy_conf["upstream"]
                 or existing.listen != proxy_conf["listen"]

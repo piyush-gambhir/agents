@@ -83,15 +83,15 @@ class TravelAgent(Agent):
             destination: Arrival city or airport code.
             date: Travel date (e.g. "2026-04-15").
         """
-        # This update is delivered immediately — the agent will say something like:
-        # "Sure, let me search for flights from New York to Tokyo on April 15th.
-        #  This might take a couple of minutes, hang tight!"
+
+
+
         await ctx.update(
             f"Searching flights from {origin} to {destination} on {date}. "
             "This will take a couple of minutes."
         )
 
-        # Phase 1: searching airlines
+
         await asyncio.sleep(30)
 
         airlines = random.sample(
@@ -101,15 +101,15 @@ class TravelAgent(Agent):
         cheapest = min(prices, key=lambda a: prices[a])
 
         logger.info("Found airlines and prices, booking the flight...")
-        # This update is delivered when the agent is idle — the agent will say something like:
-        # "Good news, I found 3 options. The best price is $289 on Delta.
-        #  I'm confirming that booking for you now."
+
+
+
         await ctx.update(
             f"Found {len(airlines)} options. Best price: ${prices[cheapest]} on {cheapest}. "
             "Confirming the booking now.",
         )
 
-        # Phase 2: confirming booking
+
         if self._user_email is None:
             logger.info("Getting user's email address")
             async with ctx.foreground():
@@ -124,16 +124,16 @@ class TravelAgent(Agent):
 
         logger.info("Flight booked")
         confirmation = f"FL-{random.randint(100000, 999999)}"
-        # The final return value is also delivered when the agent is idle — it will say:
-        # "All done! Your Delta flight from New York to Tokyo on April 15th is booked.
-        #  It was $289 and your confirmation number is FL-847293."
+
+
+
         return (
             f"Flight booked! {cheapest} from {origin} to {destination} on {date}. "
             f"Price: ${prices[cheapest]}. Confirmation: {confirmation}. "
             f"The details will be sent to your email."
         )
 
-    # -- Tool 2: Tour guide via web search --
+
 
     @llm.function_tool(flags=llm.ToolFlag.CANCELLABLE, on_duplicate="confirm")
     async def tour_guide(self, ctx: RunContext, destination: str, interests: str) -> str:
@@ -215,10 +215,10 @@ server = AgentServer()
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
         stt=inference.STT("deepgram/nova-3"),
-        # llm=inference.LLM("openai/gpt-5.3-chat-latest"),
+
         llm=inference.LLM("google/gemini-3.1-flash-lite"),
         tts=inference.TTS("cartesia/sonic-3", voice="e07c00bc-4134-4eae-9ea4-1a55fb45746b"),
-        # llm=google.realtime.RealtimeModel(),
+
         vad=silero.VAD.load(),
         turn_handling={"interruption": {"mode": "vad"}},
     )

@@ -308,7 +308,7 @@ class TestSTTDiarizationCapabilities:
         stt = _make_stt(extra_kwargs={"diarize": True})
         assert stt.capabilities.diarization is True
         stt.update_options(extra={"endpointing": 500})
-        # diarize should still be active after the partial update.
+
         assert stt._opts.extra_kwargs.get("diarize") is True
         assert stt._opts.extra_kwargs.get("endpointing") == 500
         assert stt.capabilities.diarization is True

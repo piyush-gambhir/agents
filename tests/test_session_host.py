@@ -34,9 +34,9 @@ from livekit.protocol.agent_pb import agent_session as agent_pb
 
 pytestmark = pytest.mark.unit
 
-# ---------------------------------------------------------------------------
-# In-memory transport for testing
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class InMemoryTransport(SessionTransport):
@@ -73,9 +73,9 @@ class InMemoryTransport(SessionTransport):
             raise StopAsyncIteration from None
 
 
-# ---------------------------------------------------------------------------
-# Proto conversion helpers
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestChatItemToProto:
@@ -238,9 +238,9 @@ class TestSessionUsageToProto:
         assert len(pb.model_usage) == 3
 
 
-# ---------------------------------------------------------------------------
-# RoomSessionTransport
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestRoomSessionTransport:
@@ -258,9 +258,9 @@ class TestRoomSessionTransport:
         assert transport.remote_identity is None
 
 
-# ---------------------------------------------------------------------------
-# SessionHost event forwarding
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestSessionHostEvents:
@@ -411,9 +411,9 @@ class TestSessionHostEvents:
         await host.aclose()
 
 
-# ---------------------------------------------------------------------------
-# SessionHost request handling
-# ---------------------------------------------------------------------------
+
+
+
 
 
 class TestSessionHostRequests:

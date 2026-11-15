@@ -295,7 +295,7 @@ class ChunkedStream(ABC):
                         raise
 
                 output_emitter.end_input()
-                # wait for all audio frames to be pushed & propagate errors
+
                 await output_emitter.join()
 
                 if self._input_text.strip() and output_emitter.pushed_duration() <= 0.0:
@@ -304,7 +304,7 @@ class ChunkedStream(ABC):
                 current_span.set_attribute(trace_types.ATTR_TTS_INPUT_TEXT, self._input_text)
                 return
             except APIError as e:
-                # 499 (Client Closed Request) - close gracefully without raising
+
                 if isinstance(e, APIStatusError) and e.status_code == 499:
                     return
 
@@ -320,7 +320,7 @@ class ChunkedStream(ABC):
                     )
 
                 await asyncio.sleep(retry_interval)
-                # Reset the flag when retrying
+
                 self._current_attempt_has_error = False
             finally:
                 await output_emitter.aclose()
@@ -434,16 +434,16 @@ class SynthesizeStream(ABC):
 
         self._task = asyncio.create_task(_traceable_main_task(), name="TTS._main_task")
         self._task.add_done_callback(lambda _: self._event_ch.close())
-        self._metrics_task: asyncio.Task[None] | None = None  # started on first push
+        self._metrics_task: asyncio.Task[None] | None = None
         self._current_attempt_has_error = False
         self._started_time: float = 0
         self._pushed_text: str = ""
 
-        # buffered input events for retry replay
+
         self._input_buffer: list[str | SynthesizeStream._FlushSentinel] = []
         self._input_ended = False
 
-        # used to track metrics
+
         self._mtc_pending_texts: list[str] = []
         self._mtc_text = ""
         self._num_segments = 0
@@ -482,7 +482,7 @@ class SynthesizeStream(ABC):
                         raise
 
                 output_emitter.end_input()
-                # wait for all audio frames to be pushed & propagate errors
+
                 await output_emitter.join()
 
                 if self._pushed_text.strip():
@@ -498,7 +498,7 @@ class SynthesizeStream(ABC):
                 current_span.set_attribute(trace_types.ATTR_TTS_INPUT_TEXT, self._pushed_text)
                 return
             except APIError as e:
-                # 499 (Client Closed Request) - close gracefully without raising
+
                 if isinstance(e, APIStatusError) and e.status_code == 499:
                     return
 
@@ -534,14 +534,14 @@ class SynthesizeStream(ABC):
 
                 await asyncio.sleep(retry_interval)
 
-                # replay buffered input into a fresh channel for retry
+
                 self._input_ch = aio.Chan[str | SynthesizeStream._FlushSentinel]()
                 for event in self._input_buffer:
                     self._input_ch.send_nowait(event)
                 if self._input_ended:
                     self._input_ch.close()
 
-                # Reset the flag when retrying
+
                 self._current_attempt_has_error = False
             finally:
                 await output_emitter.aclose()
@@ -559,7 +559,7 @@ class SynthesizeStream(ABC):
         )
 
     def _mark_started(self) -> None:
-        # only set the started time once, it'll get reset after we emit metrics
+
         if self._started_time == 0:
             self._started_time = time.perf_counter()
 
@@ -738,8 +738,8 @@ class AudioEmitter:
         self._request_id: str = ""
         self._started = False
         self._num_segments = 0
-        self._audio_durations: list[float] = []  # track durations per segment
-        self._provider_request_ids: list[str] = []  # deduped provider-known segment ids
+        self._audio_durations: list[float] = []
+        self._provider_request_ids: list[str] = []
 
     def pushed_duration(self, idx: int = -1) -> float:
         return (
@@ -795,7 +795,7 @@ class AudioEmitter:
         self._main_atask = asyncio.create_task(self._main_task(), name="AudioEmitter._main_task")
 
         if not self._streaming:
-            self.__start_segment(segment_id="")  # always start a segment with stream=False
+            self.__start_segment(segment_id="")
 
     def start_segment(self, *, segment_id: str) -> None:
         if not self._streaming:
@@ -938,16 +938,16 @@ class AudioEmitter:
                 logger.debug("flush audio emitter due to slow audio generation")
 
             if flush_if_delayed and sent_duration > 0.15:
-                # force flush the buffer if the audio comes slower than realtime.
-                # skip during the initial progressive ramp-up where sent_duration
-                # is too small for a meaningful slow-generation check.
+
+
+
                 delay = sent_duration - (event_loop.time() - sent_start) - 0.02
                 if delay > 0:
                     flush_timer = event_loop.call_later(delay, _flush)
 
-        # Number of samples held back in last_frame so we can tag is_final
-        # on the very last audio of a segment.  10 ms is small enough to be
-        # imperceptible but avoids holding a full-sized frame.
+
+
+
         _TAIL_SAMPLES = self._sample_rate * 10 // 1000
 
         def _split_tail(frame: rtc.AudioFrame) -> tuple[rtc.AudioFrame | None, rtc.AudioFrame]:
@@ -958,7 +958,7 @@ class AudioEmitter:
             if frame.samples_per_channel <= _TAIL_SAMPLES:
                 return None, frame
             head_samples = frame.samples_per_channel - _TAIL_SAMPLES
-            # frame.data is a memoryview of int16 — slice by sample * num_channels
+
             split_idx = head_samples * frame.num_channels
             head = rtc.AudioFrame(
                 data=frame.data[:split_idx],
@@ -1000,9 +1000,9 @@ class AudioEmitter:
             assert segment_ctx is not None
 
             if is_final:
-                # end of segment — flush everything
+
                 if last_frame is not None and frame is not None:
-                    # merge last_frame + frame, send as final
+
                     combined = rtc.combine_audio_frames([last_frame, frame])
                     _do_send(combined, is_final=True)
                     last_frame = None
@@ -1012,8 +1012,8 @@ class AudioEmitter:
                 elif frame is not None:
                     _do_send(frame, is_final=True)
                 elif segment_ctx.audio_duration > 0:
-                    # no frame but segment had audio — send a tiny empty marker
-                    # without updating duration tracking (it's synthetic silence)
+
+
                     marker = rtc.AudioFrame(
                         data=b"\0\0" * (self._sample_rate // 100 * self._num_channels),
                         sample_rate=self._sample_rate,
@@ -1036,10 +1036,10 @@ class AudioEmitter:
             if frame is None:
                 return
 
-            # Normal (non-final) frame: send as much as possible, hold back
-            # only a small tail so we can mark the last audio as is_final.
+
+
             if last_frame is not None:
-                # combine previous tail with new frame before splitting
+
                 combined = rtc.combine_audio_frames([last_frame, frame])
             else:
                 combined = frame
@@ -1063,9 +1063,9 @@ class AudioEmitter:
                     frame=last_frame,
                     request_id=self._request_id,
                     segment_id=segment_ctx.segment_id,
-                    is_final=False,  # flush isn't final
+                    is_final=False,
                 ),
-                flush_if_delayed=False,  # don't flush again before new frames are pushed
+                flush_if_delayed=False,
             )
             timed_transcripts = []
             segment_ctx.audio_duration += last_frame.duration
@@ -1075,7 +1075,7 @@ class AudioEmitter:
                 debug_frames.append(last_frame)
 
             last_frame = None
-            # reset sent duration after flush
+
             sent_start = None
             sent_duration = 0.0
             if flush_timer is not None:
@@ -1144,7 +1144,7 @@ class AudioEmitter:
                 if not segment_ctx:
                     if self._streaming:
                         if isinstance(data, (AudioEmitter._EndSegment, AudioEmitter._FlushSegment)):
-                            continue  # empty segment, ignore
+                            continue
 
                         raise RuntimeError(
                             "start_segment() must be called before pushing audio data"
@@ -1169,7 +1169,7 @@ class AudioEmitter:
                             for f in audio_byte_stream.flush():
                                 _emit_frame(f)
                             _flush_frame()
-                            audio_byte_stream.clear()  # reset progressive for next burst
+                            audio_byte_stream.clear()
 
                         elif isinstance(data, AudioEmitter._EndSegment):
                             for f in audio_byte_stream.flush():
@@ -1192,16 +1192,16 @@ class AudioEmitter:
                         audio_decoder.push(data)
                     elif decode_atask:
                         if isinstance(data, AudioEmitter._FlushSegment):
-                            # don't tear the decoder down here. flush_if_delayed
-                            # can fire mid-stream while a stateful codec
-                            # (WAV/OGG/MP3) is in the middle of a file; ending
-                            # input would discard the parser, and the next
-                            # bytes — a pure PCM/Opus packet continuation
-                            # without a fresh container header — would fail to
-                            # parse against a freshly-created decoder. The only
-                            # purpose of FlushSegment here is to release the
-                            # held-back tail so a slow upstream doesn't starve
-                            # the consumer.
+
+
+
+
+
+
+
+
+
+
                             _flush_frame()
 
                         elif isinstance(data, AudioEmitter._EndSegment) and segment_ctx:

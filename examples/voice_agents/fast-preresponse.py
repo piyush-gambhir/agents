@@ -37,7 +37,7 @@ class PreResponseAgent(Agent):
         )
 
     async def on_user_turn_completed(self, turn_ctx: ChatContext, new_message: ChatMessage):
-        # Create a short "silence filler" response to quickly acknowledge the user's input
+
         fast_llm_ctx = turn_ctx.copy(
             exclude_instructions=True,
             exclude_function_call=True,
@@ -47,16 +47,16 @@ class PreResponseAgent(Agent):
         fast_llm_ctx.items.insert(0, self._fast_llm_prompt)
         fast_llm_ctx.items.append(new_message)
 
-        # # Intentionally not awaiting SpeechHandle to allow the main response generation to
-        # # run concurrently
-        # self.session.say(
-        #     self._fast_llm.chat(chat_ctx=fast_llm_ctx).to_str_iterable(),
-        #     add_to_chat_ctx=False,
-        # )
 
-        # Alternatively, if you want the reply to be aware of this "silence filler" response,
-        # you can await the fast llm done and add the message to the turn context. But note
-        # that not all llm supports completing from an existing assistant message.
+
+
+
+
+
+
+
+
+
 
         fast_llm_fut = asyncio.Future[str]()
 

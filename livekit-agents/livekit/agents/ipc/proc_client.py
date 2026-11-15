@@ -61,7 +61,7 @@ class _ProcClient:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.set_debug(self._init_req.asyncio_debug)
-        loop.slow_callback_duration = 0.1  # 100ms
+        loop.slow_callback_duration = 0.1
 
         try:
             self._task = loop.create_task(self._monitor_task(), name="proc_client_main")
@@ -70,7 +70,7 @@ class _ProcClient:
                     loop.run_until_complete(self._task)
                 except KeyboardInterrupt:
                     # ignore the keyboard interrupt, we handle the process shutdown ourselves on the worker process  # noqa: E501
-                    # (See proto.ShutdownRequest)
+
                     pass
 
         except KeyboardInterrupt:
